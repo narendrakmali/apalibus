@@ -22,10 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { PlusCircle, Trash2, Loader2, Building, Mail, Phone, MapPin, Bus, VenetianSofa, Hash } from 'lucide-react';
+import { PlusCircle, Trash2, Loader2, Building, Mail, Phone, MapPin, Bus, VenetianSofa, Hash, Users } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -93,7 +92,9 @@ export default function OperatorRegistrationPage() {
 
         // 1. Create the bus operator document
         const operatorCollection = collection(firestore, 'bus_operators');
-        const operatorDocRef = await addDoc(operatorCollection, {
+        const operatorDocRef = doc(operatorCollection); // Create a ref with a new ID
+
+        batch.set(operatorDocRef, {
             name: data.name,
             email: data.email,
             phone: data.phone,
@@ -106,7 +107,8 @@ export default function OperatorRegistrationPage() {
         // 2. Create documents for each bus, linking them to the operator
         const busesCollection = collection(firestore, 'buses');
         for (const bus of data.buses) {
-             const busDocRef = await addDoc(busesCollection, {
+             const busDocRef = doc(busesCollection); // Create a ref with a new ID
+             batch.set(busDocRef, {
                 ...bus,
                 operatorId: operatorDocRef.id,
                 operatorName: data.name, // denormalized for easier display
@@ -115,6 +117,8 @@ export default function OperatorRegistrationPage() {
             });
         }
         
+        await batch.commit();
+
         toast({
             title: "Operator Registered",
             description: `${data.name} and their buses have been added to the system.`,
@@ -313,3 +317,5 @@ export default function OperatorRegistrationPage() {
     </div>
   );
 }
+
+    
