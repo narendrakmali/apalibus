@@ -15,11 +15,13 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -31,6 +33,13 @@ export default function DashboardPage() {
     await signOut(auth);
     router.push('/');
   };
+
+  const handleEditProfile = () => {
+    toast({
+        title: "Feature Not Implemented",
+        description: "You will be able to edit your profile soon!",
+    });
+  }
   
   if (isUserLoading || !user) {
     return (
@@ -102,7 +111,7 @@ export default function DashboardPage() {
                                 <p className="font-semibold">Phone</p>
                                 <p className="text-muted-foreground">{user.phoneNumber || "Not provided"}</p>
                            </div>
-                            <Button variant="outline" className="w-full">Edit Profile</Button>
+                            <Button variant="outline" className="w-full" onClick={handleEditProfile}>Edit Profile</Button>
                         </div>
                     </CardContent>
                 </Card>

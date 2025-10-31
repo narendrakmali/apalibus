@@ -1,27 +1,10 @@
-
 'use client';
 
-import React, { useState, useRef } from 'react';
-import {
-  GoogleMap,
-  useJsApiLoader,
-  Marker,
-  Autocomplete,
-} from '@react-google-maps/api';
+import React, { useRef } from 'react';
+import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { Input } from '@/components/ui/input';
 import { MapPin } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
-
-const containerStyle = {
-  width: '100%',
-  height: '250px',
-  borderRadius: 'var(--radius)',
-};
-
-const defaultCenter = {
-  lat: 20.5937,
-  lng: 78.9629,
-};
 
 const libraries: ('places' | 'drawing' | 'geometry' | 'localContext' | 'visualization')[] = ['places', 'geometry'];
 
@@ -36,31 +19,17 @@ export function LocationPicker({ onLocationSelect, label }: LocationPickerProps)
     libraries,
   });
 
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete>(null);
-
-  const onLoad = React.useCallback(function callback(mapInstance: google.maps.Map) {
-    setMap(mapInstance);
-  }, []);
-
-  const onUnmount = React.useCallback(function callback() {
-    setMap(null);
-  }, []);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const onPlaceChanged = () => {
     if (autocompleteRef.current) {
       const place = autocompleteRef.current.getPlace();
-      if (place.geometry && place.geometry.location) {
+      if (place.geometry && place.geometry.location && place.formatted_address) {
         const location = {
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
         };
-        map?.panTo(location);
-        setMarkerPosition(location);
-        if (place.formatted_address) {
-            onLocationSelect(location, place.formatted_address);
-        }
+        onLocationSelect(location, place.formatted_address);
       }
     }
   };
@@ -70,12 +39,7 @@ export function LocationPicker({ onLocationSelect, label }: LocationPickerProps)
   }
 
   if (!isLoaded) {
-    return (
-        <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-[250px] w-full" />
-        </div>
-    );
+    return <Skeleton className="h-10 w-full" />;
   }
 
   return (
@@ -93,19 +57,6 @@ export function LocationPicker({ onLocationSelect, label }: LocationPickerProps)
           />
         </Autocomplete>
       </div>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={markerPosition || defaultCenter}
-        zoom={markerPosition ? 15 : 5}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-        options={{
-            streetViewControl: false,
-            mapTypeControl: false,
-        }}
-      >
-        {markerPosition && <Marker position={markerPosition} />}
-      </GoogleMap>
     </div>
   );
 }

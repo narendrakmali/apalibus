@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -55,9 +54,22 @@ const formSchema = z.object({
   busType: z.enum(["AC", "Non-AC"]),
   seatingCapacity: z.enum(["15", "30", "40", "50"]),
   coachType: z.enum(["General", "Pushback", "Relaxing", "Sleeper"]),
-}).refine(data => !data.isReturnJourney || (data.isReturnJourney && data.returnDate), {
+}).refine(data => {
+    if (data.isReturnJourney) {
+        return !!data.returnDate;
+    }
+    return true;
+}, {
     message: "Return date is required for a return journey.",
     path: ["returnDate"],
+}).refine(data => {
+    if (data.isReturnJourney) {
+        return !!data.returnTime;
+    }
+    return true;
+}, {
+    message: "Return time is required for a return journey.",
+    path: ["returnTime"],
 });
 
 
@@ -75,6 +87,7 @@ export function BookingForm() {
       startLocation: "",
       destination: "",
       journeyTime: "19:00",
+      returnTime: "19:00",
       isReturnJourney: false,
       distanceKm: 0,
       busType: "AC",
@@ -462,5 +475,3 @@ export function BookingForm() {
     </>
   );
 }
-
-    
