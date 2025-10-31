@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Loader2, MapPin, Milestone, CalendarIcon, Clock, Bus, Users } from "lucide-react";
+import { Loader2, Milestone, CalendarIcon, Clock, Bus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +38,7 @@ import type { EstimateFareOutput } from "@/ai/flows/estimate-fare";
 import { useToast } from "@/hooks/use-toast";
 import { BookingResult } from "./booking-result";
 import { cn } from "@/lib/utils";
+import { LocationPicker } from "./location-picker";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, "Please enter a valid starting location."),
@@ -112,12 +113,14 @@ export function BookingForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Start Location</FormLabel>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input placeholder="e.g., Mumbai" {...field} className="pl-10" />
-                        </FormControl>
-                      </div>
+                      <FormControl>
+                        <LocationPicker
+                          label="Start Location"
+                          onLocationSelect={(location, address) => {
+                            field.onChange(address);
+                          }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -128,12 +131,14 @@ export function BookingForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Destination</FormLabel>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input placeholder="e.g., Pune" {...field} className="pl-10" />
-                        </FormControl>
-                      </div>
+                      <FormControl>
+                        <LocationPicker
+                          label="Destination"
+                          onLocationSelect={(location, address) => {
+                            field.onChange(address);
+                          }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
