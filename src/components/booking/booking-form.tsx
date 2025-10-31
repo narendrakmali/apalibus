@@ -69,13 +69,19 @@ export function BookingForm() {
     defaultValues: {
       startLocation: "",
       destination: "",
-      journeyDate: new Date(),
+      // journeyDate is now initialized without a value to avoid hydration mismatch
       numberOfSeats: 1,
       distanceKm: 0,
       busType: "Standard",
       timeOfTravel: "19:00",
     },
   });
+
+  useEffect(() => {
+    // Set default journeyDate on the client after mount
+    form.setValue("journeyDate", new Date());
+  }, [form]);
+
 
   useEffect(() => {
     if (startLatLng && destinationLatLng && window.google) {
