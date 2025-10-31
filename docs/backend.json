@@ -39,6 +39,118 @@
         "name",
         "email"
       ]
+    },
+    "BusOperator": {
+      "title": "BusOperator",
+      "description": "Stores information about bus operators, including registration details and contact information.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the bus operator company."
+        },
+        "email": {
+          "type": "string",
+          "description": "Contact email for the operator.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number for the operator."
+        },
+        "address": {
+          "type": "string",
+          "description": "Physical address of the operator."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "The UID of the user who registered the operator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "email", "phone", "address", "createdBy"]
+    },
+    "Bus": {
+      "title": "Bus",
+      "description": "Contains details about individual buses, including type, seating, and availability.",
+      "type": "object",
+      "properties": {
+        "registrationNumber": {
+          "type": "string"
+        },
+        "busType": {
+          "type": "string",
+          "enum": ["AC", "Non-AC"]
+        },
+        "seatingCapacity": {
+          "type": "string",
+          "enum": ["15", "30", "40", "50"]
+        },
+        "coachType": {
+          "type": "string",
+          "enum": ["General", "Pushback", "Relaxing", "Sleeper"]
+        },
+        "operatorId": {
+          "type": "string",
+          "description": "The ID of the bus operator who owns this bus."
+        },
+         "operatorName": {
+          "type": "string",
+          "description": "Denormalized name of the bus operator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["registrationNumber", "busType", "seatingCapacity", "coachType", "operatorId"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Stores booking information.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "busId": {
+          "type": "string"
+        },
+        "operatorId": {
+          "type": "string"
+        },
+        "journeyDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+            "type": "string",
+            "enum": ["pending", "confirmed", "cancelled"]
+        }
+      },
+      "required": ["userId", "busId", "operatorId", "journeyDate", "status"]
+    },
+    "AdminRole": {
+      "title": "AdminRole",
+      "description": "Indicates admin privileges based on document existence.",
+      "type": "object",
+      "properties": {
+          "isAdmin": {
+              "type": "boolean"
+          }
+      },
+      "required": ["isAdmin"]
     }
   },
   "auth": {
