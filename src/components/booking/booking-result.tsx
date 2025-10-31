@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -60,8 +61,8 @@ export function BookingResult({ result }: BookingResultProps) {
             <Button variant="outline" onClick={() => handleActionClick("Share via WhatsApp")}>
                 <MessageCircle className="mr-2 h-4 w-4"/> Share
             </Button>
-            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => handleActionClick("Razorpay Payment")}>
-                <CreditCard className="mr-2 h-4 w-4"/> Proceed to Pay
+            <Button onClick={() => handleActionClick("Razorpay Payment")}>
+                <CreditCard className="mr-2 h-4 w-4"/> Proceed to Book
             </Button>
         </CardFooter>
       </Card>
