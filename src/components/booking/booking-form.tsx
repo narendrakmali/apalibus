@@ -86,18 +86,39 @@ export function BookingForm() {
   const isReturnJourney = form.watch("isReturnJourney");
 
   useEffect(() => {
-    // Set default journeyDate on the client after mount
-    if (typeof window !== 'undefined') {
-        form.setValue("journeyDate", new Date());
-    }
+    // Set default journeyDate on the client after mount to avoid hydration errors
+    form.setValue("journeyDate", new Date());
   }, [form]);
 
 
   useEffect(() => {
-    if (startLatLng && destinationLatLng && window.google && window.google.maps && window.google.maps.geometry) {
-      const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, destinationLatLng);
-      const distanceInKm = Math.round(distanceInMeters / 1000);
-      form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 1);
+    if (startLatLng && destinationLatLng && window.google && window.google.maps) {
+        const directionsService = new google.maps.DirectionsService();
+        directionsService.route(
+            {
+                origin: startLatLng,
+                destination: destinationLatLng,
+                travelMode: google.maps.TravelMode.DRIVING,
+            },
+            (result, status) => {
+                if (status === google.maps.DirectionsStatus.OK && result && result.routes && result.routes.length > 0) {
+                    const route = result.routes[0];
+                    if (route.legs && route.legs.length > 0) {
+                        const leg = route.legs[0];
+                        if (leg.distance) {
+                            const distanceInKm = leg.distance.value / 1000;
+                            form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 1);
+                        }
+                    }
+                } else {
+                    console.error(`error fetching directions ${result}`);
+                    // Fallback to spherical calculation on error
+                    const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, destinationLatLng);
+                    const distanceInKm = distanceInMeters / 1000;
+                    form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 1);
+                }
+            }
+        );
     }
   }, [startLatLng, destinationLatLng, form]);
 
@@ -116,7 +137,7 @@ export function BookingForm() {
     }
     
     const journeyDistance = values.isReturnJourney ? values.distanceKm * 2 : values.distanceKm;
-    setDisplayDistance(journeyDistance);
+    setDisplayDistance(Math.round(journeyDistance / 10) * 10);
 
     try {
       // The AI model doesn't use all the fields, so we just pass what it needs.
@@ -438,3 +459,5 @@ export function BookingForm() {
     </>
   );
 }
+
+    
