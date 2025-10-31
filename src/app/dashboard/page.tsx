@@ -14,6 +14,7 @@ import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const auth = useAuth();
@@ -68,7 +69,9 @@ export default function DashboardPage() {
                     <CardContent>
                         <div className="border rounded-lg p-4 text-center">
                             <p className="text-muted-foreground">You have no recent bookings.</p>
-                            <Button className="mt-4">Book a Trip</Button>
+                            <Button className="mt-4" asChild>
+                              <Link href="/">Book a Trip</Link>
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
