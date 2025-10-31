@@ -68,6 +68,7 @@ export function BookingForm() {
   const { toast } = useToast();
   const [startLatLng, setStartLatLng] = useState<google.maps.LatLng | null>(null);
   const [destinationLatLng, setDestinationLatLng] = useState<google.maps.LatLng | null>(null);
+  const [displayDistance, setDisplayDistance] = useState(0);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -113,12 +114,16 @@ export function BookingForm() {
         setIsLoading(false);
         return;
     }
+    
+    const journeyDistance = values.isReturnJourney ? values.distanceKm * 2 : values.distanceKm;
+    setDisplayDistance(journeyDistance);
+
     try {
       // The AI model doesn't use all the fields, so we just pass what it needs.
       const estimationResult = await getFareEstimate({
           startLocation: values.startLocation,
           destination: values.destination,
-          distanceKm: values.distanceKm,
+          distanceKm: journeyDistance,
           busType: values.busType,
           timeOfTravel: values.journeyTime,
       });
@@ -214,7 +219,7 @@ export function BookingForm() {
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 disabled={(date) =>
-                                date < new Date() || date < new Date("1900-01-01")
+                                date < new Date(new Date().setHours(0,0,0,0))
                                 }
                                 initialFocus
                             />
@@ -294,7 +299,7 @@ export function BookingForm() {
                                         selected={field.value}
                                         onSelect={field.onChange}
                                         disabled={(date) =>
-                                            date < (form.getValues("journeyDate") || new Date())
+                                            date < (form.getValues("journeyDate") || new Date(new Date().setHours(0,0,0,0)))
                                         }
                                         initialFocus
                                     />
@@ -400,22 +405,6 @@ export function BookingForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                    control={form.control}
-                    name="numberOfSeats"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Number of Seats</FormLabel>
-                        <div className="relative">
-                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <FormControl>
-                            <Input type="number" placeholder="e.g., 2" {...field} className="pl-10" />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
               </div>
 
               <Button type="submit" disabled={isLoading} className="w-full md:w-auto" size="lg">
@@ -441,7 +430,7 @@ export function BookingForm() {
             <p className="text-muted-foreground mt-2">Finding the best fares for you...</p>
         </div>
       )}
-      {result && <BookingResult result={result} distance={form.getValues("distanceKm")} />}
+      {result && <BookingResult result={result} distance={displayDistance} />}
     </>
   );
 }
