@@ -53,7 +53,7 @@ const formSchema = z.object({
   returnTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Please enter a valid 24-hour time (e.g., 18:30).").optional(),
   distanceKm: z.coerce.number().min(1, "Distance must be at least 1 km."),
   busType: z.enum(["AC", "Non-AC"]),
-  seatingCapacity: z.enum(["20", "30", "40", "50"]),
+  seatingCapacity: z.enum(["15", "30", "40", "50"]),
   coachType: z.enum(["General", "Pushback", "Relaxing", "Sleeper"]),
 }).refine(data => !data.isReturnJourney || (data.isReturnJourney && data.returnDate), {
     message: "Return date is required for a return journey.",
@@ -87,12 +87,14 @@ export function BookingForm() {
 
   useEffect(() => {
     // Set default journeyDate on the client after mount to avoid hydration errors
-    form.setValue("journeyDate", new Date());
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    form.setValue("journeyDate", today);
   }, [form]);
 
 
   useEffect(() => {
-    if (startLatLng && destinationLatLng && window.google && window.google.maps) {
+    if (startLatLng && destinationLatLng && window.google && window.google.maps && window.google.maps.geometry) {
         const directionsService = new google.maps.DirectionsService();
         directionsService.route(
             {
@@ -137,7 +139,7 @@ export function BookingForm() {
     }
     
     const journeyDistance = values.isReturnJourney ? values.distanceKm * 2 : values.distanceKm;
-    setDisplayDistance(Math.round(journeyDistance / 10) * 10);
+    setDisplayDistance(journeyDistance);
 
     try {
       // The AI model doesn't use all the fields, so we just pass what it needs.
@@ -147,6 +149,7 @@ export function BookingForm() {
           distanceKm: journeyDistance,
           busType: values.busType,
           timeOfTravel: values.journeyTime,
+          seatingCapacity: values.seatingCapacity,
       });
       setResult(estimationResult);
     } catch (error) {
@@ -393,7 +396,7 @@ export function BookingForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="20">20 Seater</SelectItem>
+                            <SelectItem value="15">15 Seater</SelectItem>
                             <SelectItem value="30">30 Seater</SelectItem>
                             <SelectItem value="40">40 Seater</SelectItem>
                             <SelectItem value="50">50 Seater</SelectItem>
