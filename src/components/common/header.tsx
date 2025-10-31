@@ -11,7 +11,7 @@ export default function Header() {
           <span className="font-headline font-bold text-lg">Traverse</span>
         </Link>
         <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-          <Link href="/admin/dashboard" className="transition-colors hover:text-foreground">
+          <Link href="/dashboard" className="transition-colors hover:text-foreground">
             Dashboard
           </Link>
         </nav>
@@ -23,7 +23,7 @@ export default function Header() {
             </Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href="/login">Sign Up</Link>
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </div>
       </div>
