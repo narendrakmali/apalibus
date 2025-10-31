@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bus, Mail, Lock, User } from "lucide-react";
+import { Bus, Mail, Lock, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Please enter a valid phone number."),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -48,6 +49,7 @@ export default function SignupPage() {
         data.password
       );
       await updateProfile(userCredential.user, { displayName: data.name });
+      // TODO: Save phone number to user profile in Firestore
       toast({
         title: "Account Created",
         description: "You have been successfully signed up.",
@@ -104,6 +106,20 @@ export default function SignupPage() {
                 />
               </div>
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            </div>
+             <div className="grid gap-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="e.g. 9876543210"
+                  {...register("phone")}
+                  className="pl-10"
+                />
+              </div>
+              {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>

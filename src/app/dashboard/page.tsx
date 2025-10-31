@@ -8,7 +8,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Ticket, User, LogOut } from 'lucide-react';
+import { Ticket, User, LogOut, Phone } from 'lucide-react';
 import Header from '@/components/common/header';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                         </CardTitle>
                          <CardDescription>
                             Manage your account details.
-                        </CardDescription>
+                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
@@ -94,6 +94,10 @@ export default function DashboardPage() {
                            <div>
                                 <p className="font-semibold">Email</p>
                                 <p className="text-muted-foreground">{user.email}</p>
+                           </div>
+                           <div>
+                                <p className="font-semibold">Phone</p>
+                                <p className="text-muted-foreground">{user.phoneNumber || "Not provided"}</p>
                            </div>
                             <Button variant="outline" className="w-full">Edit Profile</Button>
                         </div>
