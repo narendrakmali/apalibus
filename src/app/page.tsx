@@ -1,5 +1,8 @@
+
 import { BookingForm } from "@/components/booking/booking-form";
 import Header from "@/components/common/header";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -16,6 +19,12 @@ export default function Home() {
           </p>
         </div>
         <BookingForm />
+        <div className="text-center mt-12">
+            <p className="text-muted-foreground">Are you a bus operator looking to join our network?</p>
+            <Button asChild variant="link" className="text-lg">
+                <Link href="/signup/operator">Register Your Fleet Today</Link>
+            </Button>
+        </div>
       </main>
     </div>
   );
