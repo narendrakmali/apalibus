@@ -1,0 +1,209 @@
+"use client";
+
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Loader2, MapPin, Milestone, DollarSign, Clock, Bus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { getFareEstimate } from "@/app/actions";
+import type { EstimateFareOutput } from "@/ai/flows/estimate-fare";
+import { useToast } from "@/hooks/use-toast";
+import { BookingResult } from "./booking-result";
+
+const formSchema = z.object({
+  startLocation: z.string().min(2, "Please enter a valid starting location."),
+  destination: z.string().min(2, "Please enter a valid destination."),
+  distanceKm: z.coerce.number().min(1, "Distance must be at least 1 km."),
+  busType: z.enum(["Standard", "Luxury"]),
+  timeOfTravel: z
+    .string()
+    .regex(
+      /^([01]\d|2[0-3]):([0-5]\d)$/,
+      "Please enter a valid 24-hour time (e.g., 18:30)."
+    ),
+});
+
+export function BookingForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<EstimateFareOutput | null>(null);
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      startLocation: "",
+      destination: "",
+      distanceKm: 300,
+      busType: "Standard",
+      timeOfTravel: "19:00",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    setResult(null);
+    try {
+      const estimationResult = await getFareEstimate(values);
+      setResult(estimationResult);
+    } catch (error) {
+      console.error("Fare estimation failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to get fare estimate. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <Card className="max-w-4xl mx-auto shadow-lg">
+        <CardContent className="p-6 md:p-8">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="startLocation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Location</FormLabel>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input placeholder="e.g., Mumbai" {...field} className="pl-10" />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="destination"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Destination</FormLabel>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input placeholder="e.g., Pune" {...field} className="pl-10" />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                 <FormField
+                  control={form.control}
+                  name="distanceKm"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Distance (km)</FormLabel>
+                      <div className="relative">
+                         <Milestone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input type="number" placeholder="e.g., 300" {...field} className="pl-10" />
+                        </FormControl>
+                      </div>
+                      <FormDescription>
+                        Normally auto-calculated via Maps.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="busType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bus Type</FormLabel>
+                       <div className="relative">
+                         <Bus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="pl-10">
+                              <SelectValue placeholder="Select a bus type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Standard">Standard</SelectItem>
+                            <SelectItem value="Luxury">Luxury</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="timeOfTravel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Time of Travel</FormLabel>
+                       <div className="relative">
+                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                          <Input type="time" {...field} className="pl-10" />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Button type="submit" disabled={isLoading} className="w-full md:w-auto" size="lg">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Estimating...
+                  </>
+                ) : (
+                  <>
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    Estimate Fare
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+      {isLoading && (
+        <div className="text-center mt-8">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground mt-2">Finding the best fares for you...</p>
+        </div>
+      )}
+      {result && <BookingResult result={result} />}
+    </>
+  );
+}
