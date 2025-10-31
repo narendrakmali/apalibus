@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Loader2, Milestone, CalendarIcon, Clock, Bus, Users } from "lucide-react";
+import { Loader2, CalendarIcon, Clock, Bus, Users, Armchair } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BookingResult } from "./booking-result";
 import { cn } from "@/lib/utils";
 import { LocationPicker } from "./location-picker";
+import { Checkbox } from "../ui/checkbox";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, "Please enter a valid starting location."),
@@ -46,16 +47,20 @@ const formSchema = z.object({
   journeyDate: z.date({
     required_error: "A date of travel is required.",
   }),
+  journeyTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Please enter a valid 24-hour time (e.g., 18:30)."),
+  isReturnJourney: z.boolean().default(false),
+  returnDate: z.date().optional(),
+  returnTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Please enter a valid 24-hour time (e.g., 18:30).").optional(),
   numberOfSeats: z.coerce.number().min(1, "Please enter at least 1 seat.").max(10, "You can book a maximum of 10 seats."),
   distanceKm: z.coerce.number().min(1, "Distance must be at least 1 km."),
-  busType: z.enum(["Standard", "Luxury"]),
-  timeOfTravel: z
-    .string()
-    .regex(
-      /^([01]\d|2[0-3]):([0-5]\d)$/,
-      "Please enter a valid 24-hour time (e.g., 18:30)."
-    ),
+  busType: z.enum(["AC", "Non-AC"]),
+  seatingCapacity: z.enum(["20", "30", "40", "50"]),
+  coachType: z.enum(["General", "Pushback", "Relaxing", "Sleeper"]),
+}).refine(data => !data.isReturnJourney || (data.isReturnJourney && data.returnDate), {
+    message: "Return date is required for a return journey.",
+    path: ["returnDate"],
 });
+
 
 export function BookingForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -69,13 +74,17 @@ export function BookingForm() {
     defaultValues: {
       startLocation: "",
       destination: "",
-      // journeyDate is now initialized without a value to avoid hydration mismatch
+      journeyTime: "19:00",
+      isReturnJourney: false,
       numberOfSeats: 1,
       distanceKm: 0,
-      busType: "Standard",
-      timeOfTravel: "19:00",
+      busType: "AC",
+      seatingCapacity: "40",
+      coachType: "Relaxing",
     },
   });
+
+  const isReturnJourney = form.watch("isReturnJourney");
 
   useEffect(() => {
     // Set default journeyDate on the client after mount
@@ -111,7 +120,7 @@ export function BookingForm() {
           destination: values.destination,
           distanceKm: values.distanceKm,
           busType: values.busType,
-          timeOfTravel: values.timeOfTravel,
+          timeOfTravel: values.journeyTime,
       });
       setResult(estimationResult);
     } catch (error) {
@@ -173,7 +182,7 @@ export function BookingForm() {
                 />
               </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-6 items-end">
                     <FormField
                     control={form.control}
                     name="journeyDate"
@@ -215,26 +224,106 @@ export function BookingForm() {
                         </FormItem>
                     )}
                     />
-                     <FormField
+                    <FormField
                         control={form.control}
-                        name="numberOfSeats"
+                        name="journeyTime"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Number of Seats</FormLabel>
+                            <FormLabel>Journey Time</FormLabel>
                             <div className="relative">
-                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <FormControl>
-                                <Input type="number" placeholder="e.g., 2" {...field} className="pl-10" />
+                                <Input type="time" {...field} className="pl-10" />
                                 </FormControl>
                             </div>
                             <FormMessage />
                             </FormItem>
                         )}
-                        />
+                    />
                 </div>
+                 <FormField
+                  control={form.control}
+                  name="isReturnJourney"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          This is a return journey
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
 
+                {isReturnJourney && (
+                    <div className="grid md:grid-cols-2 gap-6 items-end p-4 border rounded-md bg-muted/20">
+                         <FormField
+                            control={form.control}
+                            name="returnDate"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                <FormLabel>Return Date</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full pl-3 text-left font-normal bg-background",
+                                            !field.value && "text-muted-foreground"
+                                        )}
+                                        >
+                                        {field.value ? (
+                                            format(field.value, "PPP")
+                                        ) : (
+                                            <span>Pick a return date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) =>
+                                            date < (form.getValues("journeyDate") || new Date())
+                                        }
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        <FormField
+                            control={form.control}
+                            name="returnTime"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Return Time</FormLabel>
+                                <div className="relative">
+                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <FormControl>
+                                    <Input type="time" {...field} className="pl-10 bg-background" />
+                                    </FormControl>
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                )}
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
                   name="busType"
@@ -250,8 +339,34 @@ export function BookingForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Standard">Standard</SelectItem>
-                            <SelectItem value="Luxury">Luxury</SelectItem>
+                            <SelectItem value="AC">AC</SelectItem>
+                            <SelectItem value="Non-AC">Non-AC</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="seatingCapacity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Seating Capacity</FormLabel>
+                       <div className="relative">
+                         <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="pl-10">
+                              <SelectValue placeholder="Select capacity" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="20">20 Seater</SelectItem>
+                            <SelectItem value="30">30 Seater</SelectItem>
+                            <SelectItem value="40">40 Seater</SelectItem>
+                            <SelectItem value="50">50 Seater</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -261,19 +376,45 @@ export function BookingForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="timeOfTravel"
+                  name="coachType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Time of Travel</FormLabel>
+                      <FormLabel>Coach Type</FormLabel>
                        <div className="relative">
-                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input type="time" {...field} className="pl-10" />
-                        </FormControl>
+                         <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="pl-10">
+                              <SelectValue placeholder="Select coach type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="General">General</SelectItem>
+                            <SelectItem value="Pushback">Pushback</SelectItem>
+                            <SelectItem value="Relaxing">Relaxing</SelectItem>
+                            <SelectItem value="Sleeper">Sleeper</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+                <FormField
+                    control={form.control}
+                    name="numberOfSeats"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Number of Seats</FormLabel>
+                        <div className="relative">
+                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <FormControl>
+                            <Input type="number" placeholder="e.g., 2" {...field} className="pl-10" />
+                            </FormControl>
+                        </div>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                 />
               </div>
 
