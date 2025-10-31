@@ -16,9 +16,10 @@ import { Label } from "@/components/ui/label";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { doc, setDoc } from "firebase/firestore";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -31,6 +32,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function SignupPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const {
@@ -48,8 +50,20 @@ export default function SignupPage() {
         data.email,
         data.password
       );
-      await updateProfile(userCredential.user, { displayName: data.name });
-      // TODO: Save phone number to user profile in Firestore
+      const user = userCredential.user;
+      await updateProfile(user, { displayName: data.name });
+
+      // Save user profile to Firestore
+      const userDocRef = doc(firestore, "users", user.uid);
+      await setDoc(userDocRef, {
+        id: user.uid,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
       toast({
         title: "Account Created",
         description: "You have been successfully signed up.",
