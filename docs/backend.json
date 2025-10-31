@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the Traverse application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The user's phone number."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Path-based ownership ensures only the user or an admin can access their own profile data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, corresponding to their Firebase Auth UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/bus_operators/{operatorId}",
+        "definition": {
+          "entityName": "BusOperator",
+          "schema": {
+            "$ref": "#/backend/entities/BusOperator"
+          },
+          "description": "Stores information about bus operators. Includes registration details, contact information, and bus listings.",
+          "params": [
+            {
+              "name": "operatorId",
+              "description": "The unique identifier for the bus operator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/buses/{busId}",
+        "definition": {
+          "entityName": "Bus",
+          "schema": {
+            "$ref": "#/backend/entities/Bus"
+          },
+          "description": "Contains details about individual buses, including type, seating, and availability. Includes denormalized `operatorId` for authorization independence.",
+          "params": [
+            {
+              "name": "busId",
+              "description": "The unique identifier for the bus."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores booking information, including user, bus, dates, and payment status. Includes denormalized `userId` and `operatorId` for authorization independence and QAPs.",
+          "params": [
+            {
+              "name": "bookingId",
+              "description": "The unique identifier for the booking."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/AdminRole"
+          },
+          "description": "Indicates admin privileges based on document existence.  Authorization relies solely on `request.auth.uid`.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who has admin privileges."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed to support the Traverse application, focusing on secure user authentication and efficient data management for bus bookings, operator registration, and admin functionalities. The design prioritizes authorization independence by avoiding hierarchical `get()` calls in security rules, making operations atomic and improving debuggability. Structural segregation ensures that collections contain documents with similar security requirements, while explicit state modeling enhances data clarity. The key collections are:\n\n*   `/users/{userId}`: Stores user profiles with standard information and implements path-based ownership for private user data.\n*   `/bus_operators/{operatorId}`: Stores information about bus operators, including registration details and contact information.\n*   `/buses/{busId}`: Contains details about individual buses, including type, seating, and availability.  A denormalized `operatorId` field supports authorization independence, enabling rules to verify the operator without requiring a `get()` call.\n*   `/bookings/{bookingId}`: Stores booking information, including user, bus, dates, and payment status. It includes denormalized `userId` and `operatorId` fields for QAPs and authorization independence.\n*   `/roles_admin/{userId}`:  Indicates admin privileges based on document existence. This follows the \"Existence over Content\" principle for global roles.\n\nThis structure facilitates robust security rules by ensuring that all necessary authorization information is available within each document, eliminating the need for complex hierarchical lookups. Segregation into collections like `/roles_admin` simplifies rule creation and maintenance. The denormalization of `userId` and `operatorId` in `/bookings` allows for secure listing of bookings by user or operator without exposing unauthorized data."
+  }
+}
