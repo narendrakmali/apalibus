@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PlusCircle, Trash2, Loader2, Building, Mail, Phone, MapPin, Bus, VenetianSofa, Hash, Users } from 'lucide-react';
+import { PlusCircle, Trash2, Loader2, Building, Mail, Phone, MapPin, Bus, Armchair, Hash, Users } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -258,7 +258,7 @@ export default function OperatorRegistrationPage() {
                         <div className="space-y-2">
                             <Label>Coach Type</Label>
                             <div className="relative">
-                                <VenetianSofa className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Select onValueChange={controllerField.onChange} defaultValue={controllerField.value}>
                                     <SelectTrigger className="pl-10">
                                         <SelectValue placeholder="Select coach" />
@@ -317,5 +317,3 @@ export default function OperatorRegistrationPage() {
     </div>
   );
 }
-
-    
