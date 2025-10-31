@@ -36,7 +36,7 @@ export function BookingResult({ result, distance }: BookingResultProps) {
                 <IndianRupee className="h-12 w-12 text-accent mb-4 mx-auto"/>
                 <p className="text-muted-foreground text-lg">Estimated Fare</p>
                 <p className="text-5xl font-bold text-primary">
-                    {result.estimatedFare.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                    ₹{result.estimatedFare.toLocaleString('en-IN')}
                 </p>
               </div>
                <div className="text-center">

@@ -89,12 +89,14 @@ export function BookingForm() {
 
   useEffect(() => {
     // Set default journeyDate on the client after mount
-    form.setValue("journeyDate", new Date());
+    if (typeof window !== 'undefined') {
+        form.setValue("journeyDate", new Date());
+    }
   }, [form]);
 
 
   useEffect(() => {
-    if (startLatLng && destinationLatLng && window.google) {
+    if (startLatLng && destinationLatLng && window.google && window.google.maps && window.google.maps.geometry) {
       const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, destinationLatLng);
       const distanceInKm = Math.round((distanceInMeters / 1000) / 10) * 10;
       form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 10);
@@ -158,7 +160,9 @@ export function BookingForm() {
                           label="Start Location"
                           onLocationSelect={(location, address) => {
                             field.onChange(address);
-                            setStartLatLng(new google.maps.LatLng(location.lat, location.lng));
+                            if (window.google) {
+                                setStartLatLng(new google.maps.LatLng(location.lat, location.lng));
+                            }
                           }}
                         />
                       </FormControl>
@@ -177,7 +181,9 @@ export function BookingForm() {
                           label="Destination"
                           onLocationSelect={(location, address) => {
                             field.onChange(address);
-                            setDestinationLatLng(new google.maps.LatLng(location.lat, location.lng));
+                             if (window.google) {
+                                setDestinationLatLng(new google.maps.LatLng(location.lat, location.lng));
+                             }
                           }}
                         />
                       </FormControl>
@@ -404,6 +410,22 @@ export function BookingForm() {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+                  <FormField
+                    control={form.control}
+                    name="numberOfSeats"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Seats</FormLabel>
+                        <div className="relative">
+                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <FormControl>
+                            <Input type="number" {...field} className="pl-10" />
+                            </FormControl>
+                        </div>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                 />
               </div>
 
