@@ -50,13 +50,14 @@ Rate Chart:
 | AC        | 50 Seater        | ₹55/km      | 250 km     | ₹1200     | ₹1200                |
 
 Calculation Logic:
-1. Determine the number of days for the trip. A minimum of 1 day is assumed. For every 250km, consider it one day. For example, a 500km trip is 2 days. A 270km trip is 2 days. A 240km trip is 1 day.
-2. Calculate the total distance cost: (distanceKm * Rate per km). If the total distance is less than (250 * number of days), use (250 * number of days) as the distance for calculation.
-3. Calculate the total Driver DA (Daily Allowance): (Driver DA * number of days).
-4. Calculate the total Permit/State Charges: (Permit/State Charges * number of days).
-5. The total estimated fare is the sum of: Total distance cost + Total Driver DA + Total Permit/State Charges.
-6. Add 5% GST to the total estimated fare.
-7. Toll and parking charges are extra and are not included in this estimate.
+1. Determine the number of days for the trip. A minimum of 1 day is assumed. For every 250km, consider it one day. For example, a 500km trip is 2 days. A 270km trip is 2 days. A 240km trip is 1 day. Use ceiling function for day calculation.
+2. Calculate the total billable distance: (number of days * Min km/day). If the actual journey distance is higher than the billable distance, use the actual journey distance.
+3. Calculate the total distance cost: (Billable Distance * Rate per km).
+4. Calculate the total Driver DA (Daily Allowance): (Driver DA * number of days).
+5. Calculate the total Permit/State Charges: (Permit/State Charges * number of days).
+6. The total estimated fare is the sum of: Total distance cost + Total Driver DA + Total Permit/State Charges.
+7. Add 5% GST to the total estimated fare.
+8. Toll and parking charges are extra and are not included in this estimate.
 
 User Input:
 - Start Location: {{{startLocation}}}
@@ -72,7 +73,7 @@ Your Tasks:
 
 Example Calculation for a 300km trip with a Non-AC 30 Seater bus:
 - Days = ceil(300 / 250) = 2 days
-- Distance for calculation = max(300, 250 * 2) = 500 km
+- Billable distance = max(300, 250 * 2) = 500 km
 - Distance cost = 500 * 34 = 17000
 - Driver DA = 1000 * 2 = 2000
 - Permit/State Charges = 1000 * 2 = 2000
