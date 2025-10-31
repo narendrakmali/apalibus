@@ -33,7 +33,7 @@ export default function Header() {
         </nav>
         <div className="flex flex-1 items-center justify-end gap-2">
           {isUserLoading ? (
-            <p>Loading...</p>
+            <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
           ) : user ? (
             <>
               <span className="text-sm text-muted-foreground hidden sm:inline">
