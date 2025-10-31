@@ -22,8 +22,8 @@ const EstimateFareInputSchema = z.object({
 export type EstimateFareInput = z.infer<typeof EstimateFareInputSchema>;
 
 const EstimateFareOutputSchema = z.object({
+  fareBreakdown: z.string().describe('A detailed text breakdown of the fare estimate.'),
   estimatedFare: z.number().describe('The estimated fare for the bus route in INR.'),
-  nearbyOperators: z.string().describe('The list of bus operators within a 50KM radius.'),
 });
 export type EstimateFareOutput = z.infer<typeof EstimateFareOutputSchema>;
 
@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   name: 'estimateFarePrompt',
   input: {schema: EstimateFareInputSchema},
   output: {schema: EstimateFareOutputSchema},
-  prompt: `You are a fare estimation service for bus routes in India. Your task is to calculate an estimated fare based on the user's input and the rate chart provided below.
+  prompt: `You are a fare estimation service for bus routes in India. Your task is to calculate an estimated fare based on the user's input and the rate chart provided below, and then generate a clear, text-based breakdown of the costs.
 
 Rate Chart:
 | Bus Type  | Seating Capacity | Rate per km | Min km/day | Driver DA | Permit/State Charges |
@@ -55,9 +55,10 @@ Calculation Logic:
 3. Calculate the total distance cost: (Billable Distance * Rate per km).
 4. Calculate the total Driver DA (Daily Allowance): (Driver DA * number of days).
 5. Calculate the total Permit/State Charges: (Permit/State Charges * number of days).
-6. The total estimated fare is the sum of: Total distance cost + Total Driver DA + Total Permit/State Charges.
-7. Add 5% GST to the total estimated fare.
-8. Toll and parking charges are extra and are not included in this estimate.
+6. The sub-total is the sum of: Total distance cost + Total Driver DA + Total Permit/State Charges.
+7. Add 5% GST to the sub-total.
+8. The final estimatedFare is the sum of the sub-total and GST. Do not round this number.
+9. Toll and parking charges are extra and are not included in this estimate.
 
 User Input:
 - Start Location: {{{startLocation}}}
@@ -68,18 +69,22 @@ User Input:
 - Time of Travel: {{{timeOfTravel}}}
 
 Your Tasks:
-1.  Calculate the final 'estimatedFare' as a number, following the logic above. Do not round the final number.
-2.  Provide a string for 'nearbyOperators' listing potential bus operators. You can generate placeholder names if you don't have real ones.
+1.  Calculate the final 'estimatedFare' as a number, following the logic above.
+2.  Generate a detailed 'fareBreakdown' text. This text should be formatted for easy reading, as if it were to be sent in a message. Use the user's input and your calculations to fill out the details. The 'Total Cost' in the breakdown should be the final rounded fare (rounded up to the nearest 500, e.g., 501 becomes 1000).
 
-Example Calculation for a 300km trip with a Non-AC 30 Seater bus:
-- Days = ceil(300 / 250) = 2 days
-- Billable distance = max(300, 250 * 2) = 500 km
-- Distance cost = 500 * 34 = 17000
-- Driver DA = 1000 * 2 = 2000
-- Permit/State Charges = 1000 * 2 = 2000
-- Sub-Total = 17000 + 2000 + 2000 = 21000
-- GST = 21000 * 0.05 = 1050
-- Total Fare = 21000 + 1050 = 22050
+Example Fare Breakdown Output for a 300km trip with a Non-AC 30 Seater bus:
+---
+Bus Type: Non-AC
+Seating Capacity: 30 Seater
+Number of Days: 2
+Estimated km: 500 km (250 km x 2 days)
+Rate per km: ₹34
+Driver Allowance: ₹2000 (₹1000 x 2 days)
+Road Permit Charges: ₹2000 (₹1000 x 2 days)
+GST: 5%
+Total Cost: ₹22,500
+---
+Note: Toll & parking are extra. Rates may vary slightly by vendor, season, and route.
 `,
 });
 

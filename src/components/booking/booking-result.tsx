@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { EstimateFareOutput } from "@/ai/flows/estimate-fare";
-import { IndianRupee, Users, Save, Mail, MessageCircle, CreditCard, Milestone, Route } from "lucide-react";
+import { IndianRupee, Save, Mail, MessageCircle, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BookingResultProps {
@@ -22,9 +22,6 @@ export function BookingResult({ result, distance }: BookingResultProps) {
       description: `${actionName} functionality is not yet available.`,
     })
   }
-
-  // Round distance up to the nearest 25
-  const roundedDistance = Math.ceil(distance / 25) * 25;
 
   // Round fare up to the nearest 500
   const roundedFare = Math.ceil(result.estimatedFare / 500) * 500;
@@ -46,33 +43,13 @@ export function BookingResult({ result, distance }: BookingResultProps) {
                     ₹{roundedFare.toLocaleString('en-IN')}
                 </p>
               </div>
-               <div className="grid grid-cols-2 gap-4 text-center w-full">
-                 <div>
-                    <Route className="h-8 w-8 text-accent mb-2 mx-auto"/>
-                    <p className="text-muted-foreground text-md">Actual Distance</p>
-                    <p className="text-3xl font-bold text-primary">
-                        {Math.round(distance)} km
-                    </p>
-                 </div>
-                 <div>
-                    <Milestone className="h-8 w-8 text-accent mb-2 mx-auto"/>
-                    <p className="text-muted-foreground text-md">Rounded Distance</p>
-                    <p className="text-3xl font-bold text-primary">
-                        {roundedDistance} km
-                    </p>
-                 </div>
-               </div>
           </div>
            <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-primary flex items-center">
-                <Users className="h-5 w-5 mr-3 text-accent" />
-                Nearby Operators
+            <h3 className="text-lg font-semibold text-primary">
+                Fare Breakdown
             </h3>
-            <p className="text-muted-foreground bg-secondary p-4 rounded-md">
-              {result.nearbyOperators}
-            </p>
-            <p className="text-sm text-muted-foreground italic">
-                *Operator availability may vary. Fares are estimates and subject to change based on the final rounded distance and other factors.
+            <p className="text-muted-foreground bg-secondary p-4 rounded-md whitespace-pre-wrap">
+              {result.fareBreakdown}
             </p>
           </div>
         </CardContent>

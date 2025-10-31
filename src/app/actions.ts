@@ -1,9 +1,9 @@
 
 'use server';
 
-import { estimateFare, type EstimateFareInput } from '@/ai/flows/estimate-fare';
+import { estimateFare, type EstimateFareInput, type EstimateFareOutput } from '@/ai/flows/estimate-fare';
 
-export async function getFareEstimate(input: EstimateFareInput) {
+export async function getFareEstimate(input: EstimateFareInput): Promise<EstimateFareOutput> {
     try {
         const result = await estimateFare(input);
         return result;
