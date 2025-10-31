@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { EstimateFareOutput } from "@/ai/flows/estimate-fare";
-import { IndianRupee, Save, Mail, MessageCircle, CreditCard } from "lucide-react";
+import { IndianRupee, Save, Mail, MessageCircle, CreditCard, Route, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BookingResultProps {
@@ -26,6 +26,9 @@ export function BookingResult({ result, distance }: BookingResultProps) {
   // Round fare up to the nearest 500
   const roundedFare = Math.ceil(result.estimatedFare / 500) * 500;
 
+  // Round distance up to nearest 25
+  const roundedDistance = Math.ceil(distance / 25) * 25;
+
 
   return (
     <div className="mt-12 max-w-4xl mx-auto">
@@ -35,7 +38,7 @@ export function BookingResult({ result, distance }: BookingResultProps) {
           <CardDescription>Here is a summary of your trip estimate.</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-8 p-8">
-          <div className="flex flex-col justify-center items-center bg-primary/5 rounded-lg p-8 space-y-6">
+          <div className="flex flex-col justify-center items-center bg-primary/5 rounded-lg p-8 space-y-8">
               <div className="text-center">
                 <IndianRupee className="h-12 w-12 text-accent mb-4 mx-auto"/>
                 <p className="text-muted-foreground text-lg">Estimated Fare</p>
@@ -43,14 +46,26 @@ export function BookingResult({ result, distance }: BookingResultProps) {
                     ₹{roundedFare.toLocaleString('en-IN')}
                 </p>
               </div>
+              <div className="flex justify-around w-full text-center">
+                <div>
+                    <Route className="h-8 w-8 text-accent mb-2 mx-auto"/>
+                    <p className="text-muted-foreground">Actual Distance</p>
+                    <p className="text-2xl font-bold">{Math.round(distance)} km</p>
+                </div>
+                 <div>
+                    <MapPin className="h-8 w-8 text-accent mb-2 mx-auto"/>
+                    <p className="text-muted-foreground">Rounded Distance</p>
+                    <p className="text-2xl font-bold">{roundedDistance} km</p>
+                </div>
+              </div>
           </div>
-           <div className="space-y-6">
+           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-primary">
                 Fare Breakdown
             </h3>
-            <p className="text-muted-foreground bg-secondary p-4 rounded-md whitespace-pre-wrap">
+            <div className="text-muted-foreground bg-secondary p-4 rounded-md whitespace-pre-wrap text-sm">
               {result.fareBreakdown}
-            </p>
+            </div>
           </div>
         </CardContent>
         <Separator />
@@ -72,3 +87,4 @@ export function BookingResult({ result, distance }: BookingResultProps) {
     </div>
   );
 }
+
