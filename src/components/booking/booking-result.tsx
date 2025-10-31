@@ -41,7 +41,7 @@ export function BookingResult({ result, distance }: BookingResultProps) {
               </div>
                <div className="text-center">
                 <Milestone className="h-8 w-8 text-accent mb-2 mx-auto"/>
-                <p className="text-muted-foreground text-md">Approx. Distance</p>
+                <p className="text-muted-foreground text-md">Distance</p>
                 <p className="text-3xl font-bold text-primary">
                     {distance} km
                 </p>

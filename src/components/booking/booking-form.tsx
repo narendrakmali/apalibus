@@ -51,7 +51,6 @@ const formSchema = z.object({
   isReturnJourney: z.boolean().default(false),
   returnDate: z.date().optional(),
   returnTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Please enter a valid 24-hour time (e.g., 18:30).").optional(),
-  numberOfSeats: z.coerce.number().min(1, "Please enter at least 1 seat.").max(10, "You can book a maximum of 10 seats."),
   distanceKm: z.coerce.number().min(1, "Distance must be at least 1 km."),
   busType: z.enum(["AC", "Non-AC"]),
   seatingCapacity: z.enum(["20", "30", "40", "50"]),
@@ -77,7 +76,6 @@ export function BookingForm() {
       destination: "",
       journeyTime: "19:00",
       isReturnJourney: false,
-      numberOfSeats: 1,
       distanceKm: 0,
       busType: "AC",
       seatingCapacity: "40",
@@ -98,8 +96,8 @@ export function BookingForm() {
   useEffect(() => {
     if (startLatLng && destinationLatLng && window.google && window.google.maps && window.google.maps.geometry) {
       const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, destinationLatLng);
-      const distanceInKm = Math.round((distanceInMeters / 1000) / 10) * 10;
-      form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 10);
+      const distanceInKm = Math.round(distanceInMeters / 1000);
+      form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 1);
     }
   }, [startLatLng, destinationLatLng, form]);
 
@@ -334,7 +332,7 @@ export function BookingForm() {
                     </div>
                 )}
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="busType"
@@ -410,22 +408,6 @@ export function BookingForm() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-                  <FormField
-                    control={form.control}
-                    name="numberOfSeats"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Seats</FormLabel>
-                        <div className="relative">
-                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <FormControl>
-                            <Input type="number" {...field} className="pl-10" />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
                 />
               </div>
 
