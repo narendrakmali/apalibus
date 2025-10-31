@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -61,6 +61,8 @@ export function BookingForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<EstimateFareOutput | null>(null);
   const { toast } = useToast();
+  const [startLatLng, setStartLatLng] = useState<google.maps.LatLng | null>(null);
+  const [destinationLatLng, setDestinationLatLng] = useState<google.maps.LatLng | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,15 +71,33 @@ export function BookingForm() {
       destination: "",
       journeyDate: new Date(),
       numberOfSeats: 1,
-      distanceKm: 300,
+      distanceKm: 0,
       busType: "Standard",
       timeOfTravel: "19:00",
     },
   });
 
+  useEffect(() => {
+    if (startLatLng && destinationLatLng && window.google) {
+      const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, destinationLatLng);
+      const distanceInKm = Math.round((distanceInMeters / 1000) / 10) * 10;
+      form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 10);
+    }
+  }, [startLatLng, destinationLatLng, form]);
+
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setResult(null);
+    if (values.distanceKm <= 0) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Distance",
+            description: "Please select a valid start and destination.",
+        });
+        setIsLoading(false);
+        return;
+    }
     try {
       // The AI model doesn't use all the fields, so we just pass what it needs.
       const estimationResult = await getFareEstimate({
@@ -118,6 +138,7 @@ export function BookingForm() {
                           label="Start Location"
                           onLocationSelect={(location, address) => {
                             field.onChange(address);
+                            setStartLatLng(new google.maps.LatLng(location.lat, location.lng));
                           }}
                         />
                       </FormControl>
@@ -136,6 +157,7 @@ export function BookingForm() {
                           label="Destination"
                           onLocationSelect={(location, address) => {
                             field.onChange(address);
+                            setDestinationLatLng(new google.maps.LatLng(location.lat, location.lng));
                           }}
                         />
                       </FormControl>
@@ -206,26 +228,7 @@ export function BookingForm() {
                 </div>
 
 
-              <div className="grid md:grid-cols-3 gap-6">
-                 <FormField
-                  control={form.control}
-                  name="distanceKm"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Distance (km)</FormLabel>
-                      <div className="relative">
-                         <Milestone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input type="number" placeholder="e.g., 300" {...field} className="pl-10" />
-                        </FormControl>
-                      </div>
-                      <FormDescription>
-                        Normally auto-calculated via Maps.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="grid md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="busType"
@@ -291,7 +294,7 @@ export function BookingForm() {
             <p className="text-muted-foreground mt-2">Finding the best fares for you...</p>
         </div>
       )}
-      {result && <BookingResult result={result} />}
+      {result && <BookingResult result={result} distance={form.getValues("distanceKm")} />}
     </>
   );
 }

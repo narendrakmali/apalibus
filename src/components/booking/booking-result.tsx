@@ -5,14 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { EstimateFareOutput } from "@/ai/flows/estimate-fare";
-import { IndianRupee, Users, Save, Mail, MessageCircle, CreditCard } from "lucide-react";
+import { IndianRupee, Users, Save, Mail, MessageCircle, CreditCard, Milestone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BookingResultProps {
   result: EstimateFareOutput;
+  distance: number;
 }
 
-export function BookingResult({ result }: BookingResultProps) {
+export function BookingResult({ result, distance }: BookingResultProps) {
   const { toast } = useToast();
   
   const handleActionClick = (actionName: string) => {
@@ -30,12 +31,21 @@ export function BookingResult({ result }: BookingResultProps) {
           <CardDescription>Here is a summary of your trip estimate.</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-8 p-8">
-          <div className="flex flex-col justify-center items-center bg-primary/5 rounded-lg p-8">
-              <IndianRupee className="h-12 w-12 text-accent mb-4"/>
-              <p className="text-muted-foreground text-lg">Estimated Fare</p>
-              <p className="text-5xl font-bold text-primary">
-                 {result.estimatedFare.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-              </p>
+          <div className="flex flex-col justify-center items-center bg-primary/5 rounded-lg p-8 space-y-4">
+              <div className="text-center">
+                <IndianRupee className="h-12 w-12 text-accent mb-4 mx-auto"/>
+                <p className="text-muted-foreground text-lg">Estimated Fare</p>
+                <p className="text-5xl font-bold text-primary">
+                    {result.estimatedFare.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                </p>
+              </div>
+               <div className="text-center">
+                <Milestone className="h-8 w-8 text-accent mb-2 mx-auto"/>
+                <p className="text-muted-foreground text-md">Approx. Distance</p>
+                <p className="text-3xl font-bold text-primary">
+                    {distance} km
+                </p>
+              </div>
           </div>
            <div className="space-y-6">
             <h3 className="text-lg font-semibold text-primary flex items-center">
