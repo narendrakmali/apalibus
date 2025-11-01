@@ -46,12 +46,14 @@ function BookingBadge() {
 
     const bookingsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
+        // This query is now safe because this component is only rendered on admin pages,
+        // so `user` will be an operator.
         return query(collection(firestore, 'bookings'), where('operatorId', '==', user.uid), where('status', '==', 'pending'));
     }, [firestore, user?.uid]);
 
-    const { data: bookings } = useCollection(bookingsQuery);
+    const { data: bookings, isLoading } = useCollection(bookingsQuery);
 
-    if (!bookings || bookings.length === 0) return null;
+    if (isLoading || !bookings || bookings.length === 0) return null;
 
     return <Badge className="ml-auto bg-sidebar-primary text-sidebar-primary-foreground">{bookings.length}</Badge>;
 }

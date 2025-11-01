@@ -40,6 +40,22 @@ type Booking = {
   }
 };
 
+function PendingBookingsCount() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const bookingsQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return query(collection(firestore, 'bookings'), where('operatorId', '==', user.uid), where('status', '==', 'pending'));
+    }, [firestore, user?.uid]);
+
+    const { data: bookings } = useCollection(bookingsQuery);
+
+    if (!bookings || bookings.length === 0) return null;
+
+    return <Badge className="ml-2 bg-primary text-primary-foreground">{bookings.length}</Badge>;
+}
+
 export default function BookingsPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -76,7 +92,10 @@ export default function BookingsPage() {
       <div className="flex min-h-screen w-full flex-col">
         <header className="sticky top-0 flex h-14 items-center gap-4 border-b bg-background px-4 sm:h-16 sm:px-6 z-30">
           <SidebarTrigger />
-          <h1 className="font-semibold text-lg md:text-xl">Pending Bookings</h1>
+          <h1 className="font-semibold text-lg md:text-xl flex items-center">
+            Pending Bookings
+            {!isLoading && <PendingBookingsCount />}
+          </h1>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 sm:gap-8 sm:p-6">
           <Card>
