@@ -127,7 +127,7 @@ service cloud.firestore {
      * @deny (create) An unauthenticated user cannot become an admin.
      */
     match /roles_admin/{userId} {
-      allow get: if isAdmin();
+      allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if false;
