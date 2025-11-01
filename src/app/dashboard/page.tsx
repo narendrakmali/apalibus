@@ -131,7 +131,7 @@ export default function DashboardPage() {
       case 'pending':
         return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />Pending</Badge>;
       case 'confirmed':
-        return <Badge className="bg-green-600 hover:bg-green-700"><CheckCircle className="mr-1 h-3 w-3" />Confirmed</Badge>;
+        return <Badge className="bg-green-600 hover:bg-green-700 text-white"><CheckCircle className="mr-1 h-3 w-3" />Confirmed</Badge>;
       case 'cancelled':
         return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Cancelled</Badge>;
       default:
@@ -140,7 +140,7 @@ export default function DashboardPage() {
   };
 
 
-  if (isUserLoading || isProfileLoading || isAdminRoleLoading || areBookingsLoading || !user || !profile || adminRole) {
+  if (isUserLoading || isProfileLoading || isAdminRoleLoading || !user || adminRole) {
     return (
        <div className="flex h-screen w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -161,7 +161,7 @@ export default function DashboardPage() {
         <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
           <div className="flex justify-between items-center mb-8">
               <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">
-                  Welcome, {profile.name || 'User'}!
+                  Welcome, {profile?.name || 'User'}!
               </h1>
               <Button variant="outline" onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -227,33 +227,44 @@ export default function DashboardPage() {
                            </CardDescription>
                       </CardHeader>
                       <CardContent>
-                          <div className="space-y-4">
-                             <div>
-                                  <p className="font-semibold">Name</p>
-                                  <p className="text-muted-foreground">{profile.name}</p>
-                             </div>
-                             <div>
-                                  <p className="font-semibold">Email</p>
-                                  <p className="text-muted-foreground">{profile.email}</p>
-                             </div>
-                             <div>
-                                  <p className="font-semibold">Phone</p>
-                                  <p className="text-muted-foreground">{profile.phone || "Not provided"}</p>
-                             </div>
-                              <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>Edit Profile</Button>
-                          </div>
+                        {isProfileLoading ? (
+                            <div className="space-y-4">
+                                <Skeleton className="h-4 w-1/4" />
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-4 w-1/4" />
+                                <Skeleton className="h-4 w-3/4" />
+                            </div>
+                        ): profile ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="font-semibold">Name</p>
+                                    <p className="text-muted-foreground">{profile.name}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold">Email</p>
+                                    <p className="text-muted-foreground">{profile.email}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold">Phone</p>
+                                    <p className="text-muted-foreground">{profile.phone || "Not provided"}</p>
+                                </div>
+                                <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>Edit Profile</Button>
+                            </div>
+                        ): null}
                       </CardContent>
                   </Card>
               </div>
           </div>
         </main>
       </div>
-      <EditProfileDialog
+       {profile && <EditProfileDialog
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         userProfile={profile}
         onProfileUpdate={handleProfileUpdate}
-       />
+       />}
     </>
   );
 }
+
+    
