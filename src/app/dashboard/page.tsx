@@ -9,23 +9,37 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Ticket, User, LogOut } from 'lucide-react';
+import { Ticket, User, LogOut, Clock, CheckCircle, XCircle } from 'lucide-react';
 import Header from '@/components/common/header';
-import { useAuth, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
+import { useAuth, useFirestore, useUser, useMemoFirebase, useDoc, useCollection } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where } from 'firebase/firestore';
 import { EditProfileDialog } from '@/components/dashboard/edit-profile-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 type UserProfile = {
   id: string;
   name: string;
   email: string;
   phone: string;
+}
+
+type Booking = {
+    id: string;
+    status: 'pending' | 'confirmed' | 'cancelled';
+    journeyDate: { toDate: () => Date };
+    busDetails: {
+        operatorName: string;
+        registrationNumber: string;
+    };
+    startLocation: string;
+    destination: string;
 }
 
 export default function DashboardPage() {
@@ -49,6 +63,14 @@ export default function DashboardPage() {
   }, [firestore, user?.uid]);
 
   const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
+  
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return query(collection(firestore, 'bookings'), where('userId', '==', user.uid));
+  }, [firestore, user?.uid]);
+
+  const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -104,7 +126,21 @@ export default function DashboardPage() {
     setProfile(updatedProfile);
   };
 
-  if (isUserLoading || isProfileLoading || isAdminRoleLoading || !user || !profile || adminRole) {
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />Pending</Badge>;
+      case 'confirmed':
+        return <Badge className="bg-green-600 hover:bg-green-700"><CheckCircle className="mr-1 h-3 w-3" />Confirmed</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Cancelled</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+
+  if (isUserLoading || isProfileLoading || isAdminRoleLoading || areBookingsLoading || !user || !profile || adminRole) {
     return (
        <div className="flex h-screen w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -146,12 +182,35 @@ export default function DashboardPage() {
                           </CardDescription>
                       </CardHeader>
                       <CardContent>
-                          <div className="border rounded-lg p-4 text-center">
-                              <p className="text-muted-foreground">You have no recent bookings.</p>
-                              <Button className="mt-4" asChild>
-                                <Link href="/">Book a Trip</Link>
-                              </Button>
-                          </div>
+                          {areBookingsLoading ? (
+                             <Skeleton className="h-24 w-full" />
+                          ) : bookings && bookings.length > 0 ? (
+                            <div className="space-y-4">
+                                {bookings.map(booking => (
+                                    <Card key={booking.id}>
+                                        <CardContent className="p-4 flex justify-between items-center">
+                                            <div>
+                                                <p className="font-semibold">{booking.busDetails.operatorName}</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {booking.startLocation} to {booking.destination}
+                                                </p>
+                                                <p className="text-sm font-medium">
+                                                    On: {format(booking.journeyDate.toDate(), 'PPP')}
+                                                </p>
+                                            </div>
+                                            {getStatusBadge(booking.status)}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                          ) : (
+                            <div className="border rounded-lg p-4 text-center">
+                                <p className="text-muted-foreground">You have no recent bookings.</p>
+                                <Button className="mt-4" asChild>
+                                    <Link href="/">Book a Trip</Link>
+                                </Button>
+                            </div>
+                          )}
                       </CardContent>
                   </Card>
               </div>

@@ -24,18 +24,35 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 
 const menuItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/buses', label: 'My Buses', icon: Bus },
-  { href: '/admin/bookings', label: 'Bookings', icon: Ticket, badge: '12' },
+  { href: '/admin/bookings', label: 'Bookings', icon: Ticket, isBooking: true },
   { href: '/admin/tracking', label: 'Live Tracking', icon: Map },
   { href: '/admin/operators', label: 'Register Operator', icon: Building },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
+
+function BookingBadge() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const bookingsQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return query(collection(firestore, 'bookings'), where('operatorId', '==', user.uid), where('status', '==', 'pending'));
+    }, [firestore, user?.uid]);
+
+    const { data: bookings } = useCollection(bookingsQuery);
+
+    if (!bookings || bookings.length === 0) return null;
+
+    return <Badge className="ml-auto bg-sidebar-primary text-sidebar-primary-foreground">{bookings.length}</Badge>;
+}
 
 export default function AdminSidebarNav() {
   const pathname = usePathname();
@@ -62,7 +79,7 @@ export default function AdminSidebarNav() {
                 <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
-                  {item.badge && <Badge className="ml-auto bg-sidebar-primary text-sidebar-primary-foreground">{item.badge}</Badge>}
+                  {item.isBooking ? <BookingBadge /> : null}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

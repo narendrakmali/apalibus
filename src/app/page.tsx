@@ -14,8 +14,7 @@ export default function Home() {
             Your Journey, Your Way
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-12">
-            Instantly estimate bus fares and find the best operators for your
-            route. Enter your details below to get started.
+            Find and book a bus for your journey. Enter your details below to get started.
           </p>
         </div>
         <BookingForm />

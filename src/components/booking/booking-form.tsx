@@ -32,13 +32,11 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
-import { getFareEstimate } from "@/app/actions";
-import type { EstimateFareOutput } from "@/ai/flows/estimate-fare";
 import { useToast } from "@/hooks/use-toast";
-import { BookingResult } from "./booking-result";
 import { cn } from "@/lib/utils";
 import { LocationPicker } from "./location-picker";
 import { Checkbox } from "../ui/checkbox";
+import { BusList } from "./bus-list";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, "Please enter a valid starting location."),
@@ -47,39 +45,22 @@ const formSchema = z.object({
     required_error: "A date of travel is required.",
   }),
   journeyTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Please enter a valid 24-hour time (e.g., 18:30)."),
-  isReturnJourney: z.boolean().default(false),
-  returnDate: z.date().optional(),
-  returnTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Please enter a valid 24-hour time (e.g., 18:30).").optional(),
-  distanceKm: z.coerce.number().min(1, "Distance must be at least 1 km."),
   busType: z.enum(["AC", "Non-AC"]),
   seatingCapacity: z.enum(["15", "30", "40", "50"]),
-  coachType: z.enum(["General", "Pushback", "Relaxing", "Sleeper"]),
 }).refine(data => {
-    if (data.isReturnJourney) {
-        return !!data.returnDate;
-    }
     return true;
-}, {
-    message: "Return date is required for a return journey.",
-    path: ["returnDate"],
-}).refine(data => {
-    if (data.isReturnJourney) {
-        return !!data.returnTime;
-    }
-    return true;
-}, {
-    message: "Return time is required for a return journey.",
-    path: ["returnTime"],
 });
 
+export type BookingRequest = z.infer<typeof formSchema>;
 
 export function BookingForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<EstimateFareOutput | null>(null);
+  const [showBuses, setShowBuses] = useState(false);
+  const [bookingRequest, setBookingRequest] = useState<BookingRequest | null>(null);
   const { toast } = useToast();
   const [startLatLng, setStartLatLng] = useState<google.maps.LatLng | null>(null);
   const [destinationLatLng, setDestinationLatLng] = useState<google.maps.LatLng | null>(null);
-  const [displayDistance, setDisplayDistance] = useState(0);
+  
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,16 +68,10 @@ export function BookingForm() {
       startLocation: "",
       destination: "",
       journeyTime: "19:00",
-      returnTime: "19:00",
-      isReturnJourney: false,
-      distanceKm: 0,
       busType: "AC",
       seatingCapacity: "40",
-      coachType: "Relaxing",
     },
   });
-
-  const isReturnJourney = form.watch("isReturnJourney");
 
   useEffect(() => {
     // Set default journeyDate on the client after mount to avoid hydration errors
@@ -106,75 +81,15 @@ export function BookingForm() {
   }, [form]);
 
 
-  useEffect(() => {
-    if (startLatLng && destinationLatLng && window.google && window.google.maps && window.google.maps.geometry) {
-        const directionsService = new google.maps.DirectionsService();
-        directionsService.route(
-            {
-                origin: startLatLng,
-                destination: destinationLatLng,
-                travelMode: google.maps.TravelMode.DRIVING,
-            },
-            (result, status) => {
-                if (status === google.maps.DirectionsStatus.OK && result && result.routes && result.routes.length > 0) {
-                    const route = result.routes[0];
-                    if (route.legs && route.legs.length > 0) {
-                        const leg = route.legs[0];
-                        if (leg.distance) {
-                            const distanceInKm = leg.distance.value / 1000;
-                            form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 1);
-                        }
-                    }
-                } else {
-                    console.error(`error fetching directions ${result}`);
-                    // Fallback to spherical calculation on error
-                    const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, destinationLatLng);
-                    const distanceInKm = distanceInMeters / 1000;
-                    form.setValue("distanceKm", distanceInKm > 0 ? distanceInKm : 1);
-                }
-            }
-        );
-    }
-  }, [startLatLng, destinationLatLng, form]);
-
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setResult(null);
-    if (values.distanceKm <= 0) {
-        toast({
-            variant: "destructive",
-            title: "Invalid Distance",
-            description: "Please select a valid start and destination.",
-        });
-        setIsLoading(false);
-        return;
-    }
-    
-    const journeyDistance = values.isReturnJourney ? values.distanceKm * 2 : values.distanceKm;
-    setDisplayDistance(journeyDistance);
+    setBookingRequest(values);
+    setShowBuses(true);
+    setIsLoading(false);
+  }
 
-    try {
-      // The AI model doesn't use all the fields, so we just pass what it needs.
-      const estimationResult = await getFareEstimate({
-          startLocation: values.startLocation,
-          destination: values.destination,
-          distanceKm: journeyDistance,
-          busType: values.busType,
-          timeOfTravel: values.journeyTime,
-          seatingCapacity: values.seatingCapacity,
-      });
-      setResult(estimationResult);
-    } catch (error) {
-      console.error("Fare estimation failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to get fare estimate. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  if (showBuses && bookingRequest) {
+    return <BusList request={bookingRequest} onBack={() => setShowBuses(false)} />;
   }
 
   return (
@@ -287,89 +202,7 @@ export function BookingForm() {
                         )}
                     />
                 </div>
-                 <FormField
-                  control={form.control}
-                  name="isReturnJourney"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          This is a return journey
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                {isReturnJourney && (
-                    <div className="grid md:grid-cols-2 gap-6 items-end p-4 border rounded-md bg-muted/20">
-                         <FormField
-                            control={form.control}
-                            name="returnDate"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                <FormLabel>Return Date</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                    <FormControl>
-                                        <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full pl-3 text-left font-normal bg-background",
-                                            !field.value && "text-muted-foreground"
-                                        )}
-                                        >
-                                        {field.value ? (
-                                            format(field.value, "PPP")
-                                        ) : (
-                                            <span>Pick a return date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) =>
-                                            date < (form.getValues("journeyDate") || new Date(new Date().setHours(0,0,0,0)))
-                                        }
-                                        initialFocus
-                                    />
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        <FormField
-                            control={form.control}
-                            name="returnTime"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Return Time</FormLabel>
-                                <div className="relative">
-                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <FormControl>
-                                    <Input type="time" {...field} className="pl-10 bg-background" />
-                                    </FormControl>
-                                </div>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                )}
-
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="busType"
@@ -420,44 +253,18 @@ export function BookingForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="coachType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Coach Type</FormLabel>
-                       <div className="relative">
-                         <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="pl-10">
-                              <SelectValue placeholder="Select coach type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="General">General</SelectItem>
-                            <SelectItem value="Pushback">Pushback</SelectItem>
-                            <SelectItem value="Relaxing">Relaxing</SelectItem>
-                            <SelectItem value="Sleeper">Sleeper</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               <Button type="submit" disabled={isLoading} className="w-full md:w-auto" size="lg">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Estimating...
+                    Searching...
                   </>
                 ) : (
                   <>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    Estimate Fare & Book
+                    Find Buses
                   </>
                 )}
               </Button>
@@ -468,10 +275,9 @@ export function BookingForm() {
       {isLoading && (
         <div className="text-center mt-8">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground mt-2">Finding the best fares for you...</p>
+            <p className="text-muted-foreground mt-2">Finding available buses...</p>
         </div>
       )}
-      {result && <BookingResult result={result} distance={displayDistance} />}
     </>
   );
 }
