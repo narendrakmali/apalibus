@@ -20,7 +20,7 @@ import { z } from "zod";
 import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 
 const formSchema = z.object({
   userName: z.string().min(2, "Your name must be at least 2 characters"),
@@ -47,6 +47,10 @@ export default function OperatorSignupPage() {
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    if (!firestore || !auth) {
+        toast({ variant: "destructive", title: "System error", description: "Firebase not initialized."});
+        return;
+    }
     try {
       // 1. Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(
@@ -56,10 +60,12 @@ export default function OperatorSignupPage() {
       );
       const user = userCredential.user;
       await updateProfile(user, { displayName: data.userName });
+      
+      const batch = writeBatch(firestore);
 
       // 2. Save user profile to /users collection
       const userDocRef = doc(firestore, "users", user.uid);
-      await setDoc(userDocRef, {
+      batch.set(userDocRef, {
         id: user.uid,
         name: data.userName,
         email: data.email,
@@ -70,7 +76,7 @@ export default function OperatorSignupPage() {
 
       // 3. Save operator profile to /bus_operators collection
       const operatorDocRef = doc(firestore, "bus_operators", user.uid);
-      await setDoc(operatorDocRef, {
+       batch.set(operatorDocRef, {
         name: data.operatorName,
         email: data.email,
         phone: data.phone,
@@ -79,6 +85,12 @@ export default function OperatorSignupPage() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      
+      // 4. Create admin role document
+      const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
+      batch.set(adminRoleRef, { isAdmin: true });
+
+      await batch.commit();
 
       toast({
         title: "Operator Account Created",
@@ -173,5 +185,3 @@ export default function OperatorSignupPage() {
     </div>
   );
 }
-
-    

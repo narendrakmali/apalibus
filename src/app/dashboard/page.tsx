@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -8,9 +9,9 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Ticket, User, LogOut, Phone } from 'lucide-react';
+import { Ticket, User, LogOut } from 'lucide-react';
 import Header from '@/components/common/header';
-import { useAuth, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useAuth, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -18,6 +19,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { EditProfileDialog } from '@/components/dashboard/edit-profile-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type UserProfile = {
   id: string;
@@ -40,12 +42,26 @@ export default function DashboardPage() {
     if (!firestore || !user?.uid) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
+  
+  const adminRoleRef = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return doc(firestore, 'roles_admin', user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (!isAdminRoleLoading && adminRole) {
+        router.push('/admin/dashboard');
+    }
+  }, [adminRole, isAdminRoleLoading, router]);
+
 
   useEffect(() => {
     if (userDocRef) {
@@ -78,18 +94,26 @@ export default function DashboardPage() {
   }, [userDocRef, user, toast]);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/');
+    if (auth) {
+      await signOut(auth);
+      router.push('/');
+    }
   };
 
   const handleProfileUpdate = (updatedProfile: UserProfile) => {
     setProfile(updatedProfile);
   };
 
-  if (isUserLoading || isProfileLoading || !user || !profile) {
+  if (isUserLoading || isProfileLoading || isAdminRoleLoading || !user || !profile || adminRole) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
+       <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-[250px]" />
+            <Skeleton className="h-4 w-[200px]" />
+          </div>
+        </div>
       </div>
     );
   }
