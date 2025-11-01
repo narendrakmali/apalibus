@@ -21,6 +21,7 @@ import {
   CircleHelp,
   User,
   Map,
+  History,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
@@ -32,6 +33,7 @@ const menuItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/buses', label: 'My Buses', icon: Bus },
   { href: '/admin/bookings', label: 'Bookings', icon: Ticket, isBooking: true },
+  { href: '/admin/history', label: 'Booking History', icon: History },
   { href: '/admin/tracking', label: 'Live Tracking', icon: Map },
   { href: '/admin/operators', label: 'Register Operator', icon: Building },
   { href: '/admin/users', label: 'Users', icon: Users },
