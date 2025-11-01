@@ -23,18 +23,22 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
+import { useUser } from '@/firebase';
+
 
 const menuItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/buses', label: 'My Buses', icon: Bus },
   { href: '/admin/bookings', label: 'Bookings', icon: Ticket, badge: '12' },
-  { href: '/admin/operators', label: 'Operators', icon: Building },
+  { href: '/admin/operators', label: 'Register Operator', icon: Building },
   { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/buses', label: 'Buses', icon: Bus },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function AdminSidebarNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+  const userInitial = user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'A';
 
   return (
     <Sidebar>
@@ -75,12 +79,12 @@ export default function AdminSidebarNav() {
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip={{ children: 'Profile', side: 'right', align: 'center' }}>
-                    <Link href="#">
+                    <Link href="/dashboard">
                         <Avatar className="h-6 w-6">
-                            <AvatarImage src="https://picsum.photos/seed/avatar1/100" />
-                            <AvatarFallback>AD</AvatarFallback>
+                            <AvatarImage src={user?.photoURL || undefined} />
+                            <AvatarFallback>{userInitial}</AvatarFallback>
                         </Avatar>
-                        <span>Admin User</span>
+                        <span>{user?.displayName || 'Admin User'}</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
