@@ -1,4 +1,6 @@
+
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -16,6 +18,7 @@ import {
   Ticket,
   Map,
   ArrowUpRight,
+  PlusCircle,
 } from 'lucide-react';
 import { DemandChart } from '@/components/admin/demand-chart';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -28,6 +31,14 @@ export default function DashboardPage() {
       <header className="sticky top-0 flex h-14 items-center gap-4 border-b bg-background px-4 sm:h-16 sm:px-6 z-30">
         <SidebarTrigger />
         <h1 className="font-semibold text-lg md:text-xl">Dashboard</h1>
+         <div className="ml-auto">
+            <Button asChild>
+                <Link href="/admin/buses">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add / View Buses
+                </Link>
+            </Button>
+          </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:gap-8 sm:p-6">
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
