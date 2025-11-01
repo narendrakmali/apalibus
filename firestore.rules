@@ -110,14 +110,15 @@ service cloud.firestore {
 
     /**
      * @description Rules for bookings.
-     * @path /bookings/{bookingId}
+     * Users can list their own bookings.
+     * Admins (operators) can list bookings for their buses.
      */
     match /bookings/{bookingId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if false;
+        allow get: if isSignedIn();
+        allow list: if isSignedIn() && (request.query.where.userId == request.auth.uid || request.query.where.operatorId == request.auth.uid);
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.operatorId == request.auth.uid);
+        allow delete: if false;
     }
 
     /**
