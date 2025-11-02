@@ -11,6 +11,12 @@
       "description": "A placeholder image of a scenic road for the hero section.",
       "imageUrl": "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=2070&auto=format&fit=crop",
       "imageHint": "scenic road"
+    },
+    {
+      "id": "auth-background",
+      "description": "A background image of a bus on the road for authentication pages.",
+      "imageUrl": "https://images.unsplash.com/photo-1570125909232-eb263c1869fc?q=80&w=1932&auto=format&fit=crop",
+      "imageHint": "bus road"
     }
   ]
 }

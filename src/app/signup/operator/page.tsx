@@ -21,6 +21,9 @@ import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc, serverTimestamp, writeBatch } from "firebase/firestore";
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+
 
 const formSchema = z.object({
   userName: z.string().min(2, "Your name must be at least 2 characters"),
@@ -32,6 +35,7 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+const authBgImage = PlaceHolderImages.find(img => img.id === 'auth-background');
 
 export default function OperatorSignupPage() {
   const auth = useAuth();
@@ -108,8 +112,18 @@ export default function OperatorSignupPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-secondary py-12">
-      <Card className="mx-auto max-w-md w-full shadow-2xl">
+    <div className="flex items-center justify-center min-h-screen bg-secondary relative py-12">
+        {authBgImage && (
+            <Image
+                src={authBgImage.imageUrl}
+                alt={authBgImage.description}
+                fill
+                className="object-cover -z-10"
+                data-ai-hint={authBgImage.imageHint}
+            />
+        )}
+        <div className="absolute inset-0 bg-black/60 -z-10" />
+      <Card className="mx-auto max-w-md w-full shadow-2xl bg-background/90 backdrop-blur-sm">
         <CardHeader className="text-center">
           <Link href="/" className="flex items-center justify-center gap-2 mb-4">
             <Bus className="h-8 w-8 text-primary" />
