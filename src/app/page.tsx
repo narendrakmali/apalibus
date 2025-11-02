@@ -2,19 +2,12 @@
 import { BookingForm } from "@/components/booking/booking-form";
 import Header from "@/components/common/header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ArrowRight, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 const heroImage = PlaceHolderImages.find(img => img.id === 'hero-road');
-const popularRoutes = [
-    { from: 'Mumbai', to: 'Pune' },
-    { from: 'Delhi', to: 'Manali' },
-    { from: 'Bangalore', to: 'Goa' },
-    { from: 'Chennai', to: 'Bangalore' },
-];
 
 export default function Home() {
   return (
@@ -48,31 +41,6 @@ export default function Home() {
         <div className="block md:hidden -mt-24 relative z-10 p-4">
              <BookingForm />
         </div>
-
-        <section className="py-12 md:py-20 bg-secondary/50">
-            <div className="container mx-auto px-4">
-                 <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold font-headline text-primary">Popular Routes</h2>
-                    <p className="text-muted-foreground mt-2">Explore the most travelled routes by our passengers.</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {popularRoutes.map((route, index) => (
-                        <Card key={index} className="group hover:shadow-xl transition-shadow duration-300">
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div>
-                                    <p className="font-bold text-lg">{route.from}</p>
-                                    <ArrowRight className="text-muted-foreground my-1" />
-                                    <p className="font-bold text-lg">{route.to}</p>
-                                </div>
-                                <Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <ArrowRight className="text-primary"/>
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </div>
-        </section>
         
         <section className="py-12 md:py-20">
             <div className="container mx-auto px-4 text-center">
