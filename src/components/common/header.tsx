@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -17,9 +18,12 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      // For this design, we want the header to change color only when it's not at the very top.
+      setIsScrolled(window.scrollY > 0);
     };
     window.addEventListener("scroll", handleScroll);
+    // Initial check
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -31,29 +35,28 @@ export default function Header() {
     }
   };
 
+  const isTransparent = !isScrolled;
+
   return (
     <header className={cn(
         "sticky top-0 z-50 w-full transition-colors duration-300",
-        isScrolled ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b" : "bg-transparent text-white"
+        isTransparent ? "bg-transparent text-white" : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b"
       )}>
       <div className="container flex h-16 items-center">
         <Link href="/" className="flex items-center gap-2 mr-6">
-          <Bus className={cn("h-7 w-7", isScrolled ? "text-primary" : "text-white")} />
-          <span className={cn("font-headline font-bold text-xl", isScrolled ? "text-foreground" : "text-white")}>Traverse</span>
+          <Bus className={cn("h-7 w-7", isTransparent ? "text-white" : "text-primary")} />
+          <span className={cn("font-headline font-bold text-xl", isTransparent ? "text-white" : "text-foreground")}>Traverse</span>
         </Link>
         <nav className={cn(
             "hidden md:flex items-center gap-6 text-sm font-medium",
-            isScrolled ? "text-muted-foreground" : "text-slate-300"
+             isTransparent ? "text-slate-200" : "text-muted-foreground"
             )}>
           {user && (
             <Link href="/dashboard" className="transition-colors hover:text-foreground">
               Dashboard
             </Link>
           )}
-           <Link href="#popular-routes" className="transition-colors hover:text-foreground">
-              Popular Routes
-            </Link>
-             <Link href="#contact" className="transition-colors hover:text-foreground">
+           <Link href="#contact" className="transition-colors hover:text-foreground">
               Contact
             </Link>
         </nav>
@@ -62,23 +65,23 @@ export default function Header() {
             <div className="h-9 w-24 animate-pulse rounded-md bg-white/20" />
           ) : user ? (
             <>
-              <span className={cn("text-sm hidden sm:inline", isScrolled ? "text-muted-foreground" : "text-slate-200")}>
+              <span className={cn("text-sm hidden sm:inline", isTransparent ? "text-slate-200" : "text-muted-foreground")}>
                 {user.displayName || user.email}
               </span>
-              <Button variant={isScrolled ? "ghost" : "outline"} className={cn(!isScrolled && "text-white border-white/50 hover:bg-white/10 hover:text-white")} size="sm" onClick={handleLogout}>
+              <Button variant={isTransparent ? "outline" : "ghost"} className={cn(!isTransparent && "text-white border-white/50 hover:bg-white/10 hover:text-white")} size="sm" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" asChild className={cn("hover:bg-white/10", isScrolled ? "text-foreground hover:text-foreground" : "text-white hover:text-white")}>
+              <Button variant="ghost" size="sm" asChild className={cn("hover:bg-white/10", isTransparent ? "text-white hover:text-white" : "text-foreground hover:text-foreground")}>
                 <Link href="/login">
                   <User className="mr-2 h-4 w-4" />
                   Login
                 </Link>
               </Button>
-              <Button size="sm" asChild variant="outline" className={cn("bg-transparent", isScrolled ? "text-primary border-primary hover:bg-primary hover:text-primary-foreground" : "text-white border-white/80 hover:bg-white hover:text-primary")}>
+              <Button size="sm" asChild variant="outline" className={cn(isTransparent ? "text-white border-white/80 hover:bg-white hover:text-primary" : "text-primary border-primary hover:bg-primary hover:text-primary-foreground" )}>
                 <Link href="/signup">Sign Up</Link>
               </Button>
             </>
