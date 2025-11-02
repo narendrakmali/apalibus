@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -33,6 +34,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { LocationPicker } from "./location-picker";
 import { BusList } from "./bus-list";
+import { getFareEstimate } from "@/app/actions";
+import { BookingResult } from "./booking-result";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, "Please enter a valid starting location."),
@@ -51,8 +54,10 @@ export type BookingRequest = z.infer<typeof formSchema>;
 
 export function BookingForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [showBuses, setShowBuses] = useState(false);
+  const [showResult, setShowResult] = useState(false);
   const [bookingRequest, setBookingRequest] = useState<BookingRequest | null>(null);
+  const [fareResult, setFareResult] = useState<{ fareBreakdown: string, estimatedFare: number } | null>(null);
+
   const { toast } = useToast();
   const [startLatLng, setStartLatLng] = useState<google.maps.LatLng | null>(null);
   const [destinationLatLng, setDestinationLatLng] = useState<google.maps.LatLng | null>(null);
@@ -77,14 +82,46 @@ export function BookingForm() {
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!startLatLng || !destinationLatLng) {
+        toast({
+            variant: "destructive",
+            title: "Location Error",
+            description: "Please select both a start and destination from the suggestions."
+        });
+        return;
+    }
+    
     setIsLoading(true);
-    setBookingRequest(values);
-    setShowBuses(true);
-    setIsLoading(false);
+
+    try {
+        const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(startLatLng, destinationLatLng);
+        const distanceKm = distanceMeters / 1000;
+
+        const fareInput = {
+            ...values,
+            distanceKm,
+            timeOfTravel: values.journeyTime
+        };
+
+        const result = await getFareEstimate(fareInput);
+        setFareResult(result);
+        setBookingRequest(values);
+        setShowResult(true);
+
+    } catch(error: any) {
+        console.error(error);
+        toast({
+            variant: "destructive",
+            title: "Estimation Failed",
+            description: error.message || "Could not fetch fare estimate."
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
-  if (showBuses && bookingRequest) {
-    return <BusList request={bookingRequest} onBack={() => setShowBuses(false)} />;
+  if (showResult && bookingRequest && fareResult) {
+    return <BookingResult request={bookingRequest} result={fareResult} onBack={() => setShowResult(false)} />;
   }
 
   return (
