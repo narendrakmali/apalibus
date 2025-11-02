@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Loader2, CalendarIcon, Clock, Bus, Users, Search } from "lucide-react";
+import { Loader2, CalendarIcon, Search, Ticket, Building2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,13 +17,6 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -33,9 +26,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { LocationPicker } from "./location-picker";
-import { BusList } from "./bus-list";
 import { getFareEstimate } from "@/app/actions";
 import { BookingResult } from "./booking-result";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const formSchema = z.object({
   startLocation: z.string().min(2, "Please enter a valid starting location."),
@@ -52,7 +45,7 @@ const formSchema = z.object({
 
 export type BookingRequest = z.infer<typeof formSchema>;
 
-export function BookingForm() {
+function FullBusBookingForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [bookingRequest, setBookingRequest] = useState<BookingRequest | null>(null);
@@ -126,112 +119,108 @@ export function BookingForm() {
 
   return (
     <>
-      <Card className="max-w-5xl mx-auto shadow-2xl">
-        <CardContent className="p-4 md:p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-10 gap-4 items-end">
-              <div className="md:col-span-3">
-                <FormField
-                  control={form.control}
-                  name="startLocation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-foreground">From</FormLabel>
-                      <FormControl>
-                        <LocationPicker
-                          label="Start Location"
-                          onLocationSelect={(location, address) => {
-                            field.onChange(address);
-                            if (window.google) {
-                                setStartLatLng(new google.maps.LatLng(location.lat, location.lng));
-                            }
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="md:col-span-3">
-                <FormField
-                  control={form.control}
-                  name="destination"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-foreground">To</FormLabel>
-                      <FormControl>
-                        <LocationPicker
-                          label="Destination"
-                          onLocationSelect={(location, address) => {
-                            field.onChange(address);
-                             if (window.google) {
-                                setDestinationLatLng(new google.maps.LatLng(location.lat, location.lng));
-                             }
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-10 gap-4 items-end">
+          <div className="md:col-span-3">
+            <FormField
+              control={form.control}
+              name="startLocation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-foreground">From</FormLabel>
+                  <FormControl>
+                    <LocationPicker
+                      label="Start Location"
+                      onLocationSelect={(location, address) => {
+                        field.onChange(address);
+                        if (window.google) {
+                            setStartLatLng(new google.maps.LatLng(location.lat, location.lng));
+                        }
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="md:col-span-3">
+            <FormField
+              control={form.control}
+              name="destination"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-foreground">To</FormLabel>
+                  <FormControl>
+                    <LocationPicker
+                      label="Destination"
+                      onLocationSelect={(location, address) => {
+                        field.onChange(address);
+                         if (window.google) {
+                            setDestinationLatLng(new google.maps.LatLng(location.lat, location.lng));
+                         }
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
 
-              <div className="md:col-span-2">
-                <FormField
-                control={form.control}
-                name="journeyDate"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="font-semibold text-foreground">Date</FormLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <FormControl>
-                            <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-full pl-3 text-left font-normal bg-secondary",
-                                !field.value && "text-muted-foreground"
-                            )}
-                            >
-                            {field.value ? (
-                                format(field.value, "PPP")
-                            ) : (
-                                <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                        </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                            date < new Date(new Date().setHours(0,0,0,0))
-                            }
-                            initialFocus
-                        />
-                        </PopoverContent>
-                    </Popover>
-                    </FormItem>
+          <div className="md:col-span-2">
+            <FormField
+            control={form.control}
+            name="journeyDate"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel className="font-semibold text-foreground">Date</FormLabel>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <FormControl>
+                        <Button
+                        variant={"outline"}
+                        className={cn(
+                            "w-full pl-3 text-left font-normal bg-secondary",
+                            !field.value && "text-muted-foreground"
+                        )}
+                        >
+                        {field.value ? (
+                            format(field.value, "PPP")
+                        ) : (
+                            <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                    </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                        date < new Date(new Date().setHours(0,0,0,0))
+                        }
+                        initialFocus
+                    />
+                    </PopoverContent>
+                </Popover>
+                </FormItem>
+            )}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Button type="submit" disabled={isLoading} className="w-full bg-accent hover:bg-accent/90" size="lg">
+                {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                <Search className="mr-2 h-4 w-4" />
                 )}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Button type="submit" disabled={isLoading} className="w-full bg-accent hover:bg-accent/90" size="lg">
-                    {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                    <Search className="mr-2 h-4 w-4" />
-                    )}
-                    Search Buses
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-      {isLoading && (
+                Search Buses
+            </Button>
+          </div>
+        </form>
+      </Form>
+       {isLoading && (
         <div className="text-center mt-8">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
             <p className="text-muted-foreground mt-2">Finding available buses...</p>
@@ -239,4 +228,32 @@ export function BookingForm() {
       )}
     </>
   );
+}
+
+export function BookingForm() {
+    return (
+        <Card className="max-w-5xl mx-auto shadow-2xl">
+            <CardContent className="p-4 md:p-6">
+                <Tabs defaultValue="full-bus">
+                    <TabsList className="grid w-full grid-cols-2 bg-primary/10">
+                        <TabsTrigger value="individual" className="gap-2">
+                            <Ticket /> Book a Seat
+                        </TabsTrigger>
+                        <TabsTrigger value="full-bus" className="gap-2">
+                            <Building2 /> Book Full Bus
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="individual" className="pt-6">
+                        <div className="text-center text-muted-foreground p-8 border rounded-lg">
+                            <h3 className="text-lg font-semibold text-foreground">Coming Soon!</h3>
+                            <p>Individual seat booking will be available shortly. For now, please use the "Book Full Bus" option for group travel.</p>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="full-bus" className="pt-6">
+                       <FullBusBookingForm />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
+    )
 }
