@@ -5,19 +5,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Loader2, CalendarIcon, Clock, Bus, Users, Armchair } from "lucide-react";
+import { Loader2, CalendarIcon, Clock, Bus, Users, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -35,7 +32,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { LocationPicker } from "./location-picker";
-import { Checkbox } from "../ui/checkbox";
 import { BusList } from "./bus-list";
 
 const formSchema = z.object({
@@ -74,7 +70,6 @@ export function BookingForm() {
   });
 
   useEffect(() => {
-    // Set default journeyDate on the client after mount to avoid hydration errors
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     form.setValue("journeyDate", today);
@@ -94,17 +89,17 @@ export function BookingForm() {
 
   return (
     <>
-      <Card className="max-w-4xl mx-auto shadow-lg">
-        <CardContent className="p-6 md:p-8">
+      <Card className="max-w-5xl mx-auto shadow-2xl">
+        <CardContent className="p-4 md:p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid md:grid-cols-2 gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-10 gap-4 items-end">
+              <div className="md:col-span-3">
                 <FormField
                   control={form.control}
                   name="startLocation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Location</FormLabel>
+                      <FormLabel className="font-semibold text-foreground">From</FormLabel>
                       <FormControl>
                         <LocationPicker
                           label="Start Location"
@@ -116,16 +111,17 @@ export function BookingForm() {
                           }}
                         />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+              <div className="md:col-span-3">
                 <FormField
                   control={form.control}
                   name="destination"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Destination</FormLabel>
+                      <FormLabel className="font-semibold text-foreground">To</FormLabel>
                       <FormControl>
                         <LocationPicker
                           label="Destination"
@@ -137,137 +133,63 @@ export function BookingForm() {
                           }}
                         />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-                <div className="grid md:grid-cols-2 gap-6 items-end">
-                    <FormField
-                    control={form.control}
-                    name="journeyDate"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                        <FormLabel>Journey Date</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                            <FormControl>
-                                <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                )}
-                                >
-                                {field.value ? (
-                                    format(field.value, "PPP")
-                                ) : (
-                                    <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) =>
-                                date < new Date(new Date().setHours(0,0,0,0))
-                                }
-                                initialFocus
-                            />
-                            </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="journeyTime"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Journey Time</FormLabel>
-                            <div className="relative">
-                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <FormControl>
-                                <Input type="time" {...field} className="pl-10" />
-                                </FormControl>
-                            </div>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
                 <FormField
-                  control={form.control}
-                  name="busType"
-                  render={({ field }) => (
+                control={form.control}
+                name="journeyDate"
+                render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bus Type</FormLabel>
-                       <div className="relative">
-                         <Bus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="pl-10">
-                              <SelectValue placeholder="Select a bus type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="AC">AC</SelectItem>
-                            <SelectItem value="Non-AC">Non-AC</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <FormMessage />
+                    <FormLabel className="font-semibold text-foreground">Date</FormLabel>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <FormControl>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full pl-3 text-left font-normal bg-secondary",
+                                !field.value && "text-muted-foreground"
+                            )}
+                            >
+                            {field.value ? (
+                                format(field.value, "PPP")
+                            ) : (
+                                <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                        </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                            date < new Date(new Date().setHours(0,0,0,0))
+                            }
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
                     </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="seatingCapacity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Seating Capacity</FormLabel>
-                       <div className="relative">
-                         <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="pl-10">
-                              <SelectValue placeholder="Select capacity" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="15">15 Seater</SelectItem>
-                            <SelectItem value="30">30 Seater</SelectItem>
-                            <SelectItem value="40">40 Seater</SelectItem>
-                            <SelectItem value="50">50 Seater</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                )}
                 />
               </div>
-
-              <Button type="submit" disabled={isLoading} className="w-full md:w-auto" size="lg">
-                {isLoading ? (
-                  <>
+              <div className="md:col-span-2">
+                <Button type="submit" disabled={isLoading} className="w-full bg-accent hover:bg-accent/90" size="lg">
+                    {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    Find Buses
-                  </>
-                )}
-              </Button>
+                    ) : (
+                    <Search className="mr-2 h-4 w-4" />
+                    )}
+                    Search Buses
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
