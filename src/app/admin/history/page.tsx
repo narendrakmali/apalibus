@@ -43,7 +43,11 @@ export default function BookingHistoryPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
-    return query(collection(firestore, 'bookings'), where('operatorId', '==', user.uid), orderBy('journeyDate', 'desc'));
+    return query(
+        collection(firestore, 'bookings'), 
+        where('operatorId', '==', user.uid), 
+        orderBy('journeyDate', 'desc')
+    );
   }, [firestore, user?.uid]);
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
