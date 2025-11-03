@@ -65,11 +65,15 @@ function LoginForm() {
       const roleDocRef = doc(firestore, 'roles', user.uid);
       const roleDocSnap = await getDoc(roleDocRef);
 
-      if (roleDocSnap.exists() && (roleDocSnap.data().role === 'admin' || roleDocSnap.data().role === 'super-admin')) {
-        router.push('/admin/dashboard');
-      } else {
-        router.push("/dashboard");
+      if (roleDocSnap.exists()) {
+        const userRole = roleDocSnap.data().role;
+        if (userRole === 'admin' || userRole === 'super-admin' || userRole === 'fleet-operator') {
+          router.push('/admin/dashboard');
+          return;
+        }
       }
+      
+      router.push("/dashboard");
       
     } catch (error: any) {
       console.error("Login failed:", error);

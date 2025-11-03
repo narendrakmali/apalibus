@@ -149,7 +149,7 @@
       "properties": {
           "role": {
               "type": "string",
-              "enum": ["super-admin", "admin", "user"]
+              "enum": ["super-admin", "admin", "fleet-operator", "user"]
           }
       },
       "required": ["role"]

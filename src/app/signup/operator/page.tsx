@@ -90,9 +90,9 @@ export default function OperatorSignupPage() {
         updatedAt: serverTimestamp(),
       });
       
-      // 4. Create admin role document
+      // 4. Create fleet-operator role document
       const roleDocRef = doc(firestore, 'roles', user.uid);
-      batch.set(roleDocRef, { role: 'admin' });
+      batch.set(roleDocRef, { role: 'fleet-operator' });
 
       await batch.commit();
 

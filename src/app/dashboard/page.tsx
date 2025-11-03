@@ -31,7 +31,7 @@ type UserProfile = {
 }
 
 type UserRole = {
-    role: 'super-admin' | 'admin' | 'user';
+    role: 'super-admin' | 'admin' | 'fleet-operator' | 'user';
 }
 
 type Booking = {
@@ -86,7 +86,7 @@ export default function DashboardPage() {
     if (!isUserLoading && user) {
         // This effect will run when auth state is resolved.
         // It's a good place to check roles if the login page doesn't handle it.
-        if (!isUserRoleLoading && userRole && (userRole.role === 'admin' || userRole.role === 'super-admin')) {
+        if (!isUserRoleLoading && userRole && (userRole.role === 'admin' || userRole.role === 'super-admin' || userRole.role === 'fleet-operator')) {
             router.replace('/admin/dashboard');
         }
     }
@@ -148,7 +148,7 @@ export default function DashboardPage() {
   };
 
 
-  if (isUserLoading || isProfileLoading || isUserRoleLoading || !user || (userRole && (userRole.role === 'admin' || userRole.role === 'super-admin'))) {
+  if (isUserLoading || isProfileLoading || isUserRoleLoading || !user || (userRole && (userRole.role === 'admin' || userRole.role === 'super-admin' || userRole.role === 'fleet-operator'))) {
     return (
        <div className="flex h-screen w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">

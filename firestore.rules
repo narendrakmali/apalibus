@@ -10,11 +10,11 @@
  * - /bus_operators/{operatorId}: Stores information about bus operators.
  * - /buses/{busId}: Contains details about individual buses.
  * - /bookings/{bookingId}: Stores booking information.
- * - /roles/{userId}: Stores the role for a user ('super-admin', 'admin', 'user').
+ * - /roles/{userId}: Stores the role for a user ('super-admin', 'admin', 'fleet-operator', 'user').
  *
  * Key Security Decisions:
  * - **Users**: Can read/write their own profile, create bookings for themselves, and view their own bookings.
- * - **Admins**: Can do everything a user can, plus manage their own buses and operator profile, and confirm/cancel bookings for their own buses. They have read-only access to all data.
+ * - **Admins/Fleet Operators**: Can do everything a user can, plus manage their own buses and operator profile, and confirm/cancel bookings for their own buses. They have read-only access to all data.
  * - **Super-Admins**: Can do everything an admin can, plus they have read/write access to all data for moderation and administrative purposes.
  */
 rules_version = '2';
@@ -55,11 +55,11 @@ service cloud.firestore {
     }
 
     /**
-     * @description Checks if the user has 'admin' privileges.
-     * @returns {bool} True if the user is an admin or super-admin.
+     * @description Checks if the user has 'admin' privileges (admin, fleet-operator, or super-admin).
+     * @returns {bool} True if the user has admin-level access.
      */
     function isAdmin() {
-       return isSignedIn() && (getUserRole() == 'admin' || isSuperAdmin());
+       return isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'fleet-operator' || isSuperAdmin());
     }
 
     /**
