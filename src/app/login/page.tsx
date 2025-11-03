@@ -18,9 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth, useFirestore } from "@/firebase";
+import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -37,7 +36,6 @@ const authBgImage = PlaceHolderImages.find(img => img.id === 'auth-background');
 
 function LoginForm() {
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const {
@@ -49,7 +47,7 @@ function LoginForm() {
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    if (!auth || !firestore) {
+    if (!auth) {
       toast({
         variant: "destructive",
         title: "Login Error",
@@ -58,21 +56,8 @@ function LoginForm() {
       return;
     }
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
-
-      // Check for user role and redirect accordingly
-      const roleDocRef = doc(firestore, 'roles', user.uid);
-      const roleDocSnap = await getDoc(roleDocRef);
-
-      if (roleDocSnap.exists()) {
-        const userRole = roleDocSnap.data().role;
-        if (userRole === 'admin' || userRole === 'super-admin' || userRole === 'fleet-operator') {
-          router.push('/admin/dashboard');
-          return;
-        }
-      }
-      
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      // Universal redirect to dashboard, which will handle role-based routing.
       router.push("/dashboard");
       
     } catch (error: any) {

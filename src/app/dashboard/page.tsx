@@ -46,6 +46,21 @@ type Booking = {
     destination: string;
 }
 
+function FullPageLoader() {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
 export default function DashboardPage() {
   const auth = useAuth();
   const firestore = useFirestore();
@@ -77,20 +92,18 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
+    // 1. Redirect unauthenticated users to login
     if (!isUserLoading && !user) {
-      router.push('/login');
+      router.replace('/login');
     }
-  }, [user, isUserLoading, router]);
-
-  useEffect(() => {
-    if (!isUserLoading && user) {
-        // This effect will run when auth state is resolved.
-        // It's a good place to check roles if the login page doesn't handle it.
-        if (!isUserRoleLoading && userRole && (userRole.role === 'admin' || userRole.role === 'super-admin' || userRole.role === 'fleet-operator')) {
+    
+    // 2. Once user auth is resolved, check roles
+    if (!isUserLoading && user && !isUserRoleLoading) {
+        if (userRole && (userRole.role === 'admin' || userRole.role === 'super-admin' || userRole.role === 'fleet-operator')) {
             router.replace('/admin/dashboard');
         }
     }
-}, [user, isUserLoading, userRole, isUserRoleLoading, router]);
+  }, [user, isUserLoading, userRole, isUserRoleLoading, router]);
 
 
   useEffect(() => {
@@ -101,7 +114,7 @@ export default function DashboardPage() {
           if (docSnap.exists()) {
             setProfile(docSnap.data() as UserProfile);
           } else if(user) {
-            // Create profile if it doesn't exist, happens for users created before profile storage
+            // Create profile if it doesn't exist
             const newProfile: UserProfile = {
                 id: user.uid,
                 name: user.displayName || 'New User',
@@ -147,19 +160,16 @@ export default function DashboardPage() {
     }
   };
 
+  // Show a full-page loader until authentication and role checks are complete.
+  // This prevents the user UI from flashing for an admin user before redirection.
+  const showLoader = isUserLoading || isUserRoleLoading || (user && userRole && (userRole.role === 'admin' || userRole.role === 'super-admin' || userRole.role === 'fleet-operator'));
+  if (showLoader) {
+    return <FullPageLoader />;
+  }
 
-  if (isUserLoading || isProfileLoading || isUserRoleLoading || !user || (userRole && (userRole.role === 'admin' || userRole.role === 'super-admin' || userRole.role === 'fleet-operator'))) {
-    return (
-       <div className="flex h-screen w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
-        </div>
-      </div>
-    );
+  // Only render the dashboard if the user exists and is not an admin/operator
+  if (!user) {
+     return <FullPageLoader />; // Should be redirected, but this is a fallback.
   }
 
   return (
