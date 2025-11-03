@@ -96,7 +96,7 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn();
-      allow update: if isOwner(operatorId) && isAdmin() || isSuperAdmin();
+      allow update: if (isOwner(request.resource.data.createdBy) && isAdmin()) || isSuperAdmin();
       allow delete: if isSuperAdmin();
     }
 
@@ -111,7 +111,7 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true;
       allow create: if isAdmin();
-      allow update: if isAdmin() && request.resource.data.operatorId == request.auth.uid || isSuperAdmin();
+      allow update: if (isAdmin() && request.resource.data.operatorId == request.auth.uid) || isSuperAdmin();
       allow delete: if isSuperAdmin();
     }
 
@@ -123,8 +123,8 @@ service cloud.firestore {
      * - Super-admins can view all bookings.
      */
     match /bookings/{bookingId} {
-        allow get: if isSignedIn();
-        allow list: if (isUser() && request.query.where.userId == request.auth.uid) || isAdmin();
+        allow get: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin() || isSuperAdmin());
+        allow list: if (isUser() && request.query.where[0][2] == request.auth.uid) || isAdmin() || isSuperAdmin();
         allow create: if isUser() && request.resource.data.userId == request.auth.uid;
         allow update: if (isAdmin() && resource.data.operatorId == request.auth.uid) || isSuperAdmin();
         allow delete: if isSuperAdmin();
@@ -133,10 +133,12 @@ service cloud.firestore {
     /**
      * @description Rules for user roles.
      * @path /roles/{userId}
-     * - Only super-admins can read, create, update, or delete roles. This is the highest level of protection.
+     * - A user can read their own role.
+     * - Only super-admins can list, create, update, or delete roles.
      */
     match /roles/{userId} {
-      allow get, list, create, update, delete: if isSuperAdmin();
+      allow get: if isOwner(userId) || isSuperAdmin();
+      allow list, create, update, delete: if isSuperAdmin();
     }
   }
 }
