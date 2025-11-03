@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -45,8 +45,7 @@ export default function BookingHistoryPage() {
     if (!firestore || !user?.uid) return null;
     return query(
         collection(firestore, 'bookings'), 
-        where('operatorId', '==', user.uid), 
-        orderBy('journeyDate', 'desc')
+        where('operatorId', '==', user.uid)
     );
   }, [firestore, user?.uid]);
 
