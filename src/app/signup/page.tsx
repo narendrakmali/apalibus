@@ -1,6 +1,5 @@
 
 "use client";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bus, Mail, Lock, User, Phone } from "lucide-react";
@@ -186,5 +185,4 @@ export default function SignupPage() {
     </div>
   );
 }
-
     

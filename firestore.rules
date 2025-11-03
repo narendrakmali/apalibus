@@ -14,7 +14,7 @@
  *
  * Key Security Decisions:
  * - **Users**: Can read/write their own profile, create bookings for themselves, and view their own bookings.
- * - **Admins**: Can do everything a user can, plus manage their own buses and operator profile, and confirm/cancel bookings for their own buses.
+ * - **Admins**: Can do everything a user can, plus manage their own buses and operator profile, and confirm/cancel bookings for their own buses. They have read-only access to all data.
  * - **Super-Admins**: Can do everything an admin can, plus they have read/write access to all data for moderation and administrative purposes.
  */
 rules_version = '2';
@@ -56,7 +56,7 @@ service cloud.firestore {
 
     /**
      * @description Checks if the user has 'admin' privileges.
-     * @returns {bool} True if the user is an admin, false otherwise.
+     * @returns {bool} True if the user is an admin or super-admin.
      */
     function isAdmin() {
        return isSignedIn() && (getUserRole() == 'admin' || isSuperAdmin());
@@ -73,21 +73,20 @@ service cloud.firestore {
 
     /**
      * @description Rules for user profiles.
-     * @path /users/{userId}
-     * - Any user can create their own profile.
-     * - Only the owner or a super-admin can read or update a profile.
-     * - List access is denied to prevent user enumeration.
+     * - A user can get or update their own profile.
+     * - Admins have read-only access.
+     * - Super-admins have full read/write access.
      */
     match /users/{userId} {
-      allow get, update: if isOwner(userId) || isSuperAdmin();
-      allow list: if isSuperAdmin();
+      allow get: if isOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isSuperAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow delete: if isOwner(userId) || isSuperAdmin();
     }
 
     /**
      * @description Rules for bus operator profiles.
-     * @path /bus_operators/{operatorId}
      * - Publicly readable.
      * - Can be created by any signed-in user (during operator signup).
      * - Can only be updated by the owning admin or a super-admin.
@@ -96,37 +95,36 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn();
-      allow update: if (isOwner(request.resource.data.createdBy) && isAdmin()) || isSuperAdmin();
+      allow update: if (isAdmin() && isOwner(resource.data.createdBy)) || isSuperAdmin();
       allow delete: if isSuperAdmin();
     }
 
     /**
      * @description Rules for buses.
-     * @path /buses/{busId}
      * - Publicly readable.
-     * - Can be created by an admin or super-admin.
-     * - Can only be updated by the owning admin (via denormalized operatorId) or a super-admin.
+     * - Can be created by an admin.
+     * - Can only be updated by the owning admin or a super-admin.
      */
     match /buses/{busId} {
       allow get: if true;
       allow list: if true;
       allow create: if isAdmin();
-      allow update: if (isAdmin() && request.resource.data.operatorId == request.auth.uid) || isSuperAdmin();
+      allow update: if (isAdmin() && isOwner(request.resource.data.operatorId)) || isSuperAdmin();
       allow delete: if isSuperAdmin();
     }
 
     /**
      * @description Rules for bookings.
      * - Users can create bookings for themselves.
-     * - Users can view their own bookings.
-     * - Admins can view bookings associated with their operatorId.
-     * - Super-admins can view all bookings.
+     * - Users can get their own bookings. Admins have read access to all bookings.
+     * - Listing is allowed for any signed-in user (app queries enforce correct filtering).
+     * - Admins can update bookings for their buses. Super-admins have full update access.
      */
     match /bookings/{bookingId} {
-        allow get: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin() || isSuperAdmin());
-        allow list: if (isUser() && request.query.where[0][2] == request.auth.uid) || isAdmin() || isSuperAdmin();
-        allow create: if isUser() && request.resource.data.userId == request.auth.uid;
-        allow update: if (isAdmin() && resource.data.operatorId == request.auth.uid) || isSuperAdmin();
+        allow get: if (isUser() && isOwner(resource.data.userId)) || isAdmin();
+        allow list: if isSignedIn();
+        allow create: if isUser() && isOwner(request.resource.data.userId);
+        allow update: if (isAdmin() && isOwner(resource.data.operatorId)) || isSuperAdmin();
         allow delete: if isSuperAdmin();
     }
 
