@@ -18,7 +18,7 @@ import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { isSameDay, isTomorrow, format } from 'date-fns';
+import { isTomorrow } from 'date-fns';
 import { EventContentArg } from '@fullcalendar/core';
 import {
   Table,
@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertCircle, CalendarClock } from 'lucide-react';
+import { CalendarClock } from 'lucide-react';
 
 type Booking = {
   id: string;
@@ -50,7 +50,7 @@ const statusColors = {
 };
 
 function renderEventContent(eventInfo: EventContentArg) {
-  const { status, busDetails, customerName, route } = eventInfo.event.extendedProps;
+  const { busDetails, customerName, route } = eventInfo.event.extendedProps;
   return (
     <div className="p-1 overflow-hidden">
       <b className="whitespace-nowrap">{eventInfo.timeText}</b>
@@ -67,7 +67,6 @@ export default function SchedulePage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
-    // This is the corrected query with the required operatorId filter
     return query(collection(firestore, 'bookings'), where('operatorId', '==', user.uid));
   }, [firestore, user?.uid]);
 
@@ -95,7 +94,7 @@ export default function SchedulePage() {
   
   const tomorrowsBookings = useMemo(() => {
     if (!bookings) return [];
-    return bookings.filter(booking => isTomorrow(booking.journeyDate.toDate()));
+    return bookings.filter(booking => isTomorrow(booking.journeyDate.toDate()) && booking.status !== 'cancelled');
   }, [bookings]);
 
 
@@ -137,7 +136,7 @@ export default function SchedulePage() {
                                     <TableCell>{booking.startLocation} → {booking.destination}</TableCell>
                                     <TableCell>{booking.userName}</TableCell>
                                     <TableCell className="text-right">
-                                        <Badge style={{ backgroundColor: statusColors[booking.status]}} className="text-white">{booking.status}</Badge>
+                                        <Badge style={{ backgroundColor: statusColors[booking.status]}} className="text-white capitalize">{booking.status}</Badge>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -189,11 +188,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
-// Add package.json dependencies for FullCalendar
-// "@fullcalendar/react": "^6.1.10",
-// "@fullcalendar/daygrid": "^6.1.10",
-// "@fullcalendar/timegrid": "^6.1.10",
-// "@fullcalendar/interaction": "^6.1.10",
-
-    
