@@ -40,14 +40,14 @@ const prompt = ai.definePrompt({
 Rate Chart:
 | Bus Type  | Seating Capacity | Rate per km | Min km/day | Driver DA | Permit/State Charges |
 |-----------|------------------|-------------|------------|-----------|----------------------|
-| Non-AC    | 15 Seater        | ₹18/km      | 250 km     | ₹600      | ₹500                 |
+| Non-AC    | 15 Seater        | ₹25/km      | 250 km     | ₹600      | ₹500                 |
 | Non-AC    | 30 Seater        | ₹34/km      | 250 km     | ₹1000     | ₹1000                |
-| Non-AC    | 40 Seater        | ₹40/km      | 250 km     | ₹1000     | ₹1000                |
-| Non-AC    | 50 Seater        | ₹45/km      | 250 km     | ₹1200     | ₹1200                |
-| AC        | 15 Seater        | ₹19/km      | 250 km     | ₹700      | ₹700                 |
-| AC        | 30 Seater        | ₹38/km      | 250 km     | ₹1000     | ₹1000                |
-| AC        | 40 Seater        | ₹40/km      | 250 km     | ₹1000     | ₹1000                |
-| AC        | 50 Seater        | ₹55/km      | 250 km     | ₹1200     | ₹1200                |
+| Non-AC    | 40 Seater        | ₹45/km      | 250 km     | ₹1000     | ₹1000                |
+| Non-AC    | 50 Seater        | ₹55/km      | 250 km     | ₹1200     | ₹1200                |
+| AC        | 15 Seater        | ₹30/km      | 250 km     | ₹700      | ₹700                 |
+| AC        | 30 Seater        | ₹40/km      | 250 km     | ₹1000     | ₹1000                |
+| AC        | 40 Seater        | ₹45/km      | 250 km     | ₹1000     | ₹1000                |
+| AC        | 50 Seater        | ₹65/km      | 250 km     | ₹1200     | ₹1200                |
 
 Calculation Logic:
 1. Determine the number of days for the trip. A minimum of 1 day is assumed. For every 250km, consider it one day. For example, a 500km trip is 2 days. A 270km trip is 2 days. A 240km trip is 1 day. Use ceiling function for day calculation.
