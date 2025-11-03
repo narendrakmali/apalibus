@@ -83,10 +83,14 @@ export default function DashboardPage() {
   }, [user, isUserLoading, router]);
 
   useEffect(() => {
-    if (!isUserRoleLoading && userRole && (userRole.role === 'admin' || userRole.role === 'super-admin')) {
-        router.push('/admin/dashboard');
+    if (!isUserLoading && user) {
+        // This effect will run when auth state is resolved.
+        // It's a good place to check roles if the login page doesn't handle it.
+        if (!isUserRoleLoading && userRole && (userRole.role === 'admin' || userRole.role === 'super-admin')) {
+            router.replace('/admin/dashboard');
+        }
     }
-  }, [userRole, isUserRoleLoading, router]);
+}, [user, isUserLoading, userRole, isUserRoleLoading, router]);
 
 
   useEffect(() => {
