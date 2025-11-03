@@ -91,8 +91,8 @@ export default function OperatorSignupPage() {
       });
       
       // 4. Create admin role document
-      const adminRoleRef = doc(firestore, 'roles_admin', user.uid);
-      batch.set(adminRoleRef, { isAdmin: true });
+      const roleDocRef = doc(firestore, 'roles', user.uid);
+      batch.set(roleDocRef, { role: 'admin' });
 
       await batch.commit();
 

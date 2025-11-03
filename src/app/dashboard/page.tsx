@@ -30,6 +30,10 @@ type UserProfile = {
   phone: string;
 }
 
+type UserRole = {
+    role: 'super-admin' | 'admin' | 'user';
+}
+
 type Booking = {
     id: string;
     status: 'pending' | 'confirmed' | 'cancelled';
@@ -57,12 +61,12 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
   
-  const adminRoleRef = useMemoFirebase(() => {
+  const userRoleRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
-    return doc(firestore, 'roles_admin', user.uid);
+    return doc(firestore, 'roles', user.uid);
   }, [firestore, user?.uid]);
 
-  const { data: adminRole, isLoading: isAdminRoleLoading } = useDoc(adminRoleRef);
+  const { data: userRole, isLoading: isUserRoleLoading } = useDoc<UserRole>(userRoleRef);
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
@@ -79,10 +83,10 @@ export default function DashboardPage() {
   }, [user, isUserLoading, router]);
 
   useEffect(() => {
-    if (!isAdminRoleLoading && adminRole) {
+    if (!isUserRoleLoading && userRole && (userRole.role === 'admin' || userRole.role === 'super-admin')) {
         router.push('/admin/dashboard');
     }
-  }, [adminRole, isAdminRoleLoading, router]);
+  }, [userRole, isUserRoleLoading, router]);
 
 
   useEffect(() => {
@@ -140,7 +144,7 @@ export default function DashboardPage() {
   };
 
 
-  if (isUserLoading || isProfileLoading || isAdminRoleLoading || !user || adminRole) {
+  if (isUserLoading || isProfileLoading || isUserRoleLoading || !user || (userRole && (userRole.role === 'admin' || userRole.role === 'super-admin'))) {
     return (
        <div className="flex h-screen w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -266,5 +270,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    

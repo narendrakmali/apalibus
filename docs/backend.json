@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -141,16 +142,17 @@
       },
       "required": ["userId", "busId", "operatorId", "journeyDate", "status"]
     },
-    "AdminRole": {
-      "title": "AdminRole",
-      "description": "Indicates admin privileges based on document existence.",
+    "UserRole": {
+      "title": "UserRole",
+      "description": "Defines the role of a user within the system.",
       "type": "object",
       "properties": {
-          "isAdmin": {
-              "type": "boolean"
+          "role": {
+              "type": "string",
+              "enum": ["super-admin", "admin", "user"]
           }
       },
-      "required": ["isAdmin"]
+      "required": ["role"]
     }
   },
   "auth": {
@@ -226,22 +228,22 @@
         }
       },
       {
-        "path": "/roles_admin/{userId}",
+        "path": "/roles/{userId}",
         "definition": {
-          "entityName": "AdminRole",
+          "entityName": "UserRole",
           "schema": {
-            "$ref": "#/backend/entities/AdminRole"
+            "$ref": "#/backend/entities/UserRole"
           },
-          "description": "Indicates admin privileges based on document existence.  Authorization relies solely on `request.auth.uid`.",
+          "description": "Assigns a specific role to a user, controlling their access privileges throughout the application.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user who has admin privileges."
+              "description": "The unique identifier for the user, corresponding to their Firebase Auth UID."
             }
           ]
         }
       }
     ],
-    "reasoning": "This Firestore structure is designed to support the Traverse application, focusing on secure user authentication and efficient data management for bus bookings, operator registration, and admin functionalities. The design prioritizes authorization independence by avoiding hierarchical `get()` calls in security rules, making operations atomic and improving debuggability. Structural segregation ensures that collections contain documents with similar security requirements, while explicit state modeling enhances data clarity. The key collections are:\n\n*   `/users/{userId}`: Stores user profiles with standard information and implements path-based ownership for private user data.\n*   `/bus_operators/{operatorId}`: Stores information about bus operators, including registration details and contact information.\n*   `/buses/{busId}`: Contains details about individual buses, including type, seating, and availability.  A denormalized `operatorId` field supports authorization independence, enabling rules to verify the operator without requiring a `get()` call.\n*   `/bookings/{bookingId}`: Stores booking information, including user, bus, dates, and payment status. It includes denormalized `userId` and `operatorId` fields for QAPs and authorization independence.\n*   `/roles_admin/{userId}`:  Indicates admin privileges based on document existence. This follows the \"Existence over Content\" principle for global roles.\n\nThis structure facilitates robust security rules by ensuring that all necessary authorization information is available within each document, eliminating the need for complex hierarchical lookups. Segregation into collections like `/roles_admin` simplifies rule creation and maintenance. The denormalization of `userId` and `operatorId` in `/bookings` allows for secure listing of bookings by user or operator without exposing unauthorized data."
+    "reasoning": "This Firestore structure is designed to support the Traverse application, focusing on secure user authentication and efficient data management for bus bookings, operator registration, and admin functionalities. The design prioritizes authorization independence by avoiding hierarchical `get()` calls in security rules, making operations atomic and improving debuggability. Structural segregation ensures that collections contain documents with similar security requirements, while explicit state modeling enhances data clarity. The key collections are:\n\n*   `/users/{userId}`: Stores user profiles with standard information and implements path-based ownership for private user data.\n*   `/bus_operators/{operatorId}`: Stores information about bus operators, including registration details and contact information.\n*   `/buses/{busId}`: Contains details about individual buses, including type, seating, and availability.  A denormalized `operatorId` field supports authorization independence, enabling rules to verify the operator without requiring a `get()` call.\n*   `/bookings/{bookingId}`: Stores booking information, including user, bus, dates, and payment status. It includes denormalized `userId` and `operatorId` fields for QAPs and authorization independence.\n*   `/roles/{userId}`:  Assigns roles ('super-admin', 'admin', 'user') to users, enabling a tiered permission system.\n\nThis structure facilitates robust security rules by ensuring that all necessary authorization information is available within each document, eliminating the need for complex hierarchical lookups. Segregation into collections like `/roles` simplifies rule creation and maintenance. The denormalization of `userId` and `operatorId` in `/bookings` allows for secure listing of bookings by user or operator without exposing unauthorized data."
   }
 }

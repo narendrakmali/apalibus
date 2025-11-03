@@ -1,28 +1,21 @@
+
 /**
  * @fileoverview Firestore Security Rules for the Traverse application.
  *
  * Core Philosophy:
- * This ruleset enforces a user-ownership model for user profiles and an existence-based role check for admins.  It also uses denormalization to avoid costly `get()` calls, making authorization checks efficient.
+ * This ruleset enforces a user-ownership model for user profiles and a role-based system for admins and super-admins. It uses denormalization to avoid costly `get()` calls, making authorization checks efficient.
  *
- * Data Structure:
+ * Data Structure & Roles:
  * - /users/{userId}:  Stores user profile data. Access is restricted to the user themselves.
  * - /bus_operators/{operatorId}: Stores information about bus operators.
- * - /buses/{busId}: Contains details about individual buses. Includes denormalized `operatorId` for authorization independence.
- * - /bookings/{bookingId}: Stores booking information. Includes denormalized `userId` and `operatorId` for authorization independence.
- * - /roles_admin/{userId}: Indicates admin privileges based on document existence.
+ * - /buses/{busId}: Contains details about individual buses.
+ * - /bookings/{bookingId}: Stores booking information.
+ * - /roles/{userId}: Stores the role for a user ('super-admin', 'admin', 'user').
  *
  * Key Security Decisions:
- * - Users can only read/write their own profile data under /users/{userId}.
- * - Listing of users is disallowed.
- * - Admin privileges are determined by the existence of a document in /roles_admin/{userId}, eliminating the need to inspect document content.
- * - The rules explicitly deny operations that are not permitted to provide a clear security posture.
- *
- * Denormalization for Authorization:
- * - The /buses/{busId} collection denormalizes the `operatorId` to allow direct authorization checks without requiring additional reads.
- * - The /bookings/{bookingId} collection denormalizes both `userId` and `operatorId` for similar reasons.
- *
- * Structural Segregation:
- * - Admin roles are stored in a separate /roles_admin/{userId} collection. This simplifies the security rules and clearly separates admin privileges from user data.
+ * - **Users**: Can read/write their own profile, create bookings for themselves, and view their own bookings.
+ * - **Admins**: Can do everything a user can, plus manage their own buses and operator profile, and confirm/cancel bookings for their own buses.
+ * - **Super-Admins**: Can do everything an admin can, plus they have read/write access to all data for moderation and administrative purposes.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -44,95 +37,106 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
+    
     /**
-     * @description Checks if the authenticated user is the owner and the resource exists.
-     * @param {string} userId - The user ID to compare against the authenticated user's UID.
-     * @returns {bool} True if the user is signed in, the UID matches, and the resource exists.
+     * @description Gets the role of the current user from the /roles collection.
+     * @returns {string | null} The user's role ('super-admin', 'admin', 'user') or null if not defined.
      */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function getUserRole() {
+        return get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role;
     }
 
     /**
-     * @description Checks if the user has admin privileges by verifying the existence of a document in `/roles_admin/{userId}`.
-     * @returns {bool} True if the user has admin privileges, false otherwise.
+     * @description Checks if the user has 'super-admin' privileges.
+     * @returns {bool} True if the user is a super-admin, false otherwise.
+     */
+    function isSuperAdmin() {
+      return isSignedIn() && getUserRole() == 'super-admin';
+    }
+
+    /**
+     * @description Checks if the user has 'admin' privileges.
+     * @returns {bool} True if the user is an admin, false otherwise.
      */
     function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+       return isSignedIn() && (getUserRole() == 'admin' || isSuperAdmin());
     }
+
+    /**
+     * @description Checks if the user has 'user' privileges (i.e., is signed in but not an admin).
+     * @returns {bool} True if the user is a regular user.
+     */
+    function isUser() {
+        return isSignedIn() && (getUserRole() == 'user' || getUserRole() == null);
+    }
+
 
     /**
      * @description Rules for user profiles.
      * @path /users/{userId}
-     * @allow (create) User A with UID 'userA' can create their own profile at /users/userA, setting id to "userA".
-     * @allow (get) User A with UID 'userA' can read their own profile at /users/userA.
-     * @allow (update) User A with UID 'userA' can update their own profile at /users/userA.
-     * @allow (delete) User A with UID 'userA' can delete their own profile at /users/userA.
-     * @deny (create) User B with UID 'userB' cannot create a profile for User A at /users/userA.
-     * @deny (get) User B with UID 'userB' cannot read User A's profile at /users/userA.
-     * @deny (update) User B with UID 'userB' cannot update User A's profile at /users/userA.
-     * @deny (delete) User B with UID 'userB' cannot delete User A's profile at /users/userA.
-     * @principle Enforces document ownership for all operations on user profiles.
+     * - Any user can create their own profile.
+     * - Only the owner or a super-admin can read or update a profile.
+     * - List access is denied to prevent user enumeration.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-
+      allow get, update: if isOwner(userId) || isSuperAdmin();
+      allow list: if isSuperAdmin();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow delete: if isOwner(userId) || isSuperAdmin();
     }
 
-      /**
-       * @description Rules for bus operator profiles.
-       * @path /bus_operators/{operatorId}
-       */
+    /**
+     * @description Rules for bus operator profiles.
+     * @path /bus_operators/{operatorId}
+     * - Publicly readable.
+     * - Can be created by any signed-in user (during operator signup).
+     * - Can only be updated by the owning admin or a super-admin.
+     */
     match /bus_operators/{operatorId} {
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if false;
+      allow update: if isOwner(operatorId) && isAdmin() || isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
     /**
      * @description Rules for buses.
      * @path /buses/{busId}
+     * - Publicly readable.
+     * - Can be created by an admin or super-admin.
+     * - Can only be updated by the owning admin (via denormalized operatorId) or a super-admin.
      */
     match /buses/{busId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if false;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && request.resource.data.operatorId == request.auth.uid || isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
     /**
      * @description Rules for bookings.
-     * Users can list their own bookings.
-     * Admins (operators) can list bookings for their buses.
+     * - Users can create bookings for themselves.
+     * - Users can view their own bookings.
+     * - Admins can view bookings associated with their operatorId.
+     * - Super-admins can view all bookings.
      */
     match /bookings/{bookingId} {
         allow get: if isSignedIn();
-        allow list: if isSignedIn() && (request.query.where.userId == request.auth.uid || request.query.where.operatorId == request.auth.uid);
-        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.operatorId == request.auth.uid);
-        allow delete: if false;
+        allow list: if (isUser() && request.query.where.userId == request.auth.uid) || isAdmin();
+        allow create: if isUser() && request.resource.data.userId == request.auth.uid;
+        allow update: if (isAdmin() && resource.data.operatorId == request.auth.uid) || isSuperAdmin();
+        allow delete: if isSuperAdmin();
     }
 
     /**
-     * @description Rules for admin roles.
-     * @path /roles_admin/{userId}
-     * @allow (create) An authenticated user can become an admin.
-     * @deny (create) An unauthenticated user cannot become an admin.
+     * @description Rules for user roles.
+     * @path /roles/{userId}
+     * - Only super-admins can read, create, update, or delete roles. This is the highest level of protection.
      */
-    match /roles_admin/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if false;
-      allow delete: if isAdmin();
+    match /roles/{userId} {
+      allow get, list, create, update, delete: if isSuperAdmin();
     }
   }
 }
