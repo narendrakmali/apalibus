@@ -22,6 +22,7 @@ import {
   User,
   Map,
   History,
+  CalendarDays,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
@@ -31,6 +32,7 @@ import { collection, query, where } from 'firebase/firestore';
 
 const menuItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/schedule', label: 'Schedule', icon: CalendarDays },
   { href: '/admin/buses', label: 'My Buses', icon: Bus },
   { href: '/admin/bookings', label: 'Bookings', icon: Ticket, isBooking: true },
   { href: '/admin/history', label: 'Booking History', icon: History },
