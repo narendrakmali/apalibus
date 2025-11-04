@@ -12,6 +12,7 @@ import {
   import { Bus, PlusCircle, CalendarDays } from 'lucide-react';
   import Link from 'next/link';
   import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
   
   const operatorSections = [
     {
@@ -38,13 +39,14 @@ import {
     const { user, isUserLoading } = useFirebase();
     const router = useRouter();
   
-    if (isUserLoading) {
-      return <div>Loading...</div>;
-    }
-  
-    if (!user) {
-        router.push('/operator-login');
-        return null;
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/operator-login');
+        }
+    }, [isUserLoading, user, router]);
+
+    if (isUserLoading || !user) {
+      return <div>Loading...</div>; // Show loading state while checking auth or redirecting
     }
 
     return (
