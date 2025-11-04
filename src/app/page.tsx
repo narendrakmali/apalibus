@@ -9,7 +9,7 @@ import { useJsApiLoader } from "@react-google-maps/api";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import Image from "next/image";
 import { rateCard } from "@/lib/rate-card";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
 
 const libraries: ("places")[] = ["places"];
@@ -141,6 +141,45 @@ export default function Home() {
       }
     );
   };
+  
+  const handleShare = () => {
+    if (!estimate) {
+        alert("Please calculate an estimate first before sharing.");
+        return;
+    }
+
+    const subject = "Bus Trip Estimate from Sakpal Travels";
+    const body = `
+Hello,
+
+Here is the estimated cost for your bus journey:
+
+From: ${fromLocation.address}
+To: ${toLocation.address}
+Journey Date: ${journeyDate}
+Return Date: ${returnDate}
+Bus Type: ${busType}
+Seats: ${seats} Seater
+Seat Type: ${seatType || 'Not specified'}
+
+Estimated Cost Breakdown:
+- Single Journey Distance: ~${estimate.singleJourneyKm} km
+- Return Journey Distance: ~${estimate.returnJourneyKm} km
+- Base Fare (for ~${estimate.totalKm} km): ₹${estimate.baseFare.toLocaleString('en-IN')}
+- Driver Allowance (for ${estimate.numDays} days): ₹${estimate.driverAllowance.toLocaleString('en-IN')}
+- Permit Charges (for ${estimate.numDays} days): ₹${estimate.permitCharges.toLocaleString('en-IN')}
+
+Total Estimated Cost: ₹${estimate.totalCost.toLocaleString('en-IN')}
+
+Please note: This is an approximate cost. Actual cost may vary based on final details.
+
+Thank you,
+Sakpal Travels
+    `;
+
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+  };
 
 
   return (
@@ -240,8 +279,8 @@ export default function Home() {
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
                    <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate}>Estimate Cost</Button>
-                   <Button type="button" variant="outline" className="w-full sm:w-auto">Share</Button>
-                   <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">Search Buses</Button>
+                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleShare}>Share</Button>
+                   <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">Create Request</Button>
                 </div>
 
             </form>
@@ -321,5 +360,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
