@@ -7,9 +7,10 @@ import { BusFront, LogOut } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "./ui/skeleton";
 
 export default function Header() {
-  const { user, auth } = useFirebase();
+  const { user, auth, isUserLoading } = useFirebase();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -26,7 +27,13 @@ export default function Header() {
         <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-        {user ? (
+        {isUserLoading ? (
+           <div className="flex gap-4 sm:gap-6 items-center">
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        ) : user ? (
           <>
              <Link
               href="/operator/dashboard"
