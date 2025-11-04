@@ -12,8 +12,13 @@ import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
 
+const libraries: ("places")[] = ["places"];
 
-const libraries: "places"[] = ["places"];
+interface Location {
+  address: string;
+  lat?: number;
+  lng?: number;
+}
 
 interface EstimateDetails {
   totalCost: number;
@@ -21,13 +26,15 @@ interface EstimateDetails {
   driverAllowance: number;
   permitCharges: number;
   numDays: number;
-  minKm: number;
+  totalKm: number;
+  singleJourneyKm?: number;
+  returnJourneyKm?: number;
 }
 
 
 export default function Home() {
-  const [fromLocation, setFromLocation] = useState("");
-  const [toLocation, setToLocation] = useState("");
+  const [fromLocation, setFromLocation] = useState<Location>({ address: "" });
+  const [toLocation, setToLocation] = useState<Location>({ address: "" });
   const [journeyDate, setJourneyDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [seats, setSeats] = useState("");
@@ -36,6 +43,7 @@ export default function Home() {
 
   const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -51,53 +59,87 @@ export default function Home() {
 
   useEffect(() => {
     if (locationName) {
-      setFromLocation(locationName);
+      setFromLocation({ address: locationName });
     }
   }, [locationName]);
 
 
-  const handleEstimateCost = () => {
-    if (!busType || !seats || !journeyDate || !returnDate) {
-      alert("Please select Bus Type, Seats, Journey Date, and Return Date to get an estimate.");
+  const calculateDistanceAndEstimate = () => {
+    if (!fromLocation.lat || !fromLocation.lng || !toLocation.lat || !toLocation.lng) {
+      setError("Please select valid 'From' and 'To' locations from the suggestions.");
+      setIsAlertOpen(true);
       return;
     }
 
-    const rateInfo = rateCard.find(
-      (rate) => rate.busType === busType && rate.seatingCapacity === parseInt(seats)
-    );
-
-    if (!rateInfo) {
-      alert("No rate information found for the selected bus configuration.");
+    if (!busType || !seats || !journeyDate || !returnDate) {
+      setError("Please select Bus Type, Seats, Journey Date, and Return Date.");
+      setIsAlertOpen(true);
       return;
     }
 
     const startDate = new Date(journeyDate);
     const endDate = new Date(returnDate);
-    
     if(startDate > endDate) {
-      alert("Return date must be after the journey date.");
+      setError("Return date must be after the journey date.");
+      setIsAlertOpen(true);
       return;
     }
-
-    // Calculate number of days. Add 1 to include both start and end dates.
-    const numDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
     
-    const minKm = rateInfo.minKmPerDay * numDays;
-    const baseFare = minKm * rateInfo.ratePerKm;
-    const totalDriverAllowance = numDays * rateInfo.driverAllowance;
-    const totalPermitCharges = numDays * rateInfo.permitCharges;
+    setError(null);
+    setEstimate(null);
 
-    const totalCost = baseFare + totalDriverAllowance + totalPermitCharges;
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: { lat: fromLocation.lat, lng: fromLocation.lng },
+        destination: { lat: toLocation.lat, lng: toLocation.lng },
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === window.google.maps.DirectionsStatus.OK && result) {
+          const oneWayDistance = result.routes[0].legs[0].distance!.value / 1000; // in km
 
-    setEstimate({
-      totalCost,
-      baseFare,
-      driverAllowance: totalDriverAllowance,
-      permitCharges: totalPermitCharges,
-      numDays,
-      minKm,
-    });
-    setIsAlertOpen(true);
+          const rateInfo = rateCard.find(
+            (rate) => rate.busType === busType && rate.seatingCapacity === parseInt(seats)
+          );
+
+          if (!rateInfo) {
+            setError("No rate information found for the selected bus configuration.");
+            setIsAlertOpen(true);
+            return;
+          }
+
+          const numDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+          
+          const singleJourneyKm = oneWayDistance + 20;
+          const returnJourneyKm = oneWayDistance + 20;
+          const calculatedTotalKm = singleJourneyKm + returnJourneyKm;
+          
+          const minKmForTrip = rateInfo.minKmPerDay * numDays;
+          const totalKm = Math.max(calculatedTotalKm, minKmForTrip);
+          
+          const baseFare = totalKm * rateInfo.ratePerKm;
+          const totalDriverAllowance = numDays * rateInfo.driverAllowance;
+          const totalPermitCharges = numDays * rateInfo.permitCharges;
+
+          const totalCost = baseFare + totalDriverAllowance + totalPermitCharges;
+
+          setEstimate({
+            totalCost,
+            baseFare,
+            driverAllowance: totalDriverAllowance,
+            permitCharges: totalPermitCharges,
+            numDays,
+            totalKm,
+            singleJourneyKm: Math.round(singleJourneyKm),
+            returnJourneyKm: Math.round(returnJourneyKm),
+          });
+        } else {
+          setError("Could not calculate the distance between the selected locations.");
+        }
+        setIsAlertOpen(true);
+      }
+    );
   };
 
 
@@ -130,13 +172,13 @@ export default function Home() {
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="from">From</Label>
                     <PlacesAutocomplete 
-                      onLocationSelect={(address) => setFromLocation(address)} 
-                      initialValue={fromLocation}
+                      onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
+                      initialValue={fromLocation.address}
                     />
                   </div>
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="to">To</Label>
-                    <PlacesAutocomplete onLocationSelect={(address) => setToLocation(address)} />
+                    <PlacesAutocomplete onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} />
                   </div>
                   
                   {/* Dates */}
@@ -197,46 +239,7 @@ export default function Home() {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                   <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                      <AlertDialogTrigger asChild>
-                        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleEstimateCost}>Estimate Cost</Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Estimated Fare Breakdown</AlertDialogTitle>
-                           <AlertDialogDescription>
-                            This is an approximate cost for a {estimate?.numDays}-day trip. Actual cost may vary.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <div className="py-4 space-y-2">
-                          {estimate !== null ? (
-                            <>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Base Fare ({estimate.minKm} km)</span>
-                                <span>₹{estimate.baseFare.toLocaleString('en-IN')}</span>
-                              </div>
-                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Driver Allowance ({estimate.numDays} days)</span>
-                                <span>₹{estimate.driverAllowance.toLocaleString('en-IN')}</span>
-                              </div>
-                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Permit Charges ({estimate.numDays} days)</span>
-                                <span>₹{estimate.permitCharges.toLocaleString('en-IN')}</span>
-                              </div>
-                              <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
-                                <span>Total Estimate</span>
-                                <span>₹{estimate.totalCost.toLocaleString('en-IN')}</span>
-                              </div>
-                            </>
-                          ) : (
-                             <p>Could not calculate estimate. Please check your selections.</p>
-                          )}
-                        </div>
-                        <AlertDialogFooter>
-                          <AlertDialogAction>OK</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate}>Estimate Cost</Button>
                    <Button type="button" variant="outline" className="w-full sm:w-auto">Share</Button>
                    <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">Search Buses</Button>
                 </div>
@@ -251,6 +254,56 @@ export default function Home() {
           )}
         </div>
       </div>
+
+       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Estimated Fare Breakdown</AlertDialogTitle>
+              {estimate && (
+                <AlertDialogDescription>
+                  This is an approximate cost for a {estimate.numDays}-day trip. Actual cost may vary.
+                </AlertDialogDescription>
+              )}
+            </AlertDialogHeader>
+            <div className="py-4 space-y-2">
+              {error ? (
+                <p className="text-destructive">{error}</p>
+              ) : estimate ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Single Journey KM</span>
+                    <span>{estimate.singleJourneyKm} km</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Return Journey KM</span>
+                    <span>{estimate.returnJourneyKm} km</span>
+                  </div>
+                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Base Fare ({estimate.totalKm} km)</span>
+                    <span>₹{estimate.baseFare.toLocaleString('en-IN')}</span>
+                  </div>
+                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Driver Allowance ({estimate.numDays} days)</span>
+                    <span>₹{estimate.driverAllowance.toLocaleString('en-IN')}</span>
+                  </div>
+                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Permit Charges ({estimate.numDays} days)</span>
+                    <span>₹{estimate.permitCharges.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                    <span>Total Estimate</span>
+                    <span>₹{estimate.totalCost.toLocaleString('en-IN')}</span>
+                  </div>
+                </>
+              ) : (
+                 <p>Calculating estimate...</p>
+              )}
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setIsAlertOpen(false)}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
@@ -268,3 +321,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
