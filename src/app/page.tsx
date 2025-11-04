@@ -15,6 +15,8 @@ import { useFirebase } from "@/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import MapView from "@/components/map-view";
+import { MapPin } from "lucide-react";
 
 const libraries: ("places")[] = ["places"];
 
@@ -50,6 +52,9 @@ export default function Home() {
   const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [selectingOnMap, setSelectingOnMap] = useState<'from' | 'to' | null>(null);
+
+
   const { user, firestore } = useFirebase();
   const router = useRouter();
 
@@ -63,13 +68,13 @@ export default function Home() {
     skip: !googleMapsApiKey,
   });
 
-  const { locationName } = useCurrentLocation(isLoaded);
+  const { locationName, coords } = useCurrentLocation(isLoaded);
 
   useEffect(() => {
-    if (locationName) {
-      setFromLocation({ address: locationName });
+    if (locationName && coords) {
+      setFromLocation({ address: locationName, lat: coords.lat, lng: coords.lng });
     }
-  }, [locationName]);
+  }, [locationName, coords]);
 
 
   const calculateDistanceAndEstimate = () => {
@@ -196,17 +201,22 @@ Sakpal Travels
     }
 
     if (!estimate) {
-      setError("Please calculate an estimate before creating a request.");
-      setIsAlertOpen(true);
-      return;
+      calculateDistanceAndEstimate();
+      // Wait for estimate to be set before proceeding
+      setTimeout(() => {
+        if(estimate) createBookingRequest(estimate);
+      }, 1000)
+    } else {
+      createBookingRequest(estimate);
     }
+  };
 
-    if (!firestore) {
+  const createBookingRequest = (currentEstimate: EstimateDetails) => {
+     if (!firestore) {
       setError("An unexpected error occurred. Please try again.");
       setIsAlertOpen(true);
       return;
     }
-
     const requestData = {
       fromLocation,
       toLocation,
@@ -215,7 +225,7 @@ Sakpal Travels
       seats,
       busType,
       seatType,
-      estimate,
+      estimate: currentEstimate,
       userId: user.uid,
       status: 'pending',
       createdAt: serverTimestamp(),
@@ -225,6 +235,29 @@ Sakpal Travels
     addDocumentNonBlocking(requestsCollection, requestData);
     
     setIsConfirmationAlertOpen(true);
+  }
+
+  const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (!selectingOnMap || !e.latLng) return;
+    
+    const lat = e.latLng.lat();
+    const lng = e.latLng.lng();
+
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === 'OK' && results && results[0]) {
+        const address = results[0].formatted_address;
+        if (selectingOnMap === 'from') {
+          setFromLocation({ address, lat, lng });
+        } else {
+          setToLocation({ address, lat, lng });
+        }
+        setSelectingOnMap(null); // Deselect map selection mode after choosing
+      } else {
+        setError('Could not determine address for this location.');
+        setIsAlertOpen(true);
+      }
+    });
   };
 
 
@@ -242,9 +275,6 @@ Sakpal Travels
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none font-inter">
             Your Journey, Our Passion
           </h1>
-          <p className="mx-auto max-w-[700px] text-lg md:text-xl">
-            Find the perfect bus for your adventure. Safe, comfortable, and reliable.
-          </p>
         </div>
       </section>
 
@@ -256,14 +286,23 @@ Sakpal Travels
                   {/* From & To */}
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="from">From</Label>
-                    <PlacesAutocomplete 
-                      onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
-                      initialValue={fromLocation.address}
-                    />
+                    <div className="flex gap-2">
+                       <PlacesAutocomplete 
+                        onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
+                        initialValue={fromLocation.address}
+                      />
+                      <Button variant={selectingOnMap === 'from' ? 'accent' : 'outline'} size="icon" type="button" onClick={() => setSelectingOnMap(selectingOnMap === 'from' ? null : 'from')}><MapPin className="h-4 w-4"/></Button>
+                    </div>
                   </div>
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="to">To</Label>
-                    <PlacesAutocomplete onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} />
+                     <div className="flex gap-2">
+                      <PlacesAutocomplete 
+                        onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} 
+                        initialValue={toLocation.address}
+                      />
+                       <Button variant={selectingOnMap === 'to' ? 'accent' : 'outline'} size="icon" type="button" onClick={() => setSelectingOnMap(selectingOnMap === 'to' ? null : 'to')}><MapPin className="h-4 w-4"/></Button>
+                    </div>
                   </div>
                   
                   {/* Dates */}
@@ -339,6 +378,20 @@ Sakpal Travels
           )}
         </div>
       </div>
+      
+      {isLoaded && (
+        <div className="container px-4 md:px-6 my-8">
+            <div className="w-full max-w-6xl mx-auto rounded-lg overflow-hidden shadow-lg" style={{height: '500px'}}>
+              <MapView 
+                from={fromLocation}
+                to={toLocation}
+                onMapClick={handleMapClick}
+                selecting={selectingOnMap}
+              />
+            </div>
+             {selectingOnMap && <p className="text-center text-accent font-semibold mt-2 animate-pulse">Click on the map to select the '{selectingOnMap}' location.</p>}
+        </div>
+      )}
 
        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>

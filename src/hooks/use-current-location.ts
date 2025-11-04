@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 
 export const useCurrentLocation = (isGoogleMapsLoaded: boolean) => {
   const [locationName, setLocationName] = useState<string>('');
+  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -14,13 +15,14 @@ export const useCurrentLocation = (isGoogleMapsLoaded: boolean) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          setCoords({lat: latitude, lng: longitude});
+
           const geocoder = new window.google.maps.Geocoder();
           const latlng = { lat: latitude, lng: longitude };
 
           geocoder.geocode({ location: latlng }, (results, status) => {
             if (status === 'OK') {
               if (results && results[0]) {
-                // Find a suitable address component, like locality or administrative_area_level_2
                  const cityComponent = results.find(result => 
                     result.types.includes('locality') || 
                     result.types.includes('administrative_area_level_2')
@@ -48,5 +50,5 @@ export const useCurrentLocation = (isGoogleMapsLoaded: boolean) => {
     }
   }, [isGoogleMapsLoaded]);
 
-  return { locationName, error };
+  return { locationName, coords, error };
 };
