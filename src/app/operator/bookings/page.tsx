@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -32,7 +33,7 @@ interface BookingRequest {
   seatType: string;
   seats: string;
   estimate: EstimateDetails;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'quote_rejected';
   userId: string;
   finalCost?: number;
 }
@@ -111,7 +112,8 @@ export default function OperatorBookingsPage() {
                   Status: <span className={`capitalize font-medium ${
                     request.status === 'pending' ? 'text-yellow-500' 
                     : request.status === 'approved' ? 'text-green-500' 
-                    : 'text-red-500'}`}>{request.status}</span>
+                    : request.status === 'quote_rejected' ? 'text-orange-500'
+                    : 'text-red-500'}`}>{request.status.replace('_', ' ')}</span>
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow space-y-3">
