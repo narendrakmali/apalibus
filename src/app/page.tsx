@@ -35,12 +35,14 @@ export default function Home() {
   const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
+    googleMapsApiKey: googleMapsApiKey!,
     libraries,
-    language: 'en'
+    language: 'en',
+    skip: !googleMapsApiKey,
   });
 
   const handleEstimateCost = () => {
@@ -226,7 +228,13 @@ export default function Home() {
                 </div>
 
             </form>
-          ) : <div className="text-center p-8">Loading Search Tools...</div>}
+          ) : (
+             <div className="text-center p-8 text-muted-foreground">
+              <h3 className="font-semibold text-lg text-foreground mb-2">Google Maps Not Configured</h3>
+              <p>Please add your Google Maps API key to the <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> file to enable location search.</p>
+              <p>Create a file named <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> and add: <code className="bg-muted text-foreground p-1 rounded-sm text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_API_KEY</code></p>
+             </div>
+          )}
         </div>
       </div>
       
