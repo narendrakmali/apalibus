@@ -8,10 +8,20 @@ import { useJsApiLoader } from "@react-google-maps/api";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import Image from "next/image";
 import { rateCard } from "@/lib/rate-card";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
 
 
 const libraries: "places"[] = ["places"];
+
+interface EstimateDetails {
+  totalCost: number;
+  baseFare: number;
+  driverAllowance: number;
+  permitCharges: number;
+  numDays: number;
+  minKm: number;
+}
+
 
 export default function Home() {
   const [fromLocation, setFromLocation] = useState("");
@@ -22,7 +32,7 @@ export default function Home() {
   const [busType, setBusType] = useState("");
   const [seatType, setSeatType] = useState("");
 
-  const [estimate, setEstimate] = useState<number | null>(null);
+  const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
 
@@ -59,13 +69,20 @@ export default function Home() {
     const numDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
     
     const minKm = rateInfo.minKmPerDay * numDays;
+    const baseFare = minKm * rateInfo.ratePerKm;
+    const totalDriverAllowance = numDays * rateInfo.driverAllowance;
+    const totalPermitCharges = numDays * rateInfo.permitCharges;
 
-    const totalCost = 
-      (minKm * rateInfo.ratePerKm) +
-      (numDays * rateInfo.driverAllowance) +
-      (numDays * rateInfo.permitCharges);
+    const totalCost = baseFare + totalDriverAllowance + totalPermitCharges;
 
-    setEstimate(totalCost);
+    setEstimate({
+      totalCost,
+      baseFare,
+      driverAllowance: totalDriverAllowance,
+      permitCharges: totalPermitCharges,
+      numDays,
+      minKm,
+    });
     setIsAlertOpen(true);
   };
 
@@ -169,19 +186,34 @@ export default function Home() {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Estimated Fare</AlertDialogTitle>
+                          <AlertDialogTitle>Estimated Fare Breakdown</AlertDialogTitle>
+                           <AlertDialogDescription>
+                            This is an approximate cost for a {estimate?.numDays}-day trip. Actual cost may vary.
+                          </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <div className="py-4">
+                        <div className="py-4 space-y-2">
                           {estimate !== null ? (
-                            <p className="text-2xl font-bold text-center">
-                              ₹{estimate.toLocaleString('en-IN')}
-                            </p>
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Base Fare ({estimate.minKm} km)</span>
+                                <span>₹{estimate.baseFare.toLocaleString('en-IN')}</span>
+                              </div>
+                               <div className="flex justify-between">
+                                <span className="text-muted-foreground">Driver Allowance ({estimate.numDays} days)</span>
+                                <span>₹{estimate.driverAllowance.toLocaleString('en-IN')}</span>
+                              </div>
+                               <div className="flex justify-between">
+                                <span className="text-muted-foreground">Permit Charges ({estimate.numDays} days)</span>
+                                <span>₹{estimate.permitCharges.toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                                <span>Total Estimate</span>
+                                <span>₹{estimate.totalCost.toLocaleString('en-IN')}</span>
+                              </div>
+                            </>
                           ) : (
                              <p>Could not calculate estimate. Please check your selections.</p>
                           )}
-                           <p className="text-sm text-muted-foreground text-center mt-2">
-                            This is an approximate cost based on minimum daily kilometers. Actual cost may vary.
-                           </p>
                         </div>
                         <AlertDialogFooter>
                           <AlertDialogAction>OK</AlertDialogAction>
