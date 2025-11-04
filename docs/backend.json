@@ -1,0 +1,313 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the Traverse application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "mobileNumber": {
+          "type": "string",
+          "description": "User's mobile number."
+        },
+        "address": {
+          "type": "string",
+          "description": "User's address."
+        },
+        "pincode": {
+          "type": "string",
+          "description": "User's pincode."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "name",
+        "mobileNumber",
+        "address",
+        "pincode"
+      ]
+    },
+    "BusOperator": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BusOperator",
+      "type": "object",
+      "description": "Represents a bus operator registered in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the bus operator entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the bus operator."
+        },
+        "contactNumber": {
+          "type": "string",
+          "description": "Contact number of the bus operator."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the bus operator.",
+          "format": "email"
+        },
+        "busIds": {
+          "type": "array",
+          "description": "References to Buses. (Relationship: BusOperator 1:N Bus)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "contactNumber",
+        "email"
+      ]
+    },
+    "Bus": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Bus",
+      "type": "object",
+      "description": "Represents a bus available for booking.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the bus entity."
+        },
+        "operatorId": {
+          "type": "string",
+          "description": "Reference to BusOperator. (Relationship: BusOperator 1:N Bus)"
+        },
+        "busType": {
+          "type": "string",
+          "description": "Type of the bus (e.g., AC, Non-AC, Sleeper)."
+        },
+        "seatingCapacity": {
+          "type": "number",
+          "description": "Number of seats available on the bus."
+        },
+        "availableDays": {
+          "type": "array",
+          "description": "Days of the week the bus is available.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "operatorId",
+        "busType",
+        "seatingCapacity",
+        "availableDays"
+      ]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a bus booking made by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the booking entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Booking)"
+        },
+        "busId": {
+          "type": "string",
+          "description": "Reference to Bus. (Relationship: Bus 1:N Booking)"
+        },
+        "bookingDate": {
+          "type": "string",
+          "description": "Date and time the booking was made.",
+          "format": "date-time"
+        },
+        "journeyDate": {
+          "type": "string",
+          "description": "Date of the bus journey.",
+          "format": "date-time"
+        },
+        "startLocation": {
+          "type": "string",
+          "description": "Starting location of the journey."
+        },
+        "destination": {
+          "type": "string",
+          "description": "Destination of the journey."
+        },
+        "paymentId": {
+          "type": "string",
+          "description": "Reference to Payment. (Relationship: Payment 1:1 Booking)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "busId",
+        "bookingDate",
+        "journeyDate",
+        "startLocation",
+        "destination",
+        "paymentId"
+      ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a payment made for a booking.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment entity."
+        },
+        "bookingId": {
+          "type": "string",
+          "description": "Reference to Booking. (Relationship: Payment 1:1 Booking)"
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "Date and time the payment was made.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount paid for the booking."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method used (e.g., Credit Card, Razorpay)."
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "Status of the payment (e.g., Success, Pending, Failed)."
+        }
+      },
+      "required": [
+        "id",
+        "bookingId",
+        "paymentDate",
+        "amount",
+        "paymentMethod",
+        "paymentStatus"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. This includes denormalized data that may be needed for other collections.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/busOperators/{busOperatorId}",
+        "definition": {
+          "entityName": "BusOperator",
+          "schema": {
+            "$ref": "#/backend/entities/BusOperator"
+          },
+          "description": "Stores information about bus operators.",
+          "params": [
+            {
+              "name": "busOperatorId",
+              "description": "The unique identifier for the bus operator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/busOperators/{busOperatorId}/buses/{busId}",
+        "definition": {
+          "entityName": "Bus",
+          "schema": {
+            "$ref": "#/backend/entities/Bus"
+          },
+          "description": "Stores information about buses, owned by a specific bus operator. Includes denormalized operator data (name, etc.) for authorization independence.",
+          "params": [
+            {
+              "name": "busOperatorId",
+              "description": "The unique identifier for the bus operator."
+            },
+            {
+              "name": "busId",
+              "description": "The unique identifier for the bus."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores booking information for a specific user. Includes denormalized user information (name, etc.) for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "bookingId",
+              "description": "The unique identifier for the booking."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores payment information. Flat collection since payments should be accessible independently, but should be secured.",
+          "params": [
+            {
+              "name": "paymentId",
+              "description": "The unique identifier for the payment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization independence is achieved through denormalization. For instance, any authorization-relevant data from the BusOperator entity that's required for bus entities authorization should be copied to each Bus document. This eliminates the need for `get()` calls in security rules. Structural segregation is used to maintain a homogeneous security posture within collections. Each collection contains documents with similar access control needs.\n\nAccess modeling follows a consistent pattern: User-owned data (like bookings) is nested under the `/users/{userId}` path, ensuring clear ownership. Membership maps are not explicitly required based on entities provided, but if collaboration features are included later, they will be used. No custom claims will be used, relying instead on roles stored directly in Firestore (DBAC).\n\nThe structure facilitates secure `list` operations (QAPs) by segregating data based on access requirements.  For example, operator-owned buses are stored under `/busOperators/{operatorId}/buses/{busId}` and user bookings are stored under `/users/{userId}/bookings/{bookingId}`. This allows rules to easily filter lists based on ownership without being filters themselves. The data structure models state explicitly using dedicated fields where relevant (e.g., a `status` field), promotes a predictable schema, and enforces consistent naming conventions."
+  }
+}

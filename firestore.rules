@@ -1,0 +1,153 @@
+/**
+ * @fileoverview Firestore Security Rules for the Traverse application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user profiles and bookings.
+ * Bus operator data and bus data are also secured based on operator ownership.
+ * Payments are secured via lookup to ensure only associated users can access them.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information, secured by owner-only access.
+ * - /busOperators/{busOperatorId}: Stores bus operator information, secured by owner-only access.
+ * - /busOperators/{busOperatorId}/buses/{busId}: Stores bus information, secured by operator ownership.
+ * - /users/{userId}/bookings/{bookingId}: Stores booking information, secured by user ownership.
+ * - /payments/{paymentId}: Stores payment information, secured by lookup via booking.
+ *
+ * Key Security Decisions:
+ * - User data is private and only accessible to the user themselves.
+ * - Bus operator data is private and only accessible to the operator themselves.
+ * - Listing of users is explicitly denied.
+ * - Payments can be accessed only by users with a booking associated with that payment.
+ * - Data validation is relaxed in this prototype to allow for rapid iteration. Only authorization-critical
+ *   data is validated (e.g., user IDs on create operations).
+ *
+ * Denormalization for Authorization:
+ * - The `Bus` entity under a `BusOperator` will have operator information denormalized onto it, though the provided schema does not define these fields.
+ * - The `Booking` entity under a `User` will have user information denormalized onto it, though the provided schema does not define these fields.
+ *
+ * Structural Segregation:
+ * - Private user data (profiles, bookings) is stored under /users/{userId} to ensure owner-only access.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Checks if the request is authenticated.
+     * @path N/A
+     * @allow N/A
+     * @deny N/A
+     * @principle Requires authentication for all protected resources.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @path N/A
+     * @allow N/A
+     * @deny N/A
+     * @principle Enforces document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the owner of an existing document.
+     * @path N/A
+     * @allow N/A
+     * @deny N/A
+     * @principle Combines ownership and existence checks for safer destructive operations.
+     */
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for user profiles.
+     * @path /users/{userId}
+     * @allow (create) User with ID 'user_abc' creates their profile: request.auth.uid == 'user_abc'.
+     * @allow (get) User with ID 'user_abc' reads their profile: request.auth.uid == 'user_abc'.
+     * @allow (update) User with ID 'user_abc' updates their profile: request.auth.uid == 'user_abc'.
+     * @allow (delete) User with ID 'user_abc' deletes their profile: request.auth.uid == 'user_abc'.
+     * @deny (create) User with ID 'user_xyz' attempts to create a profile for 'user_abc': request.auth.uid != 'user_abc'.
+     * @principle Enforces document ownership for user profiles.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Listing users is not permitted.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id; // Enforce immutability of user ID.
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for bus operator profiles.
+     * @path /busOperators/{busOperatorId}
+     * @allow (create) Operator with ID 'operator_abc' creates their profile: request.auth.uid == 'operator_abc'.
+     * @allow (get) Operator with ID 'operator_abc' reads their profile: request.auth.uid == 'operator_abc'.
+     * @allow (update) Operator with ID 'operator_abc' updates their profile: request.auth.uid == 'operator_abc'.
+     * @allow (delete) Operator with ID 'operator_abc' deletes their profile: request.auth.uid == 'operator_abc'.
+     * @deny (create) Operator with ID 'operator_xyz' attempts to create a profile for 'operator_abc': request.auth.uid != 'operator_abc'.
+     * @principle Enforces document ownership for bus operator profiles.
+     */
+    match /busOperators/{busOperatorId} {
+      allow get: if isOwner(busOperatorId);
+      allow list: if false; // Listing bus operators is not permitted.
+      allow create: if isOwner(busOperatorId) && request.resource.data.id == busOperatorId;
+      allow update: if isExistingOwner(busOperatorId) && request.resource.data.id == resource.data.id; // Enforce immutability of operator ID.
+      allow delete: if isExistingOwner(busOperatorId);
+
+        /**
+         * @description Rules for buses owned by a bus operator.
+         * @path /busOperators/{busOperatorId}/buses/{busId}
+         * @allow (create) Operator 'operator_abc' creates a bus 'bus_123': request.auth.uid == 'operator_abc' && request.resource.data.operatorId == 'operator_abc'.
+         * @allow (get) Operator 'operator_abc' or any user reads bus 'bus_123' info.
+         * @allow (update) Operator 'operator_abc' updates bus 'bus_123': request.auth.uid == 'operator_abc' && resource.data.operatorId == 'operator_abc'.
+         * @allow (delete) Operator 'operator_abc' deletes bus 'bus_123': request.auth.uid == 'operator_abc' && resource.data.operatorId == 'operator_abc'.
+         * @deny (create) User attempts to create a bus under operator 'operator_abc'.
+         * @principle Enforces operator ownership for buses.  Allows public read access to bus information.
+         */
+        match /buses/{busId} {
+          allow get, list: if true; // Public read access to bus information.
+          allow create: if isOwner(busOperatorId) && request.resource.data.operatorId == busOperatorId && request.resource.data.id == busId;
+          allow update: if isExistingOwner(busOperatorId) && resource.data.operatorId == busOperatorId && request.resource.data.operatorId == resource.data.operatorId; //Enforce immutability of operatorId
+          allow delete: if isExistingOwner(busOperatorId) && resource.data.operatorId == busOperatorId;
+        }
+    }
+
+    /**
+     * @description Rules for user bookings.
+     * @path /users/{userId}/bookings/{bookingId}
+     * @allow (create) User with ID 'user_abc' creates a booking 'booking_123': request.auth.uid == 'user_abc'.
+     * @allow (get) User with ID 'user_abc' reads their booking 'booking_123': request.auth.uid == 'user_abc'.
+     * @allow (update) User with ID 'user_abc' updates their booking 'booking_123': request.auth.uid == 'user_abc'.
+     * @allow (delete) User with ID 'user_abc' deletes their booking 'booking_123': request.auth.uid == 'user_abc'.
+     * @deny (create) User with ID 'user_xyz' attempts to create a booking for 'user_abc'.
+     * @principle Enforces document ownership for user bookings.
+     */
+    match /users/{userId}/bookings/{bookingId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId && request.resource.data.id == bookingId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.userId == userId ; //Enforce immutability of userId
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for payments. Payments are accessible if the user has a booking with paymentId.
+     * @path /payments/{paymentId}
+     * @allow (get) User with a booking associated with payment 'payment_123' reads payment info.
+     * @deny (get) User without a related booking attempts to read payment 'payment_123'.
+     * @principle Payment access is restricted to users with associated bookings.
+     */
+    match /payments/{paymentId} {
+        allow get: if get(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.userId == request.auth.uid;
+        allow list: if false;
+        allow create: if false; //Payments should be created server side.
+        allow update: if false;
+        allow delete: if false;
+    }
+  }
+}
