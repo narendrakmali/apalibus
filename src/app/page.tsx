@@ -11,6 +11,10 @@ import Image from "next/image";
 import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
+import { useFirebase } from "@/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const libraries: ("places")[] = ["places"];
 
@@ -43,7 +47,11 @@ export default function Home() {
 
   const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { user, firestore } = useFirebase();
+  const router = useRouter();
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -181,6 +189,44 @@ Sakpal Travels
     window.location.href = mailtoLink;
   };
 
+  const handleCreateRequest = async () => {
+    if (!user) {
+      router.push('/user-login');
+      return;
+    }
+
+    if (!estimate) {
+      setError("Please calculate an estimate before creating a request.");
+      setIsAlertOpen(true);
+      return;
+    }
+
+    if (!firestore) {
+      setError("An unexpected error occurred. Please try again.");
+      setIsAlertOpen(true);
+      return;
+    }
+
+    const requestData = {
+      fromLocation,
+      toLocation,
+      journeyDate,
+      returnDate,
+      seats,
+      busType,
+      seatType,
+      estimate,
+      userId: user.uid,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+    };
+
+    const requestsCollection = collection(firestore, 'bookingRequests');
+    addDocumentNonBlocking(requestsCollection, requestData);
+    
+    setIsConfirmationAlertOpen(true);
+  };
+
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -205,7 +251,7 @@ Sakpal Travels
       <div id="search" className="container px-4 md:px-6 -mt-32 relative z-10">
         <div className="w-full max-w-6xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl">
           {isLoaded ? (
-              <form onSubmit={(e) => e.preventDefault()}>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateRequest(); }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end mb-6">
                   {/* From & To */}
                   <div className="grid gap-2 text-left">
@@ -340,6 +386,20 @@ Sakpal Travels
             </div>
             <AlertDialogFooter>
               <AlertDialogAction onClick={() => setIsAlertOpen(false)}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={isConfirmationAlertOpen} onOpenChange={setIsConfirmationAlertOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Request Submitted!</AlertDialogTitle>
+              <AlertDialogDescription>
+                Your booking request has been sent to the operators. You will be notified once it is reviewed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setIsConfirmationAlertOpen(false)}>OK</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
