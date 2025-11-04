@@ -35,7 +35,7 @@ export default function Header() {
           Contact
         </Link>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/login">Login</Link>
+          <Link href="/user-login">Login</Link>
         </Button>
         <Button size="sm" className="bg-accent hover:bg-accent/90" asChild>
            <Link href="/register">Register</Link>

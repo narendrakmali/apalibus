@@ -56,7 +56,7 @@ export default function RegisterPage() {
 
       setDocumentNonBlocking(userDocRef, userData, {});
 
-      router.push('/login');
+      router.push('/user-login');
     } catch (error: any) {
       setError(error.message);
     }
@@ -143,7 +143,7 @@ export default function RegisterPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href="/login" className="underline">
+            <Link href="/user-login" className="underline">
               Sign in
             </Link>
           </div>

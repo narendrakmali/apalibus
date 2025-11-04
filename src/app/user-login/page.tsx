@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function OperatorLoginPage() {
+export default function UserLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,6 @@ export default function OperatorLoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // TODO: Check if user is an operator and redirect to operator dashboard
       router.push('/');
     } catch (error: any) {
       setError(error.message);
@@ -42,9 +41,9 @@ export default function OperatorLoginPage() {
     <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
       <Card className="mx-auto max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Operator Login</CardTitle>
+          <CardTitle className="text-2xl">User Login</CardTitle>
           <CardDescription>
-            Enter your email below to login to your operator account
+            Enter your email below to login to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,9 +85,15 @@ export default function OperatorLoginPage() {
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
-            Not an operator?{' '}
-            <Link href="/user-login" className="underline">
-              User Login
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="underline">
+              Sign up
+            </Link>
+          </div>
+           <div className="mt-4 text-center text-sm">
+            Are you an operator?{' '}
+            <Link href="/login" className="underline">
+              Operator Login
             </Link>
           </div>
         </CardContent>
