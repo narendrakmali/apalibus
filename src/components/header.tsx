@@ -22,7 +22,7 @@ export default function Header() {
   return (
     <header className="px-4 lg:px-6 h-16 flex items-center bg-card shadow-md">
       <Link href="/" className="flex items-center justify-center">
-        <BusFront className="h-6 w-6 text-accent" />
+        <BusFront className="h-6 w-6 text-primary" />
         <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
@@ -70,7 +70,7 @@ export default function Header() {
             <Button variant="outline" size="sm" asChild>
               <Link href="/operator-login">Operator Login</Link>
             </Button>
-            <Button size="sm" className="bg-accent hover:bg-accent/90" asChild>
+            <Button size="sm" asChild>
               <Link href="/register">Register</Link>
             </Button>
           </>
