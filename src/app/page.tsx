@@ -12,11 +12,9 @@ import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
 import { useFirebase } from "@/firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import MapView from "@/components/map-view";
-import { MapPin } from "lucide-react";
 
 const libraries: ("places")[] = ["places"];
 
@@ -51,9 +49,6 @@ export default function Home() {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [selectingOnMap, setSelectingOnMap] = useState<'from' | 'to' | null>(null);
-
 
   const { user, firestore } = useFirebase();
   const router = useRouter();
@@ -237,30 +232,6 @@ Sakpal Travels
     setIsConfirmationAlertOpen(true);
   }
 
-  const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (!selectingOnMap || !e.latLng) return;
-    
-    const lat = e.latLng.lat();
-    const lng = e.latLng.lng();
-
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-      if (status === 'OK' && results && results[0]) {
-        const address = results[0].formatted_address;
-        if (selectingOnMap === 'from') {
-          setFromLocation({ address, lat, lng });
-        } else {
-          setToLocation({ address, lat, lng });
-        }
-        setSelectingOnMap(null); // Deselect map selection mode after choosing
-      } else {
-        setError('Could not determine address for this location.');
-        setIsAlertOpen(true);
-      }
-    });
-  };
-
-
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       <section className="relative w-full h-[60vh] md:h-[70vh]">
@@ -286,23 +257,17 @@ Sakpal Travels
                   {/* From & To */}
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="from">From</Label>
-                    <div className="flex gap-2">
-                       <PlacesAutocomplete 
-                        onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
-                        initialValue={fromLocation.address}
-                      />
-                      <Button variant={selectingOnMap === 'from' ? 'accent' : 'outline'} size="icon" type="button" onClick={() => setSelectingOnMap(selectingOnMap === 'from' ? null : 'from')}><MapPin className="h-4 w-4"/></Button>
-                    </div>
+                    <PlacesAutocomplete 
+                      onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
+                      initialValue={fromLocation.address}
+                    />
                   </div>
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="to">To</Label>
-                     <div className="flex gap-2">
-                      <PlacesAutocomplete 
-                        onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} 
-                        initialValue={toLocation.address}
-                      />
-                       <Button variant={selectingOnMap === 'to' ? 'accent' : 'outline'} size="icon" type="button" onClick={() => setSelectingOnMap(selectingOnMap === 'to' ? null : 'to')}><MapPin className="h-4 w-4"/></Button>
-                    </div>
+                    <PlacesAutocomplete 
+                      onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} 
+                      initialValue={toLocation.address}
+                    />
                   </div>
                   
                   {/* Dates */}
@@ -379,20 +344,6 @@ Sakpal Travels
         </div>
       </div>
       
-      {isLoaded && (
-        <div className="container px-4 md:px-6 my-8">
-            <div className="w-full max-w-6xl mx-auto rounded-lg overflow-hidden shadow-lg" style={{height: '500px'}}>
-              <MapView 
-                from={fromLocation}
-                to={toLocation}
-                onMapClick={handleMapClick}
-                selecting={selectingOnMap}
-              />
-            </div>
-             {selectingOnMap && <p className="text-center text-accent font-semibold mt-2 animate-pulse">Click on the map to select the '{selectingOnMap}' location.</p>}
-        </div>
-      )}
-
        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
