@@ -11,11 +11,11 @@ interface PlacesAutocompleteProps {
 
 const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocompleteProps) => {
     const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const [inputValue, setInputValue] = useState(initialValue || '');
 
     useEffect(() => {
-        if (inputRef.current && initialValue) {
-            inputRef.current.value = initialValue;
+        if (initialValue) {
+            setInputValue(initialValue);
         }
     }, [initialValue]);
 
@@ -29,6 +29,7 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocomple
             const address = place.formatted_address || '';
             const lat = place.geometry?.location?.lat();
             const lng = place.geometry?.location?.lng();
+            setInputValue(address);
             onLocationSelect(address, lat, lng);
         } else {
             console.error('Autocomplete is not loaded yet!');
@@ -36,6 +37,7 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocomple
     };
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(event.target.value);
         if (!event.target.value) {
             onLocationSelect('');
         }
@@ -51,12 +53,11 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocomple
             }}
         >
             <Input
-                ref={inputRef}
                 type="text"
                 placeholder="Enter a location"
                 className="w-full"
                 onChange={handleInputChange}
-                defaultValue={initialValue}
+                value={inputValue}
             />
         </Autocomplete>
     );
