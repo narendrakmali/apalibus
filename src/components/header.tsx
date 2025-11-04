@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -8,9 +7,11 @@ import { useFirebase } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
+import { useUserRole } from "@/hooks/use-user-role";
 
 export default function Header() {
   const { user, auth, isUserLoading } = useFirebase();
+  const { role, isLoading: isRoleLoading } = useUserRole();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -27,25 +28,29 @@ export default function Header() {
         <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-        {isUserLoading ? (
+        {isUserLoading || isRoleLoading ? (
            <div className="flex gap-4 sm:gap-6 items-center">
             <Skeleton className="h-6 w-20" />
             <Skeleton className="h-9 w-24" />
           </div>
         ) : user ? (
           <>
-             <Link
-              href="/operator/dashboard"
-              className="text-sm font-medium hover:underline underline-offset-4"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/dashboard/bookings"
-              className="text-sm font-medium hover:underline underline-offset-4"
-            >
-              My Bookings
-            </Link>
+            {role === 'operator' && (
+              <Link
+                href="/operator/dashboard"
+                className="text-sm font-medium hover:underline underline-offset-4"
+              >
+                Operator Dashboard
+              </Link>
+            )}
+             {role === 'user' && (
+              <Link
+                href="/dashboard/bookings"
+                className="text-sm font-medium hover:underline underline-offset-4"
+              >
+                My Bookings
+              </Link>
+            )}
             <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Logout">
               <LogOut className="h-5 w-5" />
             </Button>

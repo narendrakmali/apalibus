@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -9,10 +8,11 @@ import {
     CardTitle,
   } from '@/components/ui/card';
   import { useFirebase } from '@/firebase';
+  import { useUserRole } from '@/hooks/use-user-role';
   import { Bus, PlusCircle, CalendarDays } from 'lucide-react';
   import Link from 'next/link';
   import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+  import { useEffect } from 'react';
   
   const operatorSections = [
     {
@@ -37,16 +37,27 @@ import { useEffect } from 'react';
   
   export default function OperatorDashboardPage() {
     const { user, isUserLoading } = useFirebase();
+    const { role, isLoading: isRoleLoading } = useUserRole();
     const router = useRouter();
   
     useEffect(() => {
+        // If auth is done loading and there's no user, redirect to login
         if (!isUserLoading && !user) {
             router.push('/operator-login');
         }
-    }, [isUserLoading, user, router]);
+        // If role check is done and the user is not an operator, redirect away
+        if (!isRoleLoading && role && role !== 'operator') {
+            router.push('/');
+        }
+    }, [isUserLoading, user, isRoleLoading, role, router]);
 
-    if (isUserLoading || !user) {
-      return <div>Loading...</div>; // Show loading state while checking auth or redirecting
+    // Show loading state while checking auth or role
+    if (isUserLoading || isRoleLoading || !user || role !== 'operator') {
+      return (
+        <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
+            <p>Loading and verifying access...</p>
+        </div>
+      );
     }
 
     return (
