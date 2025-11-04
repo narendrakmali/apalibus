@@ -4,30 +4,43 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { useFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, doc, query, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useMemoFirebase } from '@/firebase/provider';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-// Define the type for a booking request
+interface EstimateDetails {
+  totalCost: number;
+}
+
 interface BookingRequest {
   id: string;
   fromLocation: { address: string };
   toLocation: { address: string };
   journeyDate: string;
   returnDate: string;
+  busType: string;
+  seatType: string;
+  seats: string;
+  estimate: EstimateDetails;
   status: 'pending' | 'approved' | 'rejected';
   userId: string;
+  finalCost?: number;
 }
 
 export default function OperatorBookingsPage() {
   const { firestore, user, isUserLoading } = useFirebase();
   const router = useRouter();
+  const [finalCosts, setFinalCosts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -37,11 +50,31 @@ export default function OperatorBookingsPage() {
 
   const bookingRequestsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // For now, operators see all requests. This could be filtered later.
     return query(collection(firestore, 'bookingRequests'));
   }, [firestore]);
 
   const { data: bookingRequests, isLoading } = useCollection<BookingRequest>(bookingRequestsQuery);
+
+  const handleStatusUpdate = async (id: string, status: 'approved' | 'rejected') => {
+    if (!firestore) return;
+    const requestDocRef = doc(firestore, 'bookingRequests', id);
+    const updateData: { status: 'approved' | 'rejected'; finalCost?: number } = { status };
+
+    if (status === 'approved') {
+        const cost = parseFloat(finalCosts[id]);
+        if (!cost || isNaN(cost)) {
+            alert('Please enter a valid final cost before approving.');
+            return;
+        }
+        updateData.finalCost = cost;
+    }
+    
+    await updateDoc(requestDocRef, updateData);
+  };
+  
+  const handleFinalCostChange = (id: string, value: string) => {
+    setFinalCosts(prev => ({...prev, [id]: value}));
+  };
 
   if (isUserLoading || !user) {
     return (
@@ -59,38 +92,58 @@ export default function OperatorBookingsPage() {
           Review and respond to incoming booking requests.
         </p>
       </header>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Incoming Requests</CardTitle>
-          <CardDescription>
-            A list of all booking requests from users.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading && <p>Loading requests...</p>}
-          {!isLoading && (!bookingRequests || bookingRequests.length === 0) && (
-            <div className="text-center text-muted-foreground py-20">
-              <p>There are no pending booking requests.</p>
-            </div>
-          )}
-          {!isLoading && bookingRequests && bookingRequests.length > 0 && (
-            <div className="space-y-4">
-              {bookingRequests.map((request) => (
-                <div key={request.id} className="border p-4 rounded-lg flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold">{request.fromLocation.address} to {request.toLocation.address}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Date: {request.journeyDate} | Status: <span className={`capitalize font-medium ${request.status === 'pending' ? 'text-yellow-500' : request.status === 'approved' ? 'text-green-500' : 'text-red-500'}`}>{request.status}</span>
-                    </p>
-                  </div>
-                  {/* TODO: Add buttons to approve/reject */}
+       {isLoading && <p>Loading requests...</p>}
+      {!isLoading && (!bookingRequests || bookingRequests.length === 0) ? (
+        <Card>
+            <CardContent className="pt-6">
+                <div className="text-center text-muted-foreground py-20">
+                    <p>There are no pending booking requests.</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {bookingRequests?.map((request) => (
+            <Card key={request.id} className="flex flex-col">
+              <CardHeader>
+                <CardTitle className="text-xl">{request.fromLocation.address} to {request.toLocation.address}</CardTitle>
+                <CardDescription>
+                  Status: <span className={`capitalize font-medium ${
+                    request.status === 'pending' ? 'text-yellow-500' 
+                    : request.status === 'approved' ? 'text-green-500' 
+                    : 'text-red-500'}`}>{request.status}</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-3">
+                <p className="text-sm"><strong>Journey:</strong> {new Date(request.journeyDate).toLocaleDateString()} - {new Date(request.returnDate).toLocaleDateString()}</p>
+                <p className="text-sm"><strong>Bus:</strong> {request.seats} Seater, {request.busType}, {request.seatType}</p>
+                <p className="text-sm"><strong>User Estimate:</strong> ₹{request.estimate.totalCost.toLocaleString('en-IN')}</p>
+                 {request.status === 'approved' && request.finalCost && (
+                     <p className="text-sm font-semibold text-green-600"><strong>Final Cost:</strong> ₹{request.finalCost.toLocaleString('en-IN')}</p>
+                 )}
+              </CardContent>
+              {request.status === 'pending' && (
+                <CardFooter className="flex flex-col items-start gap-4">
+                  <div className="w-full grid gap-2">
+                    <Label htmlFor={`final-cost-${request.id}`}>Set Final Cost</Label>
+                    <Input 
+                        id={`final-cost-${request.id}`}
+                        type="number"
+                        placeholder="e.g., 25000"
+                        value={finalCosts[request.id] || ''}
+                        onChange={(e) => handleFinalCostChange(request.id, e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-2 w-full">
+                    <Button variant="outline" className="w-full" onClick={() => handleStatusUpdate(request.id, 'reject')}>Reject</Button>
+                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'approve')}>Approve</Button>
+                  </div>
+                </CardFooter>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
