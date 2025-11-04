@@ -7,6 +7,9 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Sakpal Travels. All rights reserved.
           </p>
           <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+            <Link href="/about" className="text-xs hover:underline underline-offset-4">
+              About Us
+            </Link>
             <Link href="/terms" className="text-xs hover:underline underline-offset-4">
               Terms of Service
             </Link>

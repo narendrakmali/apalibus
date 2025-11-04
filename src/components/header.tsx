@@ -58,18 +58,6 @@ export default function Header() {
         ) : (
           <>
             <Link
-              href="/#search"
-              className="text-sm font-medium hover:underline underline-offset-4"
-            >
-              Book Now
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm font-medium hover:underline underline-offset-4"
-            >
-              About Us
-            </Link>
-            <Link
               href="/contact"
               className="text-sm font-medium hover:underline underline-offset-4"
             >
