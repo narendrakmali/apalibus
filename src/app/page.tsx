@@ -1,4 +1,3 @@
-
 'use client';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -44,80 +43,87 @@ export default function Home() {
       <div className="container px-4 md:px-6 -mt-32 relative z-10">
         <div className="w-full max-w-6xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl">
           {isLoaded ? (
-              <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
-              {/* From & To */}
-              <div className="grid gap-2 text-left">
-                <Label htmlFor="from">From</Label>
-                <PlacesAutocomplete onLocationSelect={(address) => setFromLocation(address)} />
-              </div>
-              <div className="grid gap-2 text-left">
-                <Label htmlFor="to">To</Label>
-                <PlacesAutocomplete onLocationSelect={(address) => setToLocation(address)} />
-              </div>
-              
-              {/* Dates */}
-              <div className="grid gap-2 text-left">
-                <Label htmlFor="start-date">Journey Date</Label>
-                <Input id="start-date" type="date" />
-              </div>
-              <div className="grid gap-2 text-left">
-                <Label htmlFor="return-date">Return Date (Optional)</Label>
-                <Input id="return-date" type="date" />
-              </div>
+              <form>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end mb-6">
+                  {/* From & To */}
+                  <div className="grid gap-2 text-left">
+                    <Label htmlFor="from">From</Label>
+                    <PlacesAutocomplete onLocationSelect={(address) => setFromLocation(address)} />
+                  </div>
+                  <div className="grid gap-2 text-left">
+                    <Label htmlFor="to">To</Label>
+                    <PlacesAutocomplete onLocationSelect={(address) => setToLocation(address)} />
+                  </div>
+                  
+                  {/* Dates */}
+                  <div className="grid gap-2 text-left">
+                    <Label htmlFor="start-date">Journey Date</Label>
+                    <Input id="start-date" type="date" />
+                  </div>
+                  <div className="grid gap-2 text-left">
+                    <Label htmlFor="return-date">Return Date (Optional)</Label>
+                    <Input id="return-date" type="date" />
+                  </div>
 
-              {/* Seating */}
-              <div className="grid gap-2 text-left">
-                <Label htmlFor="seats">Seats</Label>
-                <Select>
-                  <SelectTrigger id="seats">
-                    <SelectValue placeholder="Number of seats" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="13">13 Seater</SelectItem>
-                    <SelectItem value="15">15 Seater</SelectItem>
-                    <SelectItem value="17">17 Seater</SelectItem>
-                    <SelectItem value="20">20 Seater</SelectItem>
-                    <SelectItem value="24">24 Seater</SelectItem>
-                    <SelectItem value="30">30 Seater</SelectItem>
-                    <SelectItem value="36">36 Seater</SelectItem>
-                    <SelectItem value="40">40 Seater</SelectItem>
-                    <SelectItem value="45">45 Seater</SelectItem>
-                    <SelectItem value="49">49 Seater</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Bus Type */}
-              <div className="grid gap-2 text-left">
-                <Label htmlFor="bus-type">Bus Type</Label>
-                 <Select>
-                  <SelectTrigger id="bus-type">
-                    <SelectValue placeholder="AC / Non-AC" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ac">AC</SelectItem>
-                    <SelectItem value="non-ac">Non-AC</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Seat Type */}
-               <div className="grid gap-2 text-left">
-                <Label htmlFor="seat-type">Seat Type</Label>
-                 <Select>
-                  <SelectTrigger id="seat-type">
-                    <SelectValue placeholder="Select seat type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="pushback">Pushback</SelectItem>
-                    <SelectItem value="semi-sleeper">Semi Sleeper</SelectItem>
-                     <SelectItem value="sleeper">Sleeper</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  {/* Seating */}
+                  <div className="grid gap-2 text-left">
+                    <Label htmlFor="seats">Seats</Label>
+                    <Select>
+                      <SelectTrigger id="seats">
+                        <SelectValue placeholder="Number of seats" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="13">13 Seater</SelectItem>
+                        <SelectItem value="15">15 Seater</SelectItem>
+                        <SelectItem value="17">17 Seater</SelectItem>
+                        <SelectItem value="20">20 Seater</SelectItem>
+                        <SelectItem value="24">24 Seater</SelectItem>
+                        <SelectItem value="30">30 Seater</SelectItem>
+                        <SelectItem value="36">36 Seater</SelectItem>
+                        <SelectItem value="40">40 Seater</SelectItem>
+                        <SelectItem value="45">45 Seater</SelectItem>
+                        <SelectItem value="49">49 Seater</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Bus Type */}
+                  <div className="grid gap-2 text-left">
+                    <Label htmlFor="bus-type">Bus Type</Label>
+                    <Select>
+                      <SelectTrigger id="bus-type">
+                        <SelectValue placeholder="AC / Non-AC" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ac">AC</SelectItem>
+                        <SelectItem value="non-ac">Non-AC</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Seat Type */}
+                  <div className="grid gap-2 text-left">
+                    <Label htmlFor="seat-type">Seat Type</Label>
+                    <Select>
+                      <SelectTrigger id="seat-type">
+                        <SelectValue placeholder="Select seat type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General</SelectItem>
+                        <SelectItem value="pushback">Pushback</SelectItem>
+                        <SelectItem value="semi-sleeper">Semi Sleeper</SelectItem>
+                        <SelectItem value="sleeper">Sleeper</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-end">
+                   <Button type="button" variant="outline" className="w-full sm:w-auto">Estimate Cost</Button>
+                   <Button type="button" variant="outline" className="w-full sm:w-auto">Share</Button>
+                   <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">Search Buses</Button>
+                </div>
 
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground lg:col-start-4">Search Buses</Button>
             </form>
           ) : <div className="text-center p-8">Loading Search Tools...</div>}
         </div>
