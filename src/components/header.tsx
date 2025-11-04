@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -51,8 +52,8 @@ export default function Header() {
                 My Bookings
               </Link>
             )}
-            <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Logout">
-              <LogOut className="h-5 w-5" />
+            <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Logout">
+              Logout
             </Button>
           </>
         ) : (
