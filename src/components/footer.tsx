@@ -16,6 +16,9 @@ export default function Footer() {
             <Link href="/contact" className="text-xs hover:underline underline-offset-4">
               Contact
             </Link>
+            <Link href="/admin/login" className="text-xs hover:underline underline-offset-4">
+              Admin
+            </Link>
           </nav>
         </footer>
     )
