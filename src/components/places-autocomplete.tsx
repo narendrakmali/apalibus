@@ -48,7 +48,6 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocomple
             onLoad={onLoad}
             onPlaceChanged={onPlaceChanged}
             options={{
-                types: ['(cities)'],
                 componentRestrictions: { country: 'in' } // Restrict to India for relevance
             }}
         >
