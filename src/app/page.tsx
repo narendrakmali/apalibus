@@ -1,14 +1,16 @@
+
 'use client';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import Image from "next/image";
 import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { useCurrentLocation } from "@/hooks/use-current-location";
 
 
 const libraries: "places"[] = ["places"];
@@ -44,6 +46,15 @@ export default function Home() {
     language: 'en',
     skip: !googleMapsApiKey,
   });
+
+  const { locationName } = useCurrentLocation(isLoaded);
+
+  useEffect(() => {
+    if (locationName) {
+      setFromLocation(locationName);
+    }
+  }, [locationName]);
+
 
   const handleEstimateCost = () => {
     if (!busType || !seats || !journeyDate || !returnDate) {
@@ -118,7 +129,10 @@ export default function Home() {
                   {/* From & To */}
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="from">From</Label>
-                    <PlacesAutocomplete onLocationSelect={(address) => setFromLocation(address)} />
+                    <PlacesAutocomplete 
+                      onLocationSelect={(address) => setFromLocation(address)} 
+                      initialValue={fromLocation}
+                    />
                   </div>
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="to">To</Label>

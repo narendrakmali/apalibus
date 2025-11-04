@@ -1,15 +1,23 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Autocomplete } from '@react-google-maps/api';
 import { Input } from '@/components/ui/input';
 
 interface PlacesAutocompleteProps {
     onLocationSelect: (address: string, lat?: number, lng?: number) => void;
+    initialValue?: string;
 }
 
-const PlacesAutocomplete = ({ onLocationSelect }: PlacesAutocompleteProps) => {
+const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocompleteProps) => {
     const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (inputRef.current && initialValue) {
+            inputRef.current.value = initialValue;
+        }
+    }, [initialValue]);
 
     const onLoad = (autocompleteInstance: google.maps.places.Autocomplete) => {
         setAutocomplete(autocompleteInstance);
@@ -27,6 +35,12 @@ const PlacesAutocomplete = ({ onLocationSelect }: PlacesAutocompleteProps) => {
         }
     };
 
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.value) {
+            onLocationSelect('');
+        }
+    };
+
     return (
         <Autocomplete
             onLoad={onLoad}
@@ -37,9 +51,12 @@ const PlacesAutocomplete = ({ onLocationSelect }: PlacesAutocompleteProps) => {
             }}
         >
             <Input
+                ref={inputRef}
                 type="text"
                 placeholder="Enter a location"
                 className="w-full"
+                onChange={handleInputChange}
+                defaultValue={initialValue}
             />
         </Autocomplete>
     );
