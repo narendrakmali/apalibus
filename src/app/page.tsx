@@ -7,18 +7,68 @@ import { useState } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import Image from "next/image";
+import { rateCard } from "@/lib/rate-card";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogFooter } from "@/components/ui/alert-dialog";
+
 
 const libraries: "places"[] = ["places"];
 
 export default function Home() {
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
+  const [journeyDate, setJourneyDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [seats, setSeats] = useState("");
+  const [busType, setBusType] = useState("");
+  const [seatType, setSeatType] = useState("");
+
+  const [estimate, setEstimate] = useState<number | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
     libraries,
   });
+
+  const handleEstimateCost = () => {
+    if (!busType || !seats || !journeyDate || !returnDate) {
+      alert("Please select Bus Type, Seats, Journey Date, and Return Date to get an estimate.");
+      return;
+    }
+
+    const rateInfo = rateCard.find(
+      (rate) => rate.busType === busType && rate.seatingCapacity === parseInt(seats)
+    );
+
+    if (!rateInfo) {
+      alert("No rate information found for the selected bus configuration.");
+      return;
+    }
+
+    const startDate = new Date(journeyDate);
+    const endDate = new Date(returnDate);
+    
+    if(startDate > endDate) {
+      alert("Return date must be after the journey date.");
+      return;
+    }
+
+    // Calculate number of days. Add 1 to include both start and end dates.
+    const numDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+    
+    const minKm = rateInfo.minKmPerDay * numDays;
+
+    const totalCost = 
+      (minKm * rateInfo.ratePerKm) +
+      (numDays * rateInfo.driverAllowance) +
+      (numDays * rateInfo.permitCharges);
+
+    setEstimate(totalCost);
+    setIsAlertOpen(true);
+  };
+
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -40,10 +90,10 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="container px-4 md:px-6 -mt-32 relative z-10">
+      <div id="search" className="container px-4 md:px-6 -mt-32 relative z-10">
         <div className="w-full max-w-6xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl">
           {isLoaded ? (
-              <form>
+              <form onSubmit={(e) => e.preventDefault()}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end mb-6">
                   {/* From & To */}
                   <div className="grid gap-2 text-left">
@@ -58,31 +108,25 @@ export default function Home() {
                   {/* Dates */}
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="start-date">Journey Date</Label>
-                    <Input id="start-date" type="date" />
+                    <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
                   </div>
                   <div className="grid gap-2 text-left">
-                    <Label htmlFor="return-date">Return Date (Optional)</Label>
-                    <Input id="return-date" type="date" />
+                    <Label htmlFor="return-date">Return Date</Label>
+                    <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
                   </div>
 
                   {/* Seating */}
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="seats">Seats</Label>
-                    <Select>
+                    <Select onValueChange={setSeats} value={seats}>
                       <SelectTrigger id="seats">
                         <SelectValue placeholder="Number of seats" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="13">13 Seater</SelectItem>
                         <SelectItem value="15">15 Seater</SelectItem>
-                        <SelectItem value="17">17 Seater</SelectItem>
-                        <SelectItem value="20">20 Seater</SelectItem>
-                        <SelectItem value="24">24 Seater</SelectItem>
                         <SelectItem value="30">30 Seater</SelectItem>
-                        <SelectItem value="36">36 Seater</SelectItem>
                         <SelectItem value="40">40 Seater</SelectItem>
-                        <SelectItem value="45">45 Seater</SelectItem>
-                        <SelectItem value="49">49 Seater</SelectItem>
+                        <SelectItem value="50">50 Seater</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -90,13 +134,13 @@ export default function Home() {
                   {/* Bus Type */}
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="bus-type">Bus Type</Label>
-                    <Select>
+                    <Select onValueChange={setBusType} value={busType}>
                       <SelectTrigger id="bus-type">
                         <SelectValue placeholder="AC / Non-AC" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ac">AC</SelectItem>
-                        <SelectItem value="non-ac">Non-AC</SelectItem>
+                        <SelectItem value="AC">AC</SelectItem>
+                        <SelectItem value="Non-AC">Non-AC</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -104,7 +148,7 @@ export default function Home() {
                   {/* Seat Type */}
                   <div className="grid gap-2 text-left">
                     <Label htmlFor="seat-type">Seat Type</Label>
-                    <Select>
+                     <Select onValueChange={setSeatType} value={seatType}>
                       <SelectTrigger id="seat-type">
                         <SelectValue placeholder="Select seat type" />
                       </SelectTrigger>
@@ -119,7 +163,31 @@ export default function Home() {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                   <Button type="button" variant="outline" className="w-full sm:w-auto">Estimate Cost</Button>
+                   <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                      <AlertDialogTrigger asChild>
+                        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleEstimateCost}>Estimate Cost</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Estimated Fare</AlertDialogTitle>
+                        </AlertDialogHeader>
+                        <div className="py-4">
+                          {estimate !== null ? (
+                            <p className="text-2xl font-bold text-center">
+                              ₹{estimate.toLocaleString('en-IN')}
+                            </p>
+                          ) : (
+                             <p>Could not calculate estimate. Please check your selections.</p>
+                          )}
+                           <p className="text-sm text-muted-foreground text-center mt-2">
+                            This is an approximate cost based on minimum daily kilometers. Actual cost may vary.
+                           </p>
+                        </div>
+                        <AlertDialogFooter>
+                          <AlertDialogAction>OK</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                    <Button type="button" variant="outline" className="w-full sm:w-auto">Share</Button>
                    <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">Search Buses</Button>
                 </div>
