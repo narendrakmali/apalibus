@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function OperatorLoginPage() {
   const [email, setEmail] = useState('');
@@ -23,18 +24,39 @@ export default function OperatorLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
-  const { auth } = useFirebase();
+  const { auth, firestore } = useFirebase();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
+    if (!auth || !firestore) {
+        setError("Firebase is not initialized.");
+        return;
+    }
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // TODO: Check if user is an operator and redirect to operator dashboard
-      router.push('/');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Check if the user is an operator
+      const operatorDocRef = doc(firestore, 'busOperators', user.uid);
+      const operatorDocSnap = await getDoc(operatorDocRef);
+
+      if (operatorDocSnap.exists()) {
+        // User is an operator, redirect to operator dashboard
+        router.push('/operator/dashboard');
+      } else {
+        // Not an operator, sign them out and show an error
+        await signOut(auth);
+        setError('This account does not have operator privileges. Please use the user login.');
+      }
     } catch (error: any) {
-      setError(error.message);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        setError('Invalid email or password.');
+      } else {
+        setError(error.message);
+      }
     }
   };
 
