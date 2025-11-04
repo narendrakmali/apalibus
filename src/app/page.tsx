@@ -94,11 +94,11 @@ export default function Home() {
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       <section className="relative w-full h-[60vh] md:h-[70vh]">
         <Image
-            src="https://picsum.photos/seed/1/1800/1200"
-            alt="Scenic bus journey"
+            src="https://picsum.photos/seed/yellow-bus/1800/1200"
+            alt="Yellow school bus on a road"
             fill
             className="object-cover"
-            data-ai-hint="bus journey landscape"
+            data-ai-hint="yellow bus"
           />
         <div className="relative container px-4 md:px-6 h-full flex flex-col items-center justify-center text-center text-white space-y-4 bg-black/50">
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none font-inter">
