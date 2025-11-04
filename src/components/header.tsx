@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { BusFront } from "lucide-react";
@@ -40,6 +41,12 @@ export default function Header() {
         <Button size="sm" className="bg-accent hover:bg-accent/90" asChild>
            <Link href="/register">Register</Link>
         </Button>
+         <Link
+          href="/operator-login"
+          className="text-sm font-medium hover:underline underline-offset-4"
+        >
+          Operator Login
+        </Link>
       </nav>
     </header>
   );

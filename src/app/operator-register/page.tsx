@@ -15,19 +15,15 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
-import {
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-export default function RegisterPage() {
-  const [fullName, setFullName] = useState('');
+export default function OperatorRegisterPage() {
+  const [operatorName, setOperatorName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [pincode, setPincode] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
@@ -38,26 +34,20 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userData = {
+      const operatorDocRef = doc(firestore, 'busOperators', user.uid);
+      const operatorData = {
         id: user.uid,
-        name: fullName,
+        name: operatorName,
         email: user.email,
-        mobileNumber,
-        address,
-        pincode,
+        contactNumber: contactNumber,
       };
 
-      setDocumentNonBlocking(userDocRef, userData, {});
+      setDocumentNonBlocking(operatorDocRef, operatorData, {});
 
-      router.push('/user-login');
+      router.push('/operator-login');
     } catch (error: any) {
       setError(error.message);
     }
@@ -67,22 +57,22 @@ export default function RegisterPage() {
     <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
       <Card className="mx-auto max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Create a User Account</CardTitle>
+          <CardTitle className="text-2xl">Create an Operator Account</CardTitle>
           <CardDescription>
-            Enter your information to create a new user account
+            Enter your information to register as a bus operator
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="full-name">Full name</Label>
+                <Label htmlFor="operator-name">Operator Name</Label>
                 <Input
-                  id="full-name"
-                  placeholder="John Doe"
+                  id="operator-name"
+                  placeholder="Sakpal Travels Inc."
                   required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  value={operatorName}
+                  onChange={(e) => setOperatorName(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -90,7 +80,7 @@ export default function RegisterPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="operator@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -107,44 +97,24 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="mobile-number">Mobile Number</Label>
+                <Label htmlFor="contact-number">Contact Number</Label>
                 <Input
-                  id="mobile-number"
+                  id="contact-number"
                   placeholder="1234567890"
                   required
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  placeholder="123 Main St"
-                  required
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="pincode">Pincode</Label>
-                <Input
-                  id="pincode"
-                  placeholder="123456"
-                  required
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)}
                 />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
-                Create an account
+                Create Operator Account
               </Button>
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href="/user-login" className="underline">
+            <Link href="/operator-login" className="underline">
               Sign in
             </Link>
           </div>
