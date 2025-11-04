@@ -54,7 +54,7 @@ export default function OperatorRegisterPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
+    <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 bg-secondary/50">
       <Card className="mx-auto max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Create an Operator Account</CardTitle>
@@ -107,7 +107,7 @@ export default function OperatorRegisterPage() {
                 />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
                 Create Operator Account
               </Button>
             </div>

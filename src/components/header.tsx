@@ -21,16 +21,15 @@ export default function Header() {
   };
 
   return (
-    <header className="px-4 lg:px-6 h-16 flex items-center bg-card shadow-md">
+    <header className="px-4 lg:px-6 h-16 flex items-center bg-card shadow-sm border-b">
       <Link href="/" className="flex items-center justify-center">
-        <BusFront className="h-6 w-6 text-accent" />
+        <BusFront className="h-6 w-6 text-primary" />
         <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
         {isUserLoading ? (
            <div className="flex gap-4 sm:gap-6 items-center">
             <Skeleton className="h-6 w-20" />
-            <Skeleton className="h-9 w-24" />
             <Skeleton className="h-9 w-24" />
           </div>
         ) : user ? (
@@ -72,12 +71,9 @@ export default function Header() {
               Contact
             </Link>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/user-login">User Login</Link>
+              <Link href="/user-login">Login</Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/operator-login">Operator Login</Link>
-            </Button>
-            <Button size="sm" asChild>
+            <Button variant="accent" size="sm" asChild>
               <Link href="/register">Register</Link>
             </Button>
           </>
