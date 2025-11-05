@@ -31,7 +31,7 @@ export default function AboutUsPage() {
 
       <section className="mb-12 max-w-4xl mx-auto">
         <p className="text-lg text-center text-muted-foreground">
-          Sakapal Travels is a leading bus rental and booking service in Mumbai, dedicated to providing safe, reliable, and affordable travel solutions. Whether you need a luxury AC coach for corporate events or a spacious Non-AC bus for group trips, we make your journey smooth and hassle-free.
+          Sakpal Travels is a leading bus rental and booking service in Mumbai, dedicated to providing safe, reliable, and affordable travel solutions. Whether you need a luxury AC coach for corporate events or a spacious Non-AC bus for group trips, we make your journey smooth and hassle-free.
         </p>
       </section>
 
@@ -92,7 +92,7 @@ export default function AboutUsPage() {
 
       <section className="text-center mt-16">
         <h3 className="text-2xl font-semibold mb-4">
-          Plan your next journey with Sakapal Travels – Book Now and Travel Smart!
+          Plan your next journey with Sakpal Travels – Book Now and Travel Smart!
         </h3>
         <Button asChild size="lg">
           <Link href="/#search">Book Now</Link>

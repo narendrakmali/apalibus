@@ -29,12 +29,6 @@ export default function Header() {
         <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-        <Link
-            href="/search"
-            className="text-sm font-medium hover:underline underline-offset-4"
-        >
-            Search
-        </Link>
         {isUserLoading || isRoleLoading ? (
            <div className="flex gap-4 sm:gap-6 items-center">
             <Skeleton className="h-6 w-20" />
