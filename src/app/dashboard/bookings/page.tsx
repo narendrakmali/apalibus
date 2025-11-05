@@ -38,9 +38,10 @@ export default function UserBookingsPage() {
   }, [isUserLoading, user, router]);
 
   const userBookingRequestsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    // Only construct the query if firestore is available and the user is loaded and present.
+    if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'bookingRequests'), where('userId', '==', user.uid));
-  }, [firestore, user]);
+  }, [firestore, isUserLoading, user]);
 
   const { data: bookingRequests, isLoading } = useCollection<BookingRequest>(userBookingRequestsQuery);
   
@@ -128,4 +129,3 @@ export default function UserBookingsPage() {
     </div>
   );
 }
-

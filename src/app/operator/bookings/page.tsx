@@ -50,9 +50,10 @@ export default function OperatorBookingsPage() {
   }, [isUserLoading, user, router]);
 
   const bookingRequestsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // Only construct the query if firestore is available and the user is loaded and present.
+    if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'bookingRequests'));
-  }, [firestore]);
+  }, [firestore, isUserLoading, user]);
 
   const { data: bookingRequests, isLoading } = useCollection<BookingRequest>(bookingRequestsQuery);
 
