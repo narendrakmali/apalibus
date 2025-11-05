@@ -16,6 +16,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { useMemoFirebase } from '@/firebase/provider';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 interface EstimateDetails {
   totalCost: number;
@@ -32,6 +33,8 @@ interface OperatorQuote {
     costVariance?: number;
     discount?: number;
     notes?: string;
+    interiorImageUrl?: string;
+    exteriorImageUrl?: string;
 }
 
 interface BookingRequest {
@@ -166,6 +169,16 @@ export default function UserBookingsPage() {
                                                 <span>Final Quote</span>
                                                 <span className="text-green-600">₹{request.operatorQuote.finalCost?.toLocaleString('en-IN')}</span>
                                             </div>
+                                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                                <div>
+                                                    <h4 className="font-medium text-xs mb-1">Exterior</h4>
+                                                    <Image src={request.operatorQuote.exteriorImageUrl || 'https://picsum.photos/seed/bus-ext/600/400'} alt="Bus Exterior" width={600} height={400} className="rounded-md" data-ai-hint="bus exterior" />
+                                                </div>
+                                                <div>
+                                                     <h4 className="font-medium text-xs mb-1">Interior</h4>
+                                                    <Image src={request.operatorQuote.interiorImageUrl || 'https://picsum.photos/seed/bus-int/600/400'} alt="Bus Interior" width={600} height={400} className="rounded-md" data-ai-hint="bus interior" />
+                                                </div>
+                                            </div>
                                         </div>
                                     ) : request.status === 'pending' ? (
                                         <div className="flex items-center justify-center h-full text-muted-foreground text-center">Waiting for operator to review and provide a final quote.</div>
@@ -190,3 +203,4 @@ export default function UserBookingsPage() {
   );
 }
 
+    

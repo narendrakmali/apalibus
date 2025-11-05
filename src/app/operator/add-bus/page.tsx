@@ -33,6 +33,8 @@ export default function AddBusPage() {
   const [driverLanguages, setDriverLanguages] = useState('');
   const [driverContact, setDriverContact] = useState('');
   const [driverId, setDriverId] = useState('');
+  const [exteriorImageUrl, setExteriorImageUrl] = useState('');
+  const [interiorImageUrl, setInteriorImageUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -66,6 +68,8 @@ export default function AddBusPage() {
           contactNumber: driverContact,
           idNumber: driverId,
         },
+        exteriorImageUrl,
+        interiorImageUrl,
       };
       
       addDocumentNonBlocking(collection(firestore, `busOperators/${user.uid}/buses`), busData);
@@ -141,6 +145,29 @@ export default function AddBusPage() {
                 </Select>
               </div>
 
+               <div className="col-span-1 md:col-span-2">
+                <h4 className="text-lg font-semibold mt-4 border-b pb-2">Bus Images</h4>
+              </div>
+
+               <div className="grid gap-2">
+                <Label htmlFor="exterior-image-url">Exterior Image URL</Label>
+                <Input
+                  id="exterior-image-url"
+                  placeholder="https://example.com/exterior.jpg"
+                  value={exteriorImageUrl}
+                  onChange={(e) => setExteriorImageUrl(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="interior-image-url">Interior Image URL</Label>
+                <Input
+                  id="interior-image-url"
+                  placeholder="https://example.com/interior.jpg"
+                  value={interiorImageUrl}
+                  onChange={(e) => setInteriorImageUrl(e.target.value)}
+                />
+              </div>
+
               <div className="col-span-1 md:col-span-2">
                 <h4 className="text-lg font-semibold mt-4 border-b pb-2">Driver Details</h4>
               </div>
@@ -162,7 +189,7 @@ export default function AddBusPage() {
                   placeholder="English, Hindi, Marathi"
                   required
                   value={driverLanguages}
-                  onChange={(e) => setDriverLanguages(e.g. target.value)}
+                  onChange={(e) => setDriverLanguages(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">

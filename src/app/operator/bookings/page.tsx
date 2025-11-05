@@ -19,7 +19,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+interface Bus {
+    id: string;
+    registrationNumber: string;
+    seatingCapacity: number;
+    busType: string;
+    seatType: string;
+    interiorImageUrl?: string;
+    exteriorImageUrl?: string;
+}
 interface EstimateDetails {
   totalCost: number;
 }
@@ -30,6 +40,8 @@ interface OperatorQuote {
     costVariance?: number;
     discount?: number;
     notes?: string;
+    interiorImageUrl?: string;
+    exteriorImageUrl?: string;
 }
 
 interface BookingRequest {
@@ -49,7 +61,7 @@ interface BookingRequest {
 
 interface QuoteFormState {
     finalCost: string;
-    availableBus: string;
+    availableBusId: string;
     costVariance: string;
     discount: string;
     notes: string;
@@ -71,7 +83,13 @@ export default function OperatorBookingsPage() {
     return query(collection(firestore, 'bookingRequests'));
   }, [firestore, isUserLoading, user]);
 
+  const operatorBusesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, `busOperators/${user.uid}/buses`);
+  }, [firestore, user]);
+
   const { data: bookingRequests, isLoading } = useCollection<BookingRequest>(bookingRequestsQuery);
+  const { data: operatorBuses, isLoading: isLoadingBuses } = useCollection<Bus>(operatorBusesQuery);
   
   const handleFormChange = (id: string, field: keyof QuoteFormState, value: string) => {
     setQuoteForms(prev => ({
@@ -84,7 +102,7 @@ export default function OperatorBookingsPage() {
   };
 
   const handleStatusUpdate = async (id: string, status: 'approved' | 'rejected') => {
-    if (!firestore) return;
+    if (!firestore || !operatorBuses) return;
     const requestDocRef = doc(firestore, 'bookingRequests', id);
     
     const formState = quoteForms[id] || {};
@@ -97,12 +115,17 @@ export default function OperatorBookingsPage() {
             alert('Please enter a valid final cost before approving.');
             return;
         }
+
+        const selectedBus = operatorBuses.find(bus => bus.id === formState.availableBusId);
+
         updateData.operatorQuote = {
             finalCost,
-            availableBus: formState.availableBus || '',
+            availableBus: selectedBus ? `${selectedBus.seatingCapacity} Seater ${selectedBus.busType} (${selectedBus.registrationNumber})` : 'Details not available',
             costVariance: parseFloat(formState.costVariance) || 0,
             discount: parseFloat(formState.discount) || 0,
             notes: formState.notes || '',
+            interiorImageUrl: selectedBus?.interiorImageUrl,
+            exteriorImageUrl: selectedBus?.exteriorImageUrl,
         };
     }
     
@@ -191,13 +214,18 @@ export default function OperatorBookingsPage() {
                         />
                     </div>
                      <div className="grid gap-2 col-span-2">
-                        <Label htmlFor={`available-bus-${request.id}`}>Available Bus Details</Label>
-                        <Input 
-                            id={`available-bus-${request.id}`}
-                            placeholder="e.g., 45 Seater AC Sleeper"
-                            value={quoteForms[request.id]?.availableBus || ''}
-                            onChange={(e) => handleFormChange(request.id, 'availableBus', e.target.value)}
-                        />
+                        <Label htmlFor={`available-bus-${request.id}`}>Available Bus</Label>
+                        <Select onValueChange={(value) => handleFormChange(request.id, 'availableBusId', value)} value={quoteForms[request.id]?.availableBusId || ''}>
+                          <SelectTrigger id={`available-bus-${request.id}`}>
+                            <SelectValue placeholder="Select a bus from your fleet" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {isLoadingBuses ? <SelectItem value="loading" disabled>Loading buses...</SelectItem> 
+                            : operatorBuses?.map(bus => (
+                                <SelectItem key={bus.id} value={bus.id}>{bus.registrationNumber} ({bus.seatingCapacity} Seater {bus.busType})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                     </div>
                      <div className="grid gap-2 col-span-2">
                         <Label htmlFor={`notes-${request.id}`}>Notes for Customer</Label>
@@ -222,3 +250,5 @@ export default function OperatorBookingsPage() {
     </div>
   );
 }
+
+    
