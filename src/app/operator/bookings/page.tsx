@@ -18,9 +18,18 @@ import { useMemoFirebase } from '@/firebase/provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface EstimateDetails {
   totalCost: number;
+}
+
+interface OperatorQuote {
+    finalCost?: number;
+    availableBus?: string;
+    costVariance?: number;
+    discount?: number;
+    notes?: string;
 }
 
 interface BookingRequest {
@@ -35,13 +44,21 @@ interface BookingRequest {
   estimate: EstimateDetails;
   status: 'pending' | 'approved' | 'rejected' | 'quote_rejected';
   userId: string;
-  finalCost?: number;
+  operatorQuote?: OperatorQuote;
+}
+
+interface QuoteFormState {
+    finalCost: string;
+    availableBus: string;
+    costVariance: string;
+    discount: string;
+    notes: string;
 }
 
 export default function OperatorBookingsPage() {
   const { firestore, user, isUserLoading } = useFirebase();
   const router = useRouter();
-  const [finalCosts, setFinalCosts] = useState<Record<string, string>>({});
+  const [quoteForms, setQuoteForms] = useState<Record<string, QuoteFormState>>({});
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -50,33 +67,48 @@ export default function OperatorBookingsPage() {
   }, [isUserLoading, user, router]);
 
   const bookingRequestsQuery = useMemoFirebase(() => {
-    // Only construct the query if firestore is available and the user is loaded and present.
     if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'bookingRequests'));
   }, [firestore, isUserLoading, user]);
 
   const { data: bookingRequests, isLoading } = useCollection<BookingRequest>(bookingRequestsQuery);
+  
+  const handleFormChange = (id: string, field: keyof QuoteFormState, value: string) => {
+    setQuoteForms(prev => ({
+        ...prev,
+        [id]: {
+            ...prev[id],
+            [field]: value,
+        }
+    }));
+  };
 
   const handleStatusUpdate = async (id: string, status: 'approved' | 'rejected') => {
     if (!firestore) return;
     const requestDocRef = doc(firestore, 'bookingRequests', id);
-    const updateData: { status: 'approved' | 'rejected'; finalCost?: number } = { status };
+    
+    const formState = quoteForms[id] || {};
+
+    const updateData: { status: 'approved' | 'rejected'; operatorQuote?: OperatorQuote } = { status };
 
     if (status === 'approved') {
-        const cost = parseFloat(finalCosts[id]);
-        if (!cost || isNaN(cost)) {
+        const finalCost = parseFloat(formState.finalCost);
+        if (!finalCost || isNaN(finalCost)) {
             alert('Please enter a valid final cost before approving.');
             return;
         }
-        updateData.finalCost = cost;
+        updateData.operatorQuote = {
+            finalCost,
+            availableBus: formState.availableBus || '',
+            costVariance: parseFloat(formState.costVariance) || 0,
+            discount: parseFloat(formState.discount) || 0,
+            notes: formState.notes || '',
+        };
     }
     
     await updateDoc(requestDocRef, updateData);
   };
   
-  const handleFinalCostChange = (id: string, value: string) => {
-    setFinalCosts(prev => ({...prev, [id]: value}));
-  };
 
   if (isUserLoading || !user) {
     return (
@@ -119,27 +151,67 @@ export default function OperatorBookingsPage() {
               </CardHeader>
               <CardContent className="flex-grow space-y-3">
                 <p className="text-sm"><strong>Journey:</strong> {new Date(request.journeyDate).toLocaleDateString()} - {new Date(request.returnDate).toLocaleDateString()}</p>
-                <p className="text-sm"><strong>Bus:</strong> {request.seats} Seater, {request.busType}, {request.seatType}</p>
+                <p className="text-sm"><strong>Requested Bus:</strong> {request.seats} Seater, {request.busType}, {request.seatType}</p>
                 <p className="text-sm"><strong>User Estimate:</strong> ₹{request.estimate.totalCost.toLocaleString('en-IN')}</p>
-                 {request.status === 'approved' && request.finalCost && (
-                     <p className="text-sm font-semibold text-green-600"><strong>Final Cost:</strong> ₹{request.finalCost.toLocaleString('en-IN')}</p>
+                 {request.status === 'approved' && request.operatorQuote?.finalCost && (
+                     <p className="text-sm font-semibold text-green-600"><strong>Final Quote:</strong> ₹{request.operatorQuote.finalCost.toLocaleString('en-IN')}</p>
                  )}
               </CardContent>
               {request.status === 'pending' && (
-                <CardFooter className="flex flex-col items-start gap-4">
-                  <div className="w-full grid gap-2">
-                    <Label htmlFor={`final-cost-${request.id}`}>Set Final Cost</Label>
-                    <Input 
-                        id={`final-cost-${request.id}`}
-                        type="number"
-                        placeholder="e.g., 25000"
-                        value={finalCosts[request.id] || ''}
-                        onChange={(e) => handleFinalCostChange(request.id, e.target.value)}
-                    />
+                <CardFooter className="flex flex-col items-start gap-4 bg-secondary/30 p-4">
+                  <div className="w-full grid grid-cols-2 gap-4">
+                    <div className="grid gap-2 col-span-2">
+                        <Label htmlFor={`final-cost-${request.id}`}>Final Cost (Required)</Label>
+                        <Input 
+                            id={`final-cost-${request.id}`}
+                            type="number"
+                            placeholder="e.g., 25000"
+                            value={quoteForms[request.id]?.finalCost || ''}
+                            onChange={(e) => handleFormChange(request.id, 'finalCost', e.target.value)}
+                        />
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor={`cost-variance-${request.id}`}>Cost Variance</Label>
+                        <Input 
+                            id={`cost-variance-${request.id}`}
+                            type="number"
+                            placeholder="e.g., 500 or -200"
+                            value={quoteForms[request.id]?.costVariance || ''}
+                            onChange={(e) => handleFormChange(request.id, 'costVariance', e.target.value)}
+                        />
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor={`discount-${request.id}`}>Discount</Label>
+                        <Input 
+                            id={`discount-${request.id}`}
+                            type="number"
+                            placeholder="e.g., 1000"
+                            value={quoteForms[request.id]?.discount || ''}
+                            onChange={(e) => handleFormChange(request.id, 'discount', e.target.value)}
+                        />
+                    </div>
+                     <div className="grid gap-2 col-span-2">
+                        <Label htmlFor={`available-bus-${request.id}`}>Available Bus Details</Label>
+                        <Input 
+                            id={`available-bus-${request.id}`}
+                            placeholder="e.g., 45 Seater AC Sleeper"
+                            value={quoteForms[request.id]?.availableBus || ''}
+                            onChange={(e) => handleFormChange(request.id, 'availableBus', e.target.value)}
+                        />
+                    </div>
+                     <div className="grid gap-2 col-span-2">
+                        <Label htmlFor={`notes-${request.id}`}>Notes for Customer</Label>
+                        <Textarea 
+                            id={`notes-${request.id}`}
+                            placeholder="e.g., Toll and parking charges borne by customer."
+                            value={quoteForms[request.id]?.notes || ''}
+                            onChange={(e) => handleFormChange(request.id, 'notes', e.target.value)}
+                        />
+                    </div>
                   </div>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex gap-2 w-full mt-2">
                     <Button variant="outline" className="w-full" onClick={() => handleStatusUpdate(request.id, 'reject')}>Reject</Button>
-                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'approve')}>Approve</Button>
+                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'approve')}>Approve Quote</Button>
                   </div>
                 </CardFooter>
               )}

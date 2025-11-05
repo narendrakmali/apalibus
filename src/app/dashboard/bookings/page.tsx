@@ -26,6 +26,14 @@ interface EstimateDetails {
   totalKm: number;
 }
 
+interface OperatorQuote {
+    finalCost?: number;
+    availableBus?: string;
+    costVariance?: number;
+    discount?: number;
+    notes?: string;
+}
+
 interface BookingRequest {
   id: string;
   fromLocation: { address: string };
@@ -37,7 +45,7 @@ interface BookingRequest {
   seats: string;
   estimate: EstimateDetails;
   status: 'pending' | 'approved' | 'rejected' | 'quote_rejected';
-  finalCost?: number;
+  operatorQuote?: OperatorQuote;
 }
 
 
@@ -104,14 +112,25 @@ export default function UserBookingsPage() {
             bookingRequests?.map((request) => (
                 <Card key={request.id}>
                     <CardHeader>
-                        <CardTitle className="text-xl">{request.fromLocation.address} to {request.toLocation.address}</CardTitle>
-                        <CardDescription>
-                            Journey: {new Date(request.journeyDate).toLocaleDateString()} - {new Date(request.returnDate).toLocaleDateString()} | Bus: {request.seats} Seater, {request.busType}, {request.seatType}
-                        </CardDescription>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle className="text-xl">{request.fromLocation.address} to {request.toLocation.address}</CardTitle>
+                                <CardDescription>
+                                    Journey: {new Date(request.journeyDate).toLocaleDateString()} - {new Date(request.returnDate).toLocaleDateString()} | Bus: {request.seats} Seater, {request.busType}, {request.seatType}
+                                </CardDescription>
+                            </div>
+                            <p className="text-lg font-bold capitalize shrink-0 pl-4">
+                                Status: <span className={`font-bold ${
+                                    request.status === 'pending' ? 'text-yellow-500' 
+                                    : request.status === 'approved' ? 'text-green-500' 
+                                    : request.status === 'quote_rejected' ? 'text-orange-500'
+                                    : 'text-red-500'}`}>{request.status.replace('_', ' ')}
+                                </span>
+                            </p>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="grid md:grid-cols-2 gap-6">
-                            {/* Original Estimate */}
                             <div>
                                 <h3 className="font-semibold mb-2">Your Estimate</h3>
                                 <div className="space-y-1 text-sm p-3 rounded-lg border">
@@ -133,28 +152,25 @@ export default function UserBookingsPage() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Operator Quote */}
+                            
                             <div>
                                 <h3 className="font-semibold mb-2">Operator Quote</h3>
-                                <div className="p-3 rounded-lg border h-full flex flex-col justify-center items-center">
-                                    <p className="text-lg font-bold capitalize mb-2">
-                                        Status: <span className={`font-bold ${
-                                            request.status === 'pending' ? 'text-yellow-500' 
-                                            : request.status === 'approved' ? 'text-green-500' 
-                                            : request.status === 'quote_rejected' ? 'text-orange-500'
-                                            : 'text-red-500'}`}>{request.status.replace('_', ' ')}
-                                        </span>
-                                    </p>
-                                    
-                                    {request.status === 'approved' && request.finalCost ? (
-                                        <p className="text-2xl font-bold text-green-600">
-                                            Final Quote: ₹{request.finalCost.toLocaleString('en-IN')}
-                                        </p>
+                                <div className="p-3 rounded-lg border h-full">
+                                    {request.status === 'approved' && request.operatorQuote ? (
+                                        <div className="space-y-1 text-sm">
+                                            {request.operatorQuote.availableBus && <p><strong>Available Bus:</strong> {request.operatorQuote.availableBus}</p>}
+                                            {request.operatorQuote.costVariance ? <div className="flex justify-between"><span className="text-muted-foreground">Cost Variance</span><span>₹{request.operatorQuote.costVariance.toLocaleString('en-IN')}</span></div> : null}
+                                            {request.operatorQuote.discount ? <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className='text-green-600'>- ₹{request.operatorQuote.discount.toLocaleString('en-IN')}</span></div> : null}
+                                            {request.operatorQuote.notes && <p className="text-xs text-muted-foreground pt-2 italic"><strong>Note:</strong> {request.operatorQuote.notes}</p>}
+                                            <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                                                <span>Final Quote</span>
+                                                <span className="text-green-600">₹{request.operatorQuote.finalCost?.toLocaleString('en-IN')}</span>
+                                            </div>
+                                        </div>
                                     ) : request.status === 'pending' ? (
-                                        <p className="text-muted-foreground text-center">Waiting for operator to review and provide a final quote.</p>
+                                        <div className="flex items-center justify-center h-full text-muted-foreground text-center">Waiting for operator to review and provide a final quote.</div>
                                     ): (
-                                        <p className="text-muted-foreground text-center">This request has been closed.</p>
+                                        <div className="flex items-center justify-center h-full text-muted-foreground text-center">This request has been closed.</div>
                                     )}
                                 </div>
                             </div>
@@ -173,3 +189,4 @@ export default function UserBookingsPage() {
     </div>
   );
 }
+

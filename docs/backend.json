@@ -260,8 +260,19 @@
         "busType": { "type": "string" },
         "seatType": { "type": "string" },
         "estimate": { "type": "object" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "quote_rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "operatorQuote": {
+          "type": "object",
+          "description": "The final quote and details provided by the operator.",
+          "properties": {
+            "finalCost": { "type": "number" },
+            "availableBus": { "type": "string" },
+            "costVariance": { "type": "number" },
+            "discount": { "type": "number" },
+            "notes": { "type": "string" }
+          }
+        }
       },
       "required": ["userId", "fromLocation", "toLocation", "journeyDate", "returnDate", "seats", "busType", "status", "createdAt"]
     }
