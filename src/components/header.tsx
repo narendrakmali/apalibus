@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { BusFront, LogOut } from "lucide-react";
+import { BusFront } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,12 @@ export default function Header() {
         <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
+        <Link
+            href="/search"
+            className="text-sm font-medium hover:underline underline-offset-4"
+        >
+            Search
+        </Link>
         {isUserLoading || isRoleLoading ? (
            <div className="flex gap-4 sm:gap-6 items-center">
             <Skeleton className="h-6 w-20" />
@@ -53,17 +59,11 @@ export default function Header() {
               </Link>
             )}
             <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Logout">
-              <LogOut className="h-4 w-4" />
+                Logout
             </Button>
           </>
         ) : (
           <>
-            <Link
-              href="/contact"
-              className="text-sm font-medium hover:underline underline-offset-4"
-            >
-              Contact
-            </Link>
             <Button variant="outline" size="sm" asChild>
               <Link href="/user-login">User Login</Link>
             </Button>
