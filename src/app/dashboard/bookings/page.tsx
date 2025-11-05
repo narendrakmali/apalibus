@@ -17,11 +17,25 @@ import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { useMemoFirebase } from '@/firebase/provider';
 import { Button } from '@/components/ui/button';
 
+interface EstimateDetails {
+  totalCost: number;
+  baseFare: number;
+  driverAllowance: number;
+  permitCharges: number;
+  numDays: number;
+  totalKm: number;
+}
+
 interface BookingRequest {
   id: string;
   fromLocation: { address: string };
   toLocation: { address:string };
   journeyDate: string;
+  returnDate: string;
+  busType: string;
+  seatType: string;
+  seats: string;
+  estimate: EstimateDetails;
   status: 'pending' | 'approved' | 'rejected' | 'quote_rejected';
   finalCost?: number;
 }
@@ -38,10 +52,9 @@ export default function UserBookingsPage() {
   }, [isUserLoading, user, router]);
 
   const userBookingRequestsQuery = useMemoFirebase(() => {
-    // Only construct the query if firestore is available and the user is loaded and present.
-    if (!firestore || isUserLoading || !user) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, 'bookingRequests'), where('userId', '==', user.uid));
-  }, [firestore, isUserLoading, user]);
+  }, [firestore, user]);
 
   const { data: bookingRequests, isLoading } = useCollection<BookingRequest>(userBookingRequestsQuery);
   
@@ -77,55 +90,86 @@ export default function UserBookingsPage() {
         </p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Request History</CardTitle>
-          <CardDescription>
-            A list of all your submitted requests will appear here.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="space-y-6">
            {isLoading && <p>Loading your requests...</p>}
           {!isLoading && (!bookingRequests || bookingRequests.length === 0) ? (
-            <div className="text-center text-muted-foreground py-20">
-                <p>You have not made any booking requests yet.</p>
-            </div>
-          ) : (
-             <div className="space-y-4">
-              {bookingRequests?.map((request) => (
-                <Card key={request.id} className="p-4">
-                  <div className="flex flex-col sm:flex-row justify-between">
-                    <div className='mb-4 sm:mb-0'>
-                      <p className="font-semibold">{request.fromLocation.address} to {request.toLocation.address}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Journey Date: {new Date(request.journeyDate).toLocaleDateString()}
-                      </p>
-                       <p className="text-sm text-muted-foreground">
-                        Status: <span className={`capitalize font-medium ${
-                              request.status === 'pending' ? 'text-yellow-500' 
-                            : request.status === 'approved' ? 'text-green-500' 
-                            : request.status === 'quote_rejected' ? 'text-orange-500'
-                            : 'text-red-500'}`}>{request.status.replace('_', ' ')}</span>
-                      </p>
+            <Card>
+                <CardContent className="pt-6">
+                    <div className="text-center text-muted-foreground py-20">
+                        <p>You have not made any booking requests yet.</p>
                     </div>
-                     <div className="text-left sm:text-right">
-                       {request.status === 'approved' && request.finalCost && (
-                          <p className="font-semibold text-lg">Final Quote: ₹{request.finalCost.toLocaleString('en-IN')}</p>
-                       )}
-                     </div>
-                  </div>
-                   {request.status === 'approved' && (
-                     <CardFooter className="px-0 pt-4 pb-0 flex gap-2 justify-end">
-                        <Button variant="destructive" onClick={() => handleUserResponse(request.id, 'decline')}>Decline Quote</Button>
-                        <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleUserResponse(request.id, 'accept')}>Accept & Pay</Button>
-                     </CardFooter>
-                   )}
+                </CardContent>
+            </Card>
+          ) : (
+            bookingRequests?.map((request) => (
+                <Card key={request.id}>
+                    <CardHeader>
+                        <CardTitle className="text-xl">{request.fromLocation.address} to {request.toLocation.address}</CardTitle>
+                        <CardDescription>
+                            Journey: {new Date(request.journeyDate).toLocaleDateString()} - {new Date(request.returnDate).toLocaleDateString()} | Bus: {request.seats} Seater, {request.busType}, {request.seatType}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Original Estimate */}
+                            <div>
+                                <h3 className="font-semibold mb-2">Your Estimate</h3>
+                                <div className="space-y-1 text-sm p-3 rounded-lg border">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Base Fare (~{request.estimate.totalKm} km)</span>
+                                        <span>₹{request.estimate.baseFare.toLocaleString('en-IN')}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Driver Allowance ({request.estimate.numDays} days)</span>
+                                        <span>₹{request.estimate.driverAllowance.toLocaleString('en-IN')}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Permit Charges ({request.estimate.numDays} days)</span>
+                                        <span>₹{request.estimate.permitCharges.toLocaleString('en-IN')}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold border-t pt-1 mt-1">
+                                        <span>Total Estimate</span>
+                                        <span>₹{request.estimate.totalCost.toLocaleString('en-IN')}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Operator Quote */}
+                            <div>
+                                <h3 className="font-semibold mb-2">Operator Quote</h3>
+                                <div className="p-3 rounded-lg border h-full flex flex-col justify-center items-center">
+                                    <p className="text-lg font-bold capitalize mb-2">
+                                        Status: <span className={`font-bold ${
+                                            request.status === 'pending' ? 'text-yellow-500' 
+                                            : request.status === 'approved' ? 'text-green-500' 
+                                            : request.status === 'quote_rejected' ? 'text-orange-500'
+                                            : 'text-red-500'}`}>{request.status.replace('_', ' ')}
+                                        </span>
+                                    </p>
+                                    
+                                    {request.status === 'approved' && request.finalCost ? (
+                                        <p className="text-2xl font-bold text-green-600">
+                                            Final Quote: ₹{request.finalCost.toLocaleString('en-IN')}
+                                        </p>
+                                    ) : request.status === 'pending' ? (
+                                        <p className="text-muted-foreground text-center">Waiting for operator to review and provide a final quote.</p>
+                                    ): (
+                                        <p className="text-muted-foreground text-center">This request has been closed.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                    {request.status === 'approved' && (
+                        <CardFooter className="flex gap-2 justify-end bg-secondary/50 py-3">
+                            <Button variant="destructive" onClick={() => handleUserResponse(request.id, 'decline')}>Decline Quote</Button>
+                            <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleUserResponse(request.id, 'accept')}>Accept & Pay</Button>
+                        </CardFooter>
+                    )}
                 </Card>
-              ))}
-            </div>
+            ))
           )}
-        </CardContent>
-      </Card>
+        </div>
     </div>
   );
 }
