@@ -37,6 +37,11 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
+    if (!auth || !firestore) {
+        setError("An error occurred. Please try again later.");
+        return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,

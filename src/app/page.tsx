@@ -50,7 +50,7 @@ export default function Home() {
   const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { user, firestore } = useFirebase();
+  const { user, firestore, isUserLoading } = useFirebase();
   const router = useRouter();
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -151,6 +151,11 @@ export default function Home() {
   };
   
   const handleShare = () => {
+    if (!user) {
+      alert("Please log in to share estimates.");
+      return;
+    }
+    
     if (!estimate) {
         alert("Please calculate an estimate first before sharing.");
         return;
@@ -196,19 +201,25 @@ Sakpal Travels
     }
 
     if (!estimate) {
+      // First calculate estimate, then create request
       calculateDistanceAndEstimate();
-      // Wait for estimate to be set before proceeding
-      setTimeout(() => {
-        if(estimate) createBookingRequest(estimate);
-      }, 1000)
     } else {
       createBookingRequest(estimate);
     }
   };
 
+  // Effect to trigger request creation after estimate is calculated
+  useEffect(() => {
+    if (estimate && !isAlertOpen) {
+        createBookingRequest(estimate);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estimate, isAlertOpen]);
+
+
   const createBookingRequest = (currentEstimate: EstimateDetails) => {
-     if (!firestore) {
-      setError("An unexpected error occurred. Please try again.");
+     if (!firestore || !user) {
+      setError("An unexpected error occurred. Please log in and try again.");
       setIsAlertOpen(true);
       return;
     }
@@ -318,19 +329,19 @@ Sakpal Travels
                         <SelectValue placeholder="Select seat type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general">General</SelectItem>
-                        <SelectItem value="pushback">Pushback</SelectItem>
-                        <SelectItem value="semi-sleeper">Semi Sleeper</SelectItem>
-                        <SelectItem value="sleeper">Sleeper</SelectItem>
+                        <SelectItem value="General">General</SelectItem>
+                        <SelectItem value="Pushback">Pushback</SelectItem>
+                        <SelectItem value="Semi Sleeper">Semi Sleeper</SelectItem>
+                        <SelectItem value="Sleeper">Sleeper</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate}>Estimate Cost</Button>
-                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleShare}>Share</Button>
-                   <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">Create Request</Button>
+                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate} disabled={isUserLoading || !user}>Estimate Cost</Button>
+                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleShare} disabled={isUserLoading || !user}>Share</Button>
+                   <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isUserLoading || !user}>Create Request</Button>
                 </div>
 
             </form>
@@ -347,8 +358,8 @@ Sakpal Travels
        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Estimated Fare Breakdown</AlertDialogTitle>
-              {estimate && (
+              <AlertDialogTitle>{error ? 'Error' : 'Estimated Fare Breakdown'}</AlertDialogTitle>
+              {estimate && !error && (
                 <AlertDialogDescription>
                   This is an approximate cost for a {estimate.numDays}-day trip. Actual cost may vary.
                 </AlertDialogDescription>
@@ -361,11 +372,11 @@ Sakpal Travels
                 <>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Single Journey KM</span>
-                    <span>{estimate.singleJourneyKm} km</span>
+                    <span>~{estimate.singleJourneyKm} km</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Return Journey KM</span>
-                    <span>{estimate.returnJourneyKm} km</span>
+                    <span>~{estimate.returnJourneyKm} km</span>
                   </div>
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Base Fare ({estimate.totalKm} km)</span>
@@ -389,7 +400,7 @@ Sakpal Travels
               )}
             </div>
             <AlertDialogFooter>
-              <AlertDialogAction onClick={() => setIsAlertOpen(false)}>OK</AlertDialogAction>
+              <AlertDialogAction onClick={() => { setIsAlertOpen(false); setError(null); }}>OK</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -399,7 +410,7 @@ Sakpal Travels
             <AlertDialogHeader>
               <AlertDialogTitle>Request Submitted!</AlertDialogTitle>
               <AlertDialogDescription>
-                Your booking request has been sent to the operators. You will be notified once it is reviewed.
+                Your booking request has been sent to the operators. You will be notified once it is reviewed. You can check the status in 'My Bookings'.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

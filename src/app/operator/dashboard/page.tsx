@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -29,7 +30,7 @@ import {
     },
     {
       title: 'View Bookings',
-      description: 'See all upcoming and past bookings.',
+      description: 'See all incoming and past bookings.',
       icon: <CalendarDays className="h-8 w-8 text-primary" />,
       href: '/operator/bookings',
     },
@@ -44,6 +45,7 @@ import {
         // If auth is done loading and there's no user, redirect to login
         if (!isUserLoading && !user) {
             router.push('/operator-login');
+            return;
         }
         // If role check is done and the user is not an operator, redirect away
         if (!isRoleLoading && role && role !== 'operator') {
@@ -52,13 +54,23 @@ import {
     }, [isUserLoading, user, isRoleLoading, role, router]);
 
     // Show loading state while checking auth or role
-    if (isUserLoading || isRoleLoading || !user || role !== 'operator') {
+    if (isUserLoading || isRoleLoading || !user || !role) {
       return (
         <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
             <p>Loading and verifying access...</p>
         </div>
       );
     }
+    
+    // This is a final check. If the role is somehow not 'operator', don't render the dashboard.
+    if (role !== 'operator') {
+        return (
+             <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
+                <p>Access Denied. Redirecting...</p>
+            </div>
+        )
+    }
+
 
     return (
       <div className="container mx-auto py-12 px-4 md:px-6">

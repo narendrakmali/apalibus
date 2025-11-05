@@ -53,7 +53,7 @@ export default function Header() {
               </Link>
             )}
             <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Logout">
-              Logout
+              <LogOut className="h-4 w-4" />
             </Button>
           </>
         ) : (
@@ -65,10 +65,10 @@ export default function Header() {
               Contact
             </Link>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/user-login">Login</Link>
+              <Link href="/user-login">User Login</Link>
             </Button>
-            <Button variant="accent" size="sm" asChild>
-              <Link href="/register">Register</Link>
+             <Button variant="outline" size="sm" asChild>
+              <Link href="/operator-login">Operator Login</Link>
             </Button>
           </>
         )}
