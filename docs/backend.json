@@ -30,6 +30,10 @@
         "pincode": {
           "type": "string",
           "description": "User's pincode."
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Flag to indicate if the user has admin privileges."
         }
       },
       "required": [

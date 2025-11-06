@@ -13,22 +13,44 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useFirebase } from '@/firebase';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { auth, firestore } = useFirebase();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
-    // TODO: Replace with secure admin authentication logic
-    if (email === 'admin@example.com' && password === 'password') {
-      router.push('/admin/dashboard');
-    } else {
-      setError('Invalid admin credentials.');
+    if (!auth || !firestore) {
+      setError("Firebase not initialized. Please try again.");
+      return;
+    }
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Verify the user has the isAdmin flag
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists() && userDocSnap.data()?.isAdmin === true) {
+        // User is an admin, proceed to dashboard
+        router.push('/admin/dashboard');
+      } else {
+        // Not an admin, sign out and show an error
+        await signOut(auth);
+        setError('You do not have administrative privileges.');
+      }
+    } catch (err: any) {
+      setError('Invalid credentials or permission error.');
     }
   };
 
@@ -39,6 +61,7 @@ export default function AdminLoginPage() {
           <CardTitle className="text-2xl">Admin Login</CardTitle>
           <CardDescription>
             Enter your credentials to access the admin dashboard.
+            (To create an admin, manually set `isAdmin: true` on a user document in Firestore)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -78,3 +101,5 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+
+    
