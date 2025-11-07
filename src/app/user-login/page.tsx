@@ -1,7 +1,7 @@
 
 'use client';
 
-import Link from 'next-intl/link';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
-import { useRouter } from 'next-intl/navigation';
+import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -38,10 +38,10 @@ export default function UserLoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 bg-secondary/50">
+    <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 bg-background">
       <Card className="mx-auto max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">User Login</CardTitle>
+          <CardTitle className="text-2xl font-display">User Login</CardTitle>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>

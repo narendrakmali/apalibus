@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLocale, useTranslations } from 'next-intl';
-import { usePathname, useRouter } from 'next-intl/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Globe } from 'lucide-react';
 
@@ -22,9 +22,9 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
 
   function onSelectChange(value: string) {
-    setValue(value);
+    const newPath = pathname.replace(`/${locale}`, `/${value}`);
     startTransition(() => {
-      router.replace(pathname, { locale: value });
+        router.replace(newPath);
     });
   }
 

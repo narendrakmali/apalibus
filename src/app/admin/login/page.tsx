@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
     <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
       <Card className="mx-auto max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Admin Login</CardTitle>
+          <CardTitle className="text-2xl font-display">Admin Login</CardTitle>
           <CardDescription>
             Enter your credentials to access the admin dashboard.
             (To create an admin, manually set `isAdmin: true` on a user document in Firestore)
@@ -91,7 +91,7 @@ export default function AdminLoginPage() {
                 />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                 Login
               </Button>
             </div>
@@ -101,5 +101,3 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-
-    

@@ -1,7 +1,7 @@
 
 'use client';
 
-import Link from 'next-intl/link';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
-import { useRouter } from 'next-intl/navigation';
+import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -42,7 +42,7 @@ export default function OperatorLoginPage() {
     <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12">
       <Card className="mx-auto max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Operator Login</CardTitle>
+          <CardTitle className="text-2xl font-display">Operator Login</CardTitle>
           <CardDescription>
             Enter your email below to login to your operator account
           </CardDescription>
@@ -80,7 +80,7 @@ export default function OperatorLoginPage() {
                 />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                 Login
               </Button>
             </div>

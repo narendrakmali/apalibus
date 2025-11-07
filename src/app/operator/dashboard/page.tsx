@@ -11,8 +11,8 @@ import {
   import { useFirebase } from '@/firebase';
   import { useUserRole } from '@/hooks/use-user-role';
   import { Bus, PlusCircle, CalendarDays } from 'lucide-react';
-  import Link from 'next-intl/link';
-  import { useRouter } from 'next-intl/navigation';
+  import Link from 'next/link';
+  import { useRouter } from 'next/navigation';
   import { useEffect } from 'react';
   
   const operatorSections = [
@@ -115,4 +115,3 @@ import {
       </div>
     );
   }
-  
