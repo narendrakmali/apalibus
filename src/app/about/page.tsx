@@ -1,50 +1,48 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, Bus, Clock, Users, Car, Plane, Briefcase, School } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 export default function AboutUsPage() {
-  const t = useTranslations('AboutPage');
 
   const whyChooseUs = [
-    { text: t('whyUs1'), icon: <ShieldCheck className="h-6 w-6 text-primary" /> },
-    { text: t('whyUs2'), icon: <Bus className="h-6 w-6 text-primary" /> },
-    { text: t('whyUs3'), icon: <Clock className="h-6 w-6 text-primary" /> },
-    { text: t('whyUs4'), icon: <Users className="h-6 w-6 text-primary" /> },
+    { text: "Safety First: Our fleet of vehicles is meticulously maintained and operated by experienced, professional, and courteous drivers.", icon: <ShieldCheck className="h-6 w-6 text-primary" /> },
+    { text: "Diverse Fleet: We offer a wide range of vehicles to suit any group size or requirement, from sedans to large buses.", icon: <Bus className="h-6 w-6 text-primary" /> },
+    { text: "Reliability & Punctuality: We pride ourselves on dependable services, ensuring you reach your destination on time.", icon: <Clock className="h-6 w-6 text-primary" /> },
+    { text: "Customized Solutions: We cater to a wide range of travel needs, offering flexible rental options and itinerary planning services.", icon: <Users className="h-6 w-6 text-primary" /> },
   ];
 
   const services = [
-    { title: t('service1Title'), description: t('service1Desc'), icon: <Car className="w-8 h-8 text-primary" /> },
-    { title: t('service2Title'), description: t('service2Desc'), icon: <Bus className="w-8 h-8 text-primary" /> },
-    { title: t('service3Title'), description: t('service3Desc'), icon: <Plane className="w-8 h-8 text-primary" /> },
-    { title: t('service4Title'), description: t('service4Desc'), icon: <Users className="w-8 h-8 text-primary" /> },
-    { title: t('service5Title'), description: t('service5Desc'), icon: <Briefcase className="w-8 h-8 text-primary" /> },
+    { title: "Local Car Rentals", description: "Perfect for city tours and local events.", icon: <Car className="w-8 h-8 text-primary" /> },
+    { title: "Outstation Trips", description: "Explore new destinations with our comfortable round-trip options.", icon: <Bus className="w-8 h-8 text-primary" /> },
+    { title: "Airport Transfers", description: "Reliable and timely transfers to and from major airports.", icon: <Plane className="w-8 h-8 text-primary" /> },
+    { title: "Group Travel", description: "Specialized services for family vacations, school trips, and corporate outings.", icon: <Users className="w-8 h-8 text-primary" /> },
+    { title: "Tour Operator Services", description: "Expert planning for business and school tours.", icon: <Briefcase className="w-8 h-8 text-primary" /> },
   ];
 
   const fleet = [
-    { type: t('fleet1Type'), capacity: t('fleet1Capacity'), ideal: t('fleet1Ideal') },
-    { type: t('fleet2Type'), capacity: t('fleet2Capacity'), ideal: t('fleet2Ideal') },
-    { type: t('fleet3Type'), capacity: t('fleet3Capacity'), ideal: t('fleet3Ideal') },
-    { type: t('fleet4Type'), capacity: t('fleet4Capacity'), ideal: t('fleet4Ideal') },
+    { type: "Sedans", capacity: "4-5 Seater", ideal: "Corporate travel, airport transfers, city tours" },
+    { type: "SUVs", capacity: "5-7 Seater", ideal: "Families, large groups with extra luggage" },
+    { type: "Tempo Travellers", capacity: "9, 12, 15, 17 Seater", ideal: "Group outings, school excursions, family vacations" },
+    { type: "Buses", capacity: "AC (2x2) & Non-AC (2x3) options", ideal: "Large events, group tours, long-distance travel" },
   ];
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
       <header className="text-center mb-16">
         <h1 className="text-4xl font-bold tracking-tight font-display sm:text-5xl text-primary">
-          {t('title')}
+          Welcome to Sakpal Travels
         </h1>
-        <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">{t('subtitle')}</p>
+        <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">Experience safe, comfortable, and reliable transportation across Maharashtra and beyond.</p>
       </header>
 
       <section className="mb-16 max-w-4xl mx-auto text-center">
         <p className="text-base text-muted-foreground">
-         {t('intro')}
+         Established in 2001, Sakpal Travels is a premier transportation operator based in Mahad, Raigad-Maharashtra. With a strong commitment to customer satisfaction and a stellar 5.0 customer rating, we provide exceptional travel experiences tailored to your needs. Whether you're planning a family vacation, a corporate event, a school excursion, or just need a reliable ride to the airport, our dedicated team ensures a hassle-free and memorable journey every time.
         </p>
       </section>
 
       <section id="why-choose-us" className="mb-16">
-        <h2 className="text-3xl font-bold text-center mb-8 font-display text-primary">{t('whyUsTitle')}</h2>
+        <h2 className="text-3xl font-bold text-center mb-8 font-display text-primary">Why Choose Us?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {whyChooseUs.map((item, index) => (
                 <div key={index} className="flex flex-col items-center text-center">
@@ -60,7 +58,7 @@ export default function AboutUsPage() {
       <section id="services" className="w-full py-20 bg-secondary">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-2xl mx-auto mb-12">
-             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-display text-primary">{t('servicesTitle')}</h2>
+             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-display text-primary">Our Services</h2>
           </div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {services.map((service) => (
@@ -83,7 +81,7 @@ export default function AboutUsPage() {
        <section id="fleet" className="w-full py-20">
         <div className="container mx-auto px-4 md:px-6">
            <div className="text-center max-w-2xl mx-auto mb-12">
-             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-display text-primary">{t('fleetTitle')}</h2>
+             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-display text-primary">Our Fleet</h2>
           </div>
             <Card>
                 <CardContent className="p-0">
@@ -91,9 +89,9 @@ export default function AboutUsPage() {
                         <table className="w-full">
                             <thead className="bg-secondary">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('fleetHeaderType')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('fleetHeaderCapacity')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">{t('fleetHeaderIdeal')}</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Vehicle Type</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Seating Capacity</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Ideal For</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-background divide-y divide-border">

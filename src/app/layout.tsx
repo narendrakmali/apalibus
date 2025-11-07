@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
-import {NextIntlClientProvider, useMessages} from 'next-intl';
 
 const ptSans = PT_Sans({ 
   subsets: ["latin"], 
@@ -22,24 +21,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  params: { locale }
 }: Readonly<{
   children: React.ReactNode;
-  params: { locale: string };
-  turbo: {},
 }>) {
-  const messages = useMessages();
-
   return (
-    <html lang={locale}>
+    <html lang="en">
       <body className={cn("min-h-screen font-sans antialiased", ptSans.variable, spaceGrotesk.variable)}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <FirebaseClientProvider>
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-          </FirebaseClientProvider>
-        </NextIntlClientProvider>
+        <FirebaseClientProvider>
+          <Header />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </FirebaseClientProvider>
       </body>
     </html>
   );
