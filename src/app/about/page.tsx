@@ -94,8 +94,8 @@ export default function AboutUsPage() {
         <h3 className="text-2xl font-semibold mb-4">
           Plan your next journey with Sakpal Travels – Book Now and Travel Smart!
         </h3>
-        <Button asChild size="lg">
-          <Link href="/#search">Book Now</Link>
+        <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Link href="/search">Book Now</Link>
         </Button>
       </section>
     </div>

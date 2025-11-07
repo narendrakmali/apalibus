@@ -245,7 +245,7 @@ Sakpal Travels
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       <div id="search" className="container px-4 md:px-6 py-12">
-        <div className="w-full max-w-6xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl">
+        <div className="w-full max-w-6xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl border">
            <h2 className="text-3xl font-bold text-center mb-2 font-inter">Find a Bus</h2>
            <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate and create a booking request.</p>
           {isLoaded ? (
@@ -327,7 +327,7 @@ Sakpal Travels
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
                    <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate} disabled={isUserLoading || !user}>Estimate Cost</Button>
                    <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleShare} disabled={isUserLoading || !user}>Share</Button>
-                   <Button type="submit" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isUserLoading || !user}>Create Request</Button>
+                   <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isUserLoading || !user}>Create Request</Button>
                 </div>
 
             </form>
