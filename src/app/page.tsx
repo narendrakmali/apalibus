@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Clock, ShieldCheck, Users } from 'lucide-react';
-import Link from 'next-intl/link';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 export default function HomePage() {

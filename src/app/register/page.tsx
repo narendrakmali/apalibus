@@ -1,7 +1,7 @@
 
 'use client';
 
-import Link from 'next/link';
+import Link from 'next-intl/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-intl/navigation';
 import { useFirebase } from '@/firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
@@ -94,7 +94,7 @@ export default function RegisterPage() {
       setDocumentNonBlocking(userDocRef, userData, {});
 
       router.push('/user-login');
-    } catch (error: any) {
+    } catch (error: any) => {
       setError(`Failed to verify OTP: ${error.message}`);
     }
   };
@@ -167,5 +167,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    

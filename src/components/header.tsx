@@ -1,12 +1,12 @@
 
 'use client';
 
-import Link from "next-intl/link";
+import Link from 'next-intl/link';
 import { Button } from "./ui/button";
 import { BusFront } from "lucide-react";
 import { useFirebase } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-intl/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useTranslations } from "next-intl";

@@ -11,8 +11,8 @@ import {
   import { useFirebase } from '@/firebase';
   import { useUserRole } from '@/hooks/use-user-role';
   import { Bus, PlusCircle, CalendarDays } from 'lucide-react';
-  import Link from 'next/link';
-  import { useRouter } from 'next/navigation';
+  import Link from 'next-intl/link';
+  import { useRouter } from 'next-intl/navigation';
   import { useEffect } from 'react';
   
   const operatorSections = [
@@ -104,7 +104,7 @@ import {
               <CardHeader>
                 <CardTitle>Upcoming Journeys</CardTitle>
                 <CardDescription>A summary of trips scheduled for the next 24 hours.</CardDescription>
-              </CardHeader>
+              </Header>
               <CardContent>
                 <div className="text-center text-muted-foreground py-12">
                   <p>Upcoming journeys will be displayed here.</p>

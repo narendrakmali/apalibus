@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back, Admin. Here&apos;s an overview of the platform.
+          Welcome back, Admin. Here's an overview of the platform.
         </p>
       </header>
 

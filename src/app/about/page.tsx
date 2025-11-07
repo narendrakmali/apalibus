@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Star, Target, Compass, Eye } from 'lucide-react';
-import Link from 'next-intl/link';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 export default function AboutUsPage() {
