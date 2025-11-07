@@ -1,0 +1,65 @@
+{
+  "Header": {
+    "title": "Sakpal Travels",
+    "operatorDashboard": "Operator Dashboard",
+    "myBookings": "My Bookings",
+    "logout": "Logout",
+    "userLogin": "User Login",
+    "operatorLogin": "Operator Login"
+  },
+  "Footer": {
+    "copyright": "© {year} Sakpal Travels. All rights reserved.",
+    "about": "About Us",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "HomePage": {
+    "heroTitle": "Your Trusted Partner for Comfortable Bus Journeys",
+    "heroSubtitle": "Sakpal Travels is a leading bus rental service in Mumbai, dedicated to providing safe, reliable, and affordable travel solutions for all your needs.",
+    "getQuote": "Get an Instant Quote",
+    "learnMore": "Learn More",
+    "servicesTitle": "Our Services",
+    "servicesSubtitle": "From corporate travel to family vacations, we have a solution for every occasion.",
+    "service1Title": "Corporate Rentals",
+    "service1Desc": "Reliable and professional bus services for corporate events and employee transport.",
+    "service2Title": "Group & Tourist Trips",
+    "service2Desc": "Comfortable and spacious buses for family trips, tours, and large group outings.",
+    "service3Title": "Flexible Packages",
+    "service3Desc": "Hourly, daily, and custom rental packages to suit your specific travel needs.",
+    "service4Title": "Safety Assured",
+    "service4Desc": "GPS-enabled fleet with trained drivers to ensure your journey is safe and secure.",
+    "ctaTitle": "Ready to plan your trip?",
+    "ctaSubtitle": "Click the button below to get a transparent, no-obligation estimate for your journey in seconds.",
+    "ctaButton": "Create a Booking Request"
+  },
+  "AboutPage": {
+    "title": "Your Trusted Partner for Comfortable Bus Journeys",
+    "subtitle": "Sakpal Travels is a leading bus rental and booking service in Mumbai, dedicated to providing safe, reliable, and affordable travel solutions. Whether you need a luxury AC coach for corporate events or a spacious Non-AC bus for group trips, we make your journey smooth and hassle-free.",
+    "missionTitle": "Our Mission",
+    "missionDesc": "To deliver exceptional travel experiences with comfort, punctuality, and customer satisfaction at the heart of everything we do.",
+    "visionTitle": "Our Vision",
+    "visionDesc": "To be the most trusted and innovative travel partner in India, offering seamless connectivity and superior comfort.",
+    "offerTitle": "What We Offer",
+    "offer1": "Wide Fleet: AC & Non-AC buses with seating options from 15 to 50.",
+    "offer2": "Flexible Rentals: Daily, hourly, and outstation packages.",
+    "offer3": "Transparent Pricing: Fare estimation with no hidden charges.",
+    "offer4": "Safety First: GPS-enabled buses, trained drivers, and safety kits.",
+    "offer5": "Easy Booking: Online reservations, instant fare calculation, and secure payments.",
+    "whyUsTitle": "Why Choose Us?",
+    "whyUs1": "24/7 customer support",
+    "whyUs2": "Experienced drivers",
+    "whyUs3": "Real-time bus tracking",
+    "whyUs4": "Customizable travel plans",
+    "whyUs5": "Affordable rates with GST-compliant billing",
+    "ctaTitle": "Plan your next journey with Sakpal Travels – Book Now and Travel Smart!",
+    "ctaButton": "Book Now"
+  },
+  "LanguageSwitcher": {
+    "label": "Change language",
+    "en": "English",
+    "hi": "Hindi",
+    "mr": "Marathi"
+  }
+}

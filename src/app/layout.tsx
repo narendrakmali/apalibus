@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -13,19 +15,25 @@ export const metadata: Metadata = {
   description: "A comprehensive web-based bus booking platform.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params: { locale }
 }: Readonly<{
   children: React.ReactNode;
+  params: { locale: string };
 }>) {
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className={cn("min-h-screen font-sans antialiased", inter.variable)}>
-        <FirebaseClientProvider>
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-        </FirebaseClientProvider>
+        <NextIntlClientProvider messages={messages}>
+          <FirebaseClientProvider>
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </FirebaseClientProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
