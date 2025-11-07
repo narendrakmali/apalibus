@@ -26,6 +26,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
   params: { locale: string };
+  turbo: {},
 }>) {
   const messages = useMessages();
 
