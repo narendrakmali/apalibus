@@ -6,8 +6,7 @@ import { cn } from "@/lib/utils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
-import { getMessages } from 'next-intl/server';
-import {NextIntlClientProvider} from 'next-intl';
+import {NextIntlClientProvider, useMessages} from 'next-intl';
 
 const ptSans = PT_Sans({ 
   subsets: ["latin"], 
@@ -21,14 +20,14 @@ export const metadata: Metadata = {
   description: "A comprehensive web-based bus booking platform.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
   params: { locale }
 }: Readonly<{
   children: React.ReactNode;
   params: { locale: string };
 }>) {
-  const messages = await getMessages();
+  const messages = useMessages();
 
   return (
     <html lang={locale}>
