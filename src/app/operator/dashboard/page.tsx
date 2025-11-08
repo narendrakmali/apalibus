@@ -103,7 +103,7 @@ import {
               <CardHeader>
                 <CardTitle>Upcoming Journeys</CardTitle>
                 <CardDescription>A summary of trips scheduled for the next 24 hours.</CardDescription>
-              </Header>
+              </CardHeader>
               <CardContent>
                 <div className="text-center text-muted-foreground py-12">
                   <p>Upcoming journeys will be displayed here.</p>

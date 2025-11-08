@@ -41,6 +41,9 @@ export default function HomePage() {
               Sakpal Travels is a leading bus rental service in Mumbai, dedicated to providing safe, reliable, and affordable travel solutions for all your needs.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
+               <Button asChild size="lg">
+                <Link href="/search">Book Now</Link>
+              </Button>
               <Button asChild size="lg" variant="outline">
                 <Link href="/about">Learn More</Link>
               </Button>
