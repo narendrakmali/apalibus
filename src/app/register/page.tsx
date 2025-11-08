@@ -36,6 +36,10 @@ export default function RegisterPage() {
       setError("Firebase is not initialized.");
       return;
     }
+     if (phone.length !== 10) {
+      setError("Please enter a valid 10-digit phone number.");
+      return;
+    }
 
     // reCAPTCHA setup
     if (!(window as any).recaptchaVerifier) {
@@ -57,7 +61,9 @@ export default function RegisterPage() {
       setError(`Failed to send OTP: ${err.message}`);
       // Reset reCAPTCHA
       appVerifier.render().then((widgetId: any) => {
-        grecaptcha.reset(widgetId);
+        if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+          grecaptcha.reset(widgetId);
+        }
       });
     }
   };
@@ -66,6 +72,10 @@ export default function RegisterPage() {
     setError(null);
     if (!confirmationResult) {
       setError("Please request an OTP first.");
+      return;
+    }
+     if (otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP.");
       return;
     }
 
@@ -118,11 +128,12 @@ export default function RegisterPage() {
                       required
                       className="rounded-l-none"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                      maxLength={10}
                     />
                   </div>
                 </div>
-                <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90">
+                <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10}>
                   Send OTP
                 </Button>
               </>
@@ -138,7 +149,7 @@ export default function RegisterPage() {
                     renderInput={(props) => <Input {...props} />}
                   />
                 </div>
-                <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90">
+                <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90" disabled={otp.length !== 6}>
                   Verify OTP & Register
                 </Button>
               </>

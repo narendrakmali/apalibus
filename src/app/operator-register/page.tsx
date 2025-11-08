@@ -37,6 +37,10 @@ export default function OperatorRegisterPage() {
         setError("Please enter your Operator Name first.");
         return;
     }
+    if (phone.length !== 10) {
+      setError("Please enter a valid 10-digit phone number.");
+      return;
+    }
     if (!auth || !firestore) {
       setError("Firebase is not initialized.");
       return;
@@ -54,10 +58,14 @@ export default function OperatorRegisterPage() {
       setConfirmationResult(result);
       setIsOtpSent(true);
     } catch (err: any) {
+      // Reset reCAPTCHA on error
       console.error(err);
       setError(`Failed to send OTP: ${err.message}`);
+      // This is a bit of a hack to reset the reCAPTCHA widget.
       appVerifier.render().then((widgetId: any) => {
-        grecaptcha.reset(widgetId);
+        if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+          grecaptcha.reset(widgetId);
+        }
       });
     }
   };
@@ -67,6 +75,10 @@ export default function OperatorRegisterPage() {
     if (!confirmationResult) {
       setError("Please request an OTP first.");
       return;
+    }
+    if (otp.length !== 6) {
+        setError("Please enter a valid 6-digit OTP.");
+        return;
     }
 
     try {
@@ -123,11 +135,12 @@ export default function OperatorRegisterPage() {
                       required
                       className="rounded-l-none"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                      maxLength={10}
                     />
                   </div>
                 </div>
-                <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90">
+                <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10 || !operatorName}>
                   Send OTP
                 </Button>
               </>
@@ -143,7 +156,7 @@ export default function OperatorRegisterPage() {
                     renderInput={(props) => <Input {...props} />}
                   />
                 </div>
-                <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90">
+                <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90" disabled={otp.length !== 6}>
                   Verify OTP & Register
                 </Button>
               </>
