@@ -68,9 +68,8 @@ import {
              <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
                 <p>Access Denied. Redirecting...</p>
             </div>
-        )
+        );
     }
-
 
     return (
       <div className="container mx-auto py-12 px-4 md:px-6">
