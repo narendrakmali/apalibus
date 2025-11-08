@@ -19,6 +19,7 @@ import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'fi
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import OtpInput from 'react-otp-input';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function OperatorRegisterPage() {
   const [operatorName, setOperatorName] = useState('');
@@ -27,6 +28,7 @@ export default function OperatorRegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const router = useRouter();
   const { auth, firestore } = useFirebase();
@@ -58,15 +60,13 @@ export default function OperatorRegisterPage() {
       setConfirmationResult(result);
       setIsOtpSent(true);
     } catch (err: any) {
-      // Reset reCAPTCHA on error
       console.error(err);
       setError(`Failed to send OTP: ${err.message}`);
-      // This is a bit of a hack to reset the reCAPTCHA widget.
-      appVerifier.render().then((widgetId: any) => {
-        if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+       if (appVerifier && typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+        appVerifier.render().then((widgetId: any) => {
           grecaptcha.reset(widgetId);
-        }
-      });
+        });
+      }
     }
   };
 
@@ -94,84 +94,103 @@ export default function OperatorRegisterPage() {
       };
 
       setDocumentNonBlocking(operatorDocRef, operatorData, {});
+      
+      setIsSuccess(true);
 
-      router.push('/operator-login');
     } catch (err: any) {
       setError(`Failed to verify OTP: ${err.message}`);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 bg-background">
-      <Card className="mx-auto max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl font-display">Create an Operator Account</CardTitle>
-          <CardDescription>
-            {isOtpSent ? "Enter the OTP sent to your phone" : "Enter your details to get an OTP"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {!isOtpSent ? (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="operator-name">Operator Name</Label>
-                  <Input
-                    id="operator-name"
-                    placeholder="Sakpal Travels Inc."
-                    required
-                    value={operatorName}
-                    onChange={(e) => setOperatorName(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="flex items-center">
-                    <span className="p-2 border rounded-l-md bg-muted">+91</span>
+    <>
+      <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 bg-background">
+        <Card className="mx-auto max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl font-display">Create an Operator Account</CardTitle>
+            <CardDescription>
+              {isOtpSent ? "Enter the OTP sent to your phone" : "Enter your details to get an OTP"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              {!isOtpSent ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="operator-name">Operator Name</Label>
                     <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="9876543210"
+                      id="operator-name"
+                      placeholder="Sakpal Travels Inc."
                       required
-                      className="rounded-l-none"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
-                      maxLength={10}
+                      value={operatorName}
+                      onChange={(e) => setOperatorName(e.target.value)}
                     />
                   </div>
-                </div>
-                <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10 || !operatorName}>
-                  Send OTP
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="grid gap-2 justify-center">
-                  <Label htmlFor="otp">Enter OTP</Label>
-                  <OtpInput
-                    value={otp}
-                    onChange={setOtp}
-                    numInputs={6}
-                    containerStyle="gap-2"
-                    renderInput={(props) => <Input {...props} />}
-                  />
-                </div>
-                <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90" disabled={otp.length !== 6}>
-                  Verify OTP & Register
-                </Button>
-              </>
-            )}
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          </div>
-          
-          <div className="mt-4 text-center text-sm">
-            Already have an account?{' '}
-            <Link href="/operator-login" className="underline">
-              Sign in
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <div className="flex items-center">
+                      <span className="p-2 border rounded-l-md bg-muted">+91</span>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="9876543210"
+                        required
+                        className="rounded-l-none"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                        maxLength={10}
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10 || !operatorName}>
+                    Send OTP
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="grid gap-2 justify-center">
+                    <Label htmlFor="otp">Enter OTP</Label>
+                    <OtpInput
+                      value={otp}
+                      onChange={setOtp}
+                      numInputs={6}
+                      containerStyle="gap-2"
+                      renderInput={(props) => <Input {...props} />}
+                    />
+                  </div>
+                  <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90" disabled={otp.length !== 6}>
+                    Verify OTP & Register
+                  </Button>
+                </>
+              )}
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            </div>
+            
+            <div className="mt-4 text-center text-sm">
+              Already have an account?{' '}
+              <Link href="/operator-login" className="underline">
+                Sign in
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <AlertDialog open={isSuccess} onOpenChange={setIsSuccess}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registration Successful!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your operator account has been created. Please log in to access your dashboard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => router.push('/operator-login')}>
+              Proceed to Login
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
