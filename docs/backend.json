@@ -149,7 +149,8 @@
           "type": "string",
           "description": "URL of the bus interior image."
         },
-        "exteriorImageUrl": {
+        "exteriorImageUrl":.
+        {
           "type": "string",
           "description": "URL of the bus exterior image."
         }
@@ -300,7 +301,7 @@
   },
   "auth": {
     "providers": [
-      "password",
+      "phone",
       "anonymous"
     ]
   },

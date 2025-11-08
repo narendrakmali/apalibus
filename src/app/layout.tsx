@@ -28,6 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn("min-h-screen font-sans antialiased", ptSans.variable, spaceGrotesk.variable)}>
         <FirebaseClientProvider>
+          <div id="recaptcha-container"></div>
           <Header />
           <main className="flex-grow">{children}</main>
           <Footer />
