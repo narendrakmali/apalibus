@@ -155,7 +155,7 @@ export default function OperatorRegisterPage() {
                       onChange={setOtp}
                       numInputs={6}
                       containerStyle="gap-2"
-                      renderInput={(props) => <Input {...props} />}
+                      renderInput={(props) => <Input {...props} type="text" />}
                     />
                   </div>
                   <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90" disabled={otp.length !== 6}>
