@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
-import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import OtpInput from 'react-otp-input';
@@ -23,6 +23,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 
 export default function OperatorRegisterPage() {
   const [operatorName, setOperatorName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +37,8 @@ export default function OperatorRegisterPage() {
 
   const handleSendOtp = async () => {
     setError(null);
-    if (!operatorName) {
-        setError("Please enter your Operator Name first.");
+    if (!operatorName || !email || !password) {
+        setError("Please fill in all required fields.");
         return;
     }
     if (phone.length !== 10) {
@@ -70,7 +72,7 @@ export default function OperatorRegisterPage() {
     }
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtpAndRegister = async () => {
     setError(null);
     if (!confirmationResult) {
       setError("Please request an OTP first.");
@@ -82,15 +84,23 @@ export default function OperatorRegisterPage() {
     }
 
     try {
-      const result = await confirmationResult.confirm(otp);
-      const user = result.user;
+      // First, create the user with email and password
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
+      // Update profile with operator name
+      await updateProfile(user, { displayName: operatorName });
+
+      // After creating the user, confirm the OTP. This will link the phone number.
+      await confirmationResult.confirm(otp);
+
+      // Create operator document in Firestore
       const operatorDocRef = doc(firestore, 'busOperators', user.uid);
       const operatorData = {
         id: user.uid,
         name: operatorName,
-        contactNumber: user.phoneNumber,
-        email: "", // email is not collected in this flow
+        contactNumber: user.phoneNumber || `+91${phone}`, // Use verified number
+        email: user.email,
       };
 
       setDocumentNonBlocking(operatorDocRef, operatorData, {});
@@ -98,7 +108,7 @@ export default function OperatorRegisterPage() {
       setIsSuccess(true);
 
     } catch (err: any) {
-      setError(`Failed to verify OTP: ${err.message}`);
+      setError(`Failed to register: ${err.message}`);
     }
   };
 
@@ -126,6 +136,27 @@ export default function OperatorRegisterPage() {
                       onChange={(e) => setOperatorName(e.target.value)}
                     />
                   </div>
+                   <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="operator@example.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                   <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="phone">Phone Number</Label>
                     <div className="flex items-center">
@@ -142,7 +173,7 @@ export default function OperatorRegisterPage() {
                       />
                     </div>
                   </div>
-                  <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10 || !operatorName}>
+                  <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10 || !operatorName || !email || !password}>
                     Send OTP
                   </Button>
                 </>
@@ -158,7 +189,7 @@ export default function OperatorRegisterPage() {
                       renderInput={(props) => <Input {...props} type="text" />}
                     />
                   </div>
-                  <Button onClick={handleVerifyOtp} className="w-full bg-primary hover:bg-primary/90" disabled={otp.length !== 6}>
+                  <Button onClick={handleVerifyOtpAndRegister} className="w-full bg-primary hover:bg-primary/90" disabled={otp.length !== 6}>
                     Verify OTP & Register
                   </Button>
                 </>
