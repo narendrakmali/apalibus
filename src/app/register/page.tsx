@@ -63,10 +63,14 @@ export default function RegisterPage() {
       setIsOtpSent(true);
     } catch (err: any) {
       console.error(err);
-      setError(`Failed to send OTP: ${err.message}`);
-       if (appVerifier && typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+      if (err.code === 'auth/captcha-check-failed') {
+          setError("CAPTCHA check failed. This can happen in development if the domain is not authorized in your Firebase project. Please use a test phone number like '9999999999' and test OTP '123456'.");
+      } else {
+        setError(`Failed to send OTP: ${err.message}`);
+      }
+       if (appVerifier && typeof (window as any).grecaptcha !== 'undefined' && (window as any).grecaptcha.reset) {
         appVerifier.render().then((widgetId: any) => {
-          grecaptcha.reset(widgetId);
+          (window as any).grecaptcha.reset(widgetId);
         });
       }
     }
@@ -117,6 +121,9 @@ export default function RegisterPage() {
             <CardTitle className="text-2xl font-display">Create a User Account</CardTitle>
             <CardDescription>
               {isOtpSent ? "Enter the OTP sent to your phone" : "Enter your details to receive an OTP"}
+            </CardDescription>
+             <CardDescription className="text-xs text-blue-600 pt-2">
+                <strong>Development Note:</strong> If you see a CAPTCHA error, authorize your domain in the Firebase Console or use a test number like <code className="font-mono">9999999999</code> with test OTP <code className="font-mono">123456</code>.
             </CardDescription>
           </CardHeader>
           <CardContent>
