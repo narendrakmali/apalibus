@@ -37,10 +37,26 @@ export default function OperatorRegisterPage() {
 
   useEffect(() => {
     if (!auth) return;
-    // Cleanup any existing verifier
-    if ((window as any).recaptchaVerifier) {
-        (window as any).recaptchaVerifier.clear();
+
+    // Ensure this runs only once and the container exists.
+    if (!(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'normal',
+        'callback': (response: any) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+        'expired-callback': () => {
+          setError("reCAPTCHA has expired. Please try again.");
+        }
+      });
     }
+
+    // Cleanup on unmount
+    return () => {
+      if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.clear();
+      }
+    };
   }, [auth]);
 
 
@@ -60,19 +76,8 @@ export default function OperatorRegisterPage() {
     }
 
     try {
-        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            'size': 'normal', // Use 'normal' to make it visible
-             'callback': (response: any) => {
-                // reCAPTCHA solved, allow signInWithPhoneNumber.
-            },
-            'expired-callback': () => {
-                // Response expired. Ask user to solve reCAPTCHA again.
-                setError("reCAPTCHA has expired. Please try again.");
-            }
-        });
-        (window as any).recaptchaVerifier = recaptchaVerifier;
-
-      const result = await signInWithPhoneNumber(auth, `+91${phone}`, recaptchaVerifier);
+      const verifier = (window as any).recaptchaVerifier;
+      const result = await signInWithPhoneNumber(auth, `+91${phone}`, verifier);
       setConfirmationResult(result);
       setIsOtpSent(true);
     } catch (err: any) {
