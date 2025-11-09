@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -60,7 +61,7 @@ export default function AdminAnalyticsPage() {
                             : 'text-red-500'}`}>{booking.status.replace('_', ' ')}
                         </span>
                     </TableCell>
-                    <TableCell className="text-right">₹{booking.estimate.totalCost.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="text-right">{booking.estimate.totalCost.toLocaleString('en-IN')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

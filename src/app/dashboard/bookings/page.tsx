@@ -140,19 +140,19 @@ export default function UserBookingsPage() {
                                 <div className="space-y-1 text-sm p-3 rounded-lg border">
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Base Fare (~{request.estimate.totalKm} km)</span>
-                                        <span>₹{request.estimate.baseFare.toLocaleString('en-IN')}</span>
+                                        <span>{request.estimate.baseFare.toLocaleString('en-IN')}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Driver Allowance ({request.estimate.numDays} days)</span>
-                                        <span>₹{request.estimate.driverAllowance.toLocaleString('en-IN')}</span>
+                                        <span>{request.estimate.driverAllowance.toLocaleString('en-IN')}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Permit Charges ({request.estimate.numDays} days)</span>
-                                        <span>₹{request.estimate.permitCharges.toLocaleString('en-IN')}</span>
+                                        <span>{request.estimate.permitCharges.toLocaleString('en-IN')}</span>
                                     </div>
                                     <div className="flex justify-between font-bold border-t pt-1 mt-1">
                                         <span>Total Estimate</span>
-                                        <span>₹{request.estimate.totalCost.toLocaleString('en-IN')}</span>
+                                        <span>{request.estimate.totalCost.toLocaleString('en-IN')}</span>
                                     </div>
                                 </div>
                             </div>
@@ -163,12 +163,12 @@ export default function UserBookingsPage() {
                                     {request.status === 'approved' && request.operatorQuote ? (
                                         <div className="space-y-1 text-sm">
                                             {request.operatorQuote.availableBus && <p><strong>Available Bus:</strong> {request.operatorQuote.availableBus}</p>}
-                                            {request.operatorQuote.costVariance ? <div className="flex justify-between"><span className="text-muted-foreground">Cost Variance</span><span>₹{request.operatorQuote.costVariance.toLocaleString('en-IN')}</span></div> : null}
-                                            {request.operatorQuote.discount ? <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className='text-green-600'>- ₹{request.operatorQuote.discount.toLocaleString('en-IN')}</span></div> : null}
+                                            {request.operatorQuote.costVariance ? <div className="flex justify-between"><span className="text-muted-foreground">Cost Variance</span><span>{request.operatorQuote.costVariance.toLocaleString('en-IN')}</span></div> : null}
+                                            {request.operatorQuote.discount ? <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className='text-green-600'>- {request.operatorQuote.discount.toLocaleString('en-IN')}</span></div> : null}
                                             {request.operatorQuote.notes && <p className="text-xs text-muted-foreground pt-2 italic"><strong>Note:</strong> {request.operatorQuote.notes}</p>}
                                             <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                                                 <span>Final Quote</span>
-                                                <span className="text-green-600">₹{request.operatorQuote.finalCost?.toLocaleString('en-IN')}</span>
+                                                <span className="text-green-600">{request.operatorQuote.finalCost?.toLocaleString('en-IN')}</span>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 mt-4">
                                                 <div>

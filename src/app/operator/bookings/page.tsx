@@ -176,9 +176,9 @@ export default function OperatorBookingsPage() {
               <CardContent className="flex-grow space-y-3">
                 <p className="text-sm"><strong>Journey:</strong> {new Date(request.journeyDate).toLocaleDateString()} - {new Date(request.returnDate).toLocaleDateString()}</p>
                 <p className="text-sm"><strong>Requested Bus:</strong> {request.seats} Seater, {request.busType}, {request.seatType}</p>
-                <p className="text-sm"><strong>User Estimate:</strong> ₹{request.estimate.totalCost.toLocaleString('en-IN')}</p>
+                <p className="text-sm"><strong>User Estimate:</strong> {request.estimate.totalCost.toLocaleString('en-IN')}</p>
                  {request.status === 'approved' && request.operatorQuote?.finalCost && (
-                     <p className="text-sm font-semibold text-green-600"><strong>Final Quote:</strong> ₹{request.operatorQuote.finalCost.toLocaleString('en-IN')}</p>
+                     <p className="text-sm font-semibold text-green-600"><strong>Final Quote:</strong> {request.operatorQuote.finalCost.toLocaleString('en-IN')}</p>
                  )}
               </CardContent>
               {request.status === 'pending' && (

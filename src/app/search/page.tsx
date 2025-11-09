@@ -177,11 +177,11 @@ Seat Type: ${seatType || 'Not specified'}
 Estimated Cost Breakdown:
 - Single Journey Distance: ~${estimate.singleJourneyKm} km
 - Return Journey Distance: ~${estimate.returnJourneyKm} km
-- Base Fare (for ~${estimate.totalKm} km): ₹${estimate.baseFare.toLocaleString('en-IN')}
-- Driver Allowance (for ${estimate.numDays} days): ₹${estimate.driverAllowance.toLocaleString('en-IN')}
-- Permit Charges (for ${estimate.numDays} days): ₹${estimate.permitCharges.toLocaleString('en-IN')}
+- Base Fare (for ~${estimate.totalKm} km): ${estimate.baseFare.toLocaleString('en-IN')}
+- Driver Allowance (for ${estimate.numDays} days): ${estimate.driverAllowance.toLocaleString('en-IN')}
+- Permit Charges (for ${estimate.numDays} days): ${estimate.permitCharges.toLocaleString('en-IN')}
 
-Total Estimated Cost: ₹${estimate.totalCost.toLocaleString('en-IN')}
+Total Estimated Cost: ${estimate.totalCost.toLocaleString('en-IN')}
 
 Please note: This is an approximate cost. Actual cost may vary based on final details.
 
@@ -366,19 +366,19 @@ Sakpal Travels
                   </div>
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Base Fare ({estimate.totalKm} km)</span>
-                    <span>₹{estimate.baseFare.toLocaleString('en-IN')}</span>
+                    <span>{estimate.baseFare.toLocaleString('en-IN')}</span>
                   </div>
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Driver Allowance ({estimate.numDays} days)</span>
-                    <span>₹{estimate.driverAllowance.toLocaleString('en-IN')}</span>
+                    <span>{estimate.driverAllowance.toLocaleString('en-IN')}</span>
                   </div>
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Permit Charges ({estimate.numDays} days)</span>
-                    <span>₹{estimate.permitCharges.toLocaleString('en-IN')}</span>
+                    <span>{estimate.permitCharges.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                     <span>Total Estimate</span>
-                    <span>₹{estimate.totalCost.toLocaleString('en-IN')}</span>
+                    <span>{estimate.totalCost.toLocaleString('en-IN')}</span>
                   </div>
                 </>
               ) : (
