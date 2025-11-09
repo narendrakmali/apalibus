@@ -65,6 +65,8 @@ export default function OperatorRegisterPage() {
       console.error(err);
       if (err.code === 'auth/captcha-check-failed') {
           setError("CAPTCHA check failed. This can happen in development if the domain is not authorized in your Firebase project. Please use a test phone number like '9999999999' and test OTP '123456'.");
+      } else if (err.code === 'auth/too-many-requests') {
+          setError("You've made too many requests. Please use a test number (e.g., '9999999999' with OTP '123456') for development or try again later.");
       } else {
         setError(`Failed to send OTP: ${err.message}`);
       }
