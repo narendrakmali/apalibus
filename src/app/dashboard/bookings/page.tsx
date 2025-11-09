@@ -13,10 +13,11 @@ import { useFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { useMemoFirebase } from '@/firebase/provider';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 interface EstimateDetails {
   totalCost: number;
@@ -75,7 +76,7 @@ export default function UserBookingsPage() {
       const requestDocRef = doc(firestore, 'bookingRequests', requestId);
 
       if (response === 'decline') {
-          await updateDoc(requestDocRef, { status: 'quote_rejected' });
+          updateDocumentNonBlocking(requestDocRef, { status: 'quote_rejected' });
       } else {
           // Placeholder for payment flow
           alert("Payment gateway integration is pending. For now, the request is marked as accepted.");

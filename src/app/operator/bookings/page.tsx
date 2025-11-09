@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 interface Bus {
     id: string;
@@ -129,7 +130,7 @@ export default function OperatorBookingsPage() {
         };
     }
     
-    await updateDoc(requestDocRef, updateData);
+    updateDocumentNonBlocking(requestDocRef, updateData);
   };
   
 
@@ -238,8 +239,8 @@ export default function OperatorBookingsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2 w-full mt-2">
-                    <Button variant="outline" className="w-full" onClick={() => handleStatusUpdate(request.id, 'reject')}>Reject</Button>
-                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'approve')}>Approve Quote</Button>
+                    <Button variant="outline" className="w-full" onClick={() => handleStatusUpdate(request.id, 'rejected')}>Reject</Button>
+                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'approved')}>Approve Quote</Button>
                   </div>
                 </CardFooter>
               )}

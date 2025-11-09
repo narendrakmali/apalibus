@@ -39,10 +39,11 @@ export function setDocumentNonBlocking(docRef: DocumentReference, data: any, opt
 export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
   const promise = addDoc(colRef, data)
     .catch(error => {
+      const newDocRef = error.ref || { path: `${colRef.path}/[new_document]` };
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
-          path: colRef.path,
+          path: newDocRef.path,
           operation: 'create',
           requestResourceData: data,
         })
