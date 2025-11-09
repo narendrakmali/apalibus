@@ -13,21 +13,30 @@ export const useUserRole = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Start loading whenever the auth state is loading.
-    if (isAuthLoading) {
-      setIsLoading(true);
+    // Always be in a loading state if auth is loading or if we have a user but no role yet.
+    setIsLoading(isAuthLoading || (!!user && !role));
+
+    if (isAuthLoading || !firestore) {
+      // If auth is loading or firestore is not ready, we can't do anything.
+      // The isLoading state is already set above.
       return;
     }
-
-    // If there's no user, role is null and we are done loading.
-    if (!user || !firestore) {
+    
+    if (!user) {
+      // No user, so no role. We are done loading.
       setRole(null);
       setIsLoading(false);
       return;
     }
 
-    // If there is a user, start the async check.
-    setIsLoading(true);
+    // We have a user, but maybe we've already determined the role.
+    // If a role is already set, we don't need to re-check.
+    if (role) {
+        setIsLoading(false);
+        return;
+    }
+
+
     let isCancelled = false;
 
     const checkUserRole = async () => {
@@ -36,10 +45,7 @@ export const useUserRole = () => {
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists() && userDocSnap.data()?.isAdmin === true) {
-          if (!isCancelled) {
-            setRole('admin');
-            setIsLoading(false);
-          }
+          if (!isCancelled) setRole('admin');
           return; // Found role, no need to check further
         }
 
@@ -47,24 +53,18 @@ export const useUserRole = () => {
         const operatorDocRef = doc(firestore, 'busOperators', user.uid);
         const operatorDocSnap = await getDoc(operatorDocRef);
         if (operatorDocSnap.exists()) {
-          if (!isCancelled) {
-            setRole('operator');
-            setIsLoading(false);
-          }
+          if (!isCancelled) setRole('operator');
           return; // Found role
         }
 
         // If neither, they are a standard 'user'
-        if (!isCancelled) {
-          setRole('user');
-          setIsLoading(false);
-        }
+        if (!isCancelled) setRole('user');
+
       } catch (error) {
         console.error("Error checking user role:", error);
-        if (!isCancelled) {
-          setRole('user'); // Default to 'user' on error
-          setIsLoading(false);
-        }
+        if (!isCancelled) setRole('user'); // Default to 'user' on error
+      } finally {
+        if (!isCancelled) setIsLoading(false);
       }
     };
 
@@ -73,7 +73,9 @@ export const useUserRole = () => {
     return () => {
       isCancelled = true;
     };
-  }, [user, firestore, isAuthLoading]);
+  // IMPORTANT: We add `role` to the dependency array. 
+  // This ensures that if the role is cleared on logout, the effect re-evaluates.
+  }, [user, firestore, isAuthLoading, role]);
 
   return { role, isLoading };
 };

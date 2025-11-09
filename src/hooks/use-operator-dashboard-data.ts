@@ -12,21 +12,23 @@ export const useOperatorDashboardData = () => {
   const { firestore, user } = useFirebase();
   const { role, isLoading: isRoleLoading } = useUserRole();
 
+  const canQuery = role === 'operator' && !isRoleLoading && !!user;
+
   // Query for the operator's buses
   const busesQuery = useMemoFirebase(() => 
-    firestore && user && role === 'operator' ? collection(firestore, `busOperators/${user.uid}/buses`) : null,
-    [firestore, user, role]
+    canQuery ? collection(firestore, `busOperators/${user.uid}/buses`) : null,
+    [firestore, user, canQuery]
   );
   
   // Query for pending booking requests - only if user is an operator
   const pendingRequestsQuery = useMemoFirebase(() => 
-    firestore && role === 'operator' ? query(collection(firestore, 'bookingRequests'), where('status', '==', 'pending')) : null,
-    [firestore, role]
+    canQuery ? query(collection(firestore, 'bookingRequests'), where('status', '==', 'pending')) : null,
+    [firestore, canQuery]
   );
   
   // Query for upcoming journeys in the next 24 hours
   const upcomingJourneysQuery = useMemoFirebase(() => {
-    if (!firestore || !user || role !== 'operator') return null;
+    if (!canQuery) return null;
     const now = Timestamp.now();
     const in24Hours = new Timestamp(now.seconds + 24 * 3600, now.nanoseconds);
     
@@ -37,7 +39,7 @@ export const useOperatorDashboardData = () => {
         where('journeyDate', '>=', now.toDate().toISOString().split('T')[0]),
         where('journeyDate', '<=', in24Hours.toDate().toISOString().split('T')[0])
     );
-  }, [firestore, user, role]);
+  }, [firestore, user, canQuery]);
 
 
   const { data: buses, isLoading: isLoadingBuses } = useCollection(busesQuery);

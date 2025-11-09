@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,27 +15,29 @@ import { FirestorePermissionError } from '@/firebase/errors';
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
 
-/**
- * Interface for the return value of the useCollection hook.
- * @template T Type of the document data.
- */
+/** Interface for the return value of the useCollection hook. */
 export interface UseCollectionResult<T> {
   data: WithId<T>[] | null;
   isLoading: boolean;
   error: FirestoreError | Error | null;
 }
 
+/** Extracts Firestore path from a CollectionReference or Query */
+function getFirestorePath(refOrQuery: CollectionReference | Query): string {
+  try {
+    if ('path' in refOrQuery && typeof refOrQuery.path === 'string') {
+      return refOrQuery.path;
+    }
+    if ('parent' in refOrQuery && refOrQuery.parent && typeof refOrQuery.parent.path === 'string') {
+      return refOrQuery.parent.path;
+    }
+  } catch {}
+  return '[unknown path]';
+}
+
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
- *
- * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN.
- * Use useMemo to memoize it per React guidance. Also make sure that its dependencies are stable references.
- *
- * @template T Optional type for document data. Defaults to any.
- * @param {CollectionReference<DocumentData> | Query<DocumentData> | null | undefined} targetRefOrQuery -
- * The Firestore CollectionReference or Query. Waits if null/undefined.
- * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
  */
 export function useCollection<T = any>(
   memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -71,24 +72,9 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (firestoreError: FirestoreError) => {
-        // Guard against errors firing on a nullified query during re-renders.
-        if (!memoizedTargetRefOrQuery) {
-            return;
-        }
+        if (!memoizedTargetRefOrQuery) return;
 
-        let path = '[unknown path]';
-
-        try {
-              if ('path' in memoizedTargetRefOrQuery && typeof memoizedTargetRefOrQuery.path === 'string') {
-             path = memoizedTargetRefOrQuery.path;
-              } 
-              else if ('parent' in memoizedTargetRefOrQuery && memoizedTargetRefOrQuery.parent && typeof memoizedTargetRefOrQuery.parent.path === 'string')
-                 {
-                   path = memoizedTargetRefOrQuery.parent.path;
-  }
-} catch {
-  path = '[path extraction failed]';
-}
+        const path = getFirestorePath(memoizedTargetRefOrQuery);
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
