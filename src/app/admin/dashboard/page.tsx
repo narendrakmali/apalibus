@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -8,8 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Users, Bus, BarChart3, Settings } from 'lucide-react';
+import { Users, Bus, BarChart3, Settings, CalendarCheck } from 'lucide-react';
 import Link from 'next/link';
+import { useAdminDashboardData } from '@/hooks/use-admin-dashboard-data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const adminSections = [
   {
@@ -20,7 +21,7 @@ const adminSections = [
   },
   {
     title: 'Operator Management',
-    description: 'Approve, view, and manage bus operators.',
+    description: 'View, and manage bus operators and their fleet.',
     icon: <Bus className="h-8 w-8 text-primary" />,
     href: '/admin/operators',
   },
@@ -39,14 +40,46 @@ const adminSections = [
 ];
 
 export default function AdminDashboardPage() {
+  const { stats, isLoading } = useAdminDashboardData();
+
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back, Admin. Here's an overview of the platform.
+          Platform-wide overview of operators, users, and bookings.
         </p>
       </header>
+      
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats.totalUsers}</div>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Operators</CardTitle>
+            <Bus className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             {isLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats.totalOperators}</div>}
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Booking Requests</CardTitle>
+            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             {isLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats.totalBookingRequests}</div>}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {adminSections.map((section) => (
@@ -66,16 +99,15 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-       {/* Placeholder for more detailed analytics */}
        <div className="mt-12">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>A log of recent platform events will appear here.</CardDescription>
+              <CardTitle>Top Performing Operators</CardTitle>
+              <CardDescription>A summary of operators by booking count will appear here.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center text-muted-foreground py-12">
-                <p>Activity feed coming soon.</p>
+                <p>Performance charts coming soon.</p>
               </div>
             </CardContent>
           </Card>
