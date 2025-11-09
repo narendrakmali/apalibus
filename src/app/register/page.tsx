@@ -38,7 +38,7 @@ export default function RegisterPage() {
   useEffect(() => {
     if (!auth) return;
     
-    // Ensure this runs only once and the container exists.
+    // We only want to create the verifier once.
     if (!(window as any).recaptchaVerifier) {
       (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'normal',
@@ -50,13 +50,6 @@ export default function RegisterPage() {
         }
       });
     }
-
-    // Cleanup on unmount
-    return () => {
-      if ((window as any).recaptchaVerifier) {
-        (window as any).recaptchaVerifier.clear();
-      }
-    };
   }, [auth]);
 
 
