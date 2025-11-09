@@ -13,13 +13,9 @@ export const useUserRole = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Always start in a loading state when the effect runs.
-    setIsLoading(true);
-    setRole(null);
-
     // We cannot proceed if Firebase Auth is still loading or if Firestore isn't available.
     if (isAuthLoading || !firestore) {
-      // The hook remains in a loading state until dependencies are ready.
+      setIsLoading(true); // Explicitly stay in loading state
       return;
     }
     
@@ -34,9 +30,8 @@ export const useUserRole = () => {
     let isCancelled = false;
 
     const checkUserRole = async () => {
+      setIsLoading(true); // Ensure we are in a loading state at the start of the check
       try {
-        // Assumption: A user can only be an admin or an operator, but not both. Admin check takes precedence.
-        
         // 1. Check for Admin role
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
