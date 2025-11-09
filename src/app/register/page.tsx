@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
-import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber, createUserWithEmailAndPassword } from 'firebase/auth';
+import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import OtpInput from 'react-otp-input';
@@ -90,21 +90,29 @@ export default function RegisterPage() {
     }
 
     try {
+      // Confirm the OTP to get the phone credential
+      const phoneCredential = await confirmationResult.confirm(otp);
+      
+      // Create the user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await confirmationResult.confirm(otp);
-
+      // Link the phone credential to the newly created user account
+      // This is a placeholder for a more complex account linking flow if needed,
+      // for now, we will store the phone number in the user's document.
+      await updateProfile(user, { displayName: name });
+      
       const userDocRef = doc(firestore, 'users', user.uid);
       const userData = {
         id: user.uid,
         email: user.email,
-        mobileNumber: user.phoneNumber || `+91${phone}`,
+        mobileNumber: phoneCredential.user.phoneNumber || `+91${phone}`, // Use the verified phone number
         name: name,
         address: "",
         pincode: "",
         isAdmin: false,
       };
+
       setDocumentNonBlocking(userDocRef, userData, {});
 
       setIsSuccess(true);
