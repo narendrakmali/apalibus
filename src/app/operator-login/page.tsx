@@ -98,7 +98,7 @@ export default function OperatorLoginPage() {
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.targe.value)}
                 />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
