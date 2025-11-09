@@ -12,6 +12,7 @@ export const useOperatorDashboardData = () => {
   const { firestore, user } = useFirebase();
   const { role, isLoading: isRoleLoading } = useUserRole();
 
+  // IMPORTANT: Only allow querying if role check is complete, role is 'operator', and user object is available.
   const canQuery = !isRoleLoading && role === 'operator' && !!user;
 
   // Query for the operator's buses
@@ -52,6 +53,7 @@ export const useOperatorDashboardData = () => {
     upcomingJourneys: upcoming?.length ?? 0,
   };
 
+  // Overall loading is true if role check is running OR any of the dependent queries are running.
   return {
     stats,
     isLoading: isRoleLoading || isLoadingBuses || isLoadingRequests || isLoadingUpcoming,

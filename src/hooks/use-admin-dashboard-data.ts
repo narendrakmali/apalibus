@@ -36,6 +36,7 @@ export const useAdminDashboardData = () => {
   const { firestore } = useFirebase();
   const { role, isLoading: isRoleLoading } = useUserRole();
 
+  // IMPORTANT: Only allow querying if the role check is complete and the role is 'admin'.
   const canQuery = !isRoleLoading && role === 'admin';
 
   const usersQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'users') : null, [firestore, canQuery]);
@@ -52,6 +53,7 @@ export const useAdminDashboardData = () => {
     totalBookingRequests: bookings?.length ?? 0,
   };
 
+  // The overall loading state is true if the role is still being determined OR if any of the queries are running.
   return {
     stats,
     isLoading: isRoleLoading || isLoadingUsers || isLoadingOperators || isLoadingBookings,
@@ -62,31 +64,37 @@ export const useAdminDashboardData = () => {
 export const useAdminUserData = () => {
     const { firestore } = useFirebase();
     const { role, isLoading: isRoleLoading } = useUserRole();
+    // IMPORTANT: Only allow querying if the role check is complete and the role is 'admin'.
     const canQuery = !isRoleLoading && role === 'admin';
 
     const usersQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'users') : null, [firestore, canQuery]);
-    const { data, isLoading } = useCollection<User>(usersQuery);
-    return { users: data ?? [], isLoading: isRoleLoading || isLoading };
+    const { data, isLoading: isLoadingCollection } = useCollection<User>(usersQuery);
+    
+    return { users: data ?? [], isLoading: isRoleLoading || isLoadingCollection };
 }
 
 // Hook to get all operators
 export const useAdminOperatorData = () => {
     const { firestore } = useFirebase();
     const { role, isLoading: isRoleLoading } = useUserRole();
+    // IMPORTANT: Only allow querying if the role check is complete and the role is 'admin'.
     const canQuery = !isRoleLoading && role === 'admin';
     
     const operatorsQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'busOperators') : null, [firestore, canQuery]);
-    const { data, isLoading } = useCollection<BusOperator>(operatorsQuery);
-    return { operators: data ?? [], isLoading: isRoleLoading || isLoading };
+    const { data, isLoading: isLoadingCollection } = useCollection<BusOperator>(operatorsQuery);
+
+    return { operators: data ?? [], isLoading: isRoleLoading || isLoadingCollection };
 }
 
 // Hook to get all booking requests
 export const useAdminBookingData = () => {
     const { firestore } = useFirebase();
     const { role, isLoading: isRoleLoading } = useUserRole();
+    // IMPORTANT: Only allow querying if the role check is complete and the role is 'admin'.
     const canQuery = !isRoleLoading && role === 'admin';
 
     const bookingsQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'bookingRequests') : null, [firestore, canQuery]);
-    const { data, isLoading } = useCollection<BookingRequest>(bookingsQuery);
-    return { bookings: data ?? [], isLoading: isRoleLoading || isLoading };
+    const { data, isLoading: isLoadingCollection } = useCollection<BookingRequest>(bookingsQuery);
+
+    return { bookings: data ?? [], isLoading: isRoleLoading || isLoadingCollection };
 }
