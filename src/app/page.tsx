@@ -84,12 +84,12 @@ export default function HomePage() {
           </div>
           <div className="flex justify-center">
             <Image 
-                src="https://picsum.photos/seed/bus-illustration/600/400" 
+                src="https://picsum.photos/seed/volvo-bus/600/400" 
                 alt="Bus themed illustration" 
                 width={600} 
                 height={400} 
                 className="rounded-lg shadow-xl"
-                data-ai-hint="bus illustration"
+                data-ai-hint="volvo bus"
             />
           </div>
         </div>
@@ -152,5 +152,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
