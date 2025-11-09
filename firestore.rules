@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Firestore Security Rules for the Sakpal Travels application.
  *
@@ -114,7 +115,7 @@ service cloud.firestore {
     match /busOperators/{busOperatorId} {
       allow get: if isOwner(busOperatorId) || isAdmin();
       allow list: if isAdmin(); // Listing bus operators is permitted for admins.
-      allow create: if isOwner(busOperatorId) && request.resource.data.id == busOperatorId;
+      allow create: if isSignedIn() && request.resource.data.id == busOperatorId;
       allow update: if isExistingOwner(busOperatorId) && request.resource.data.id == resource.data.id || isAdmin(); // Enforce immutability of operator ID.
       allow delete: if isExistingOwner(busOperatorId) || isAdmin();
 
@@ -185,5 +186,4 @@ service cloud.firestore {
   }
 }
 
-    
     
