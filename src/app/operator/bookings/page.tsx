@@ -43,6 +43,8 @@ interface OperatorQuote {
     notes?: string;
     interiorImageUrl?: string;
     exteriorImageUrl?: string;
+    operatorId?: string;
+    operatorName?: string;
 }
 
 interface BookingRequest {
@@ -103,12 +105,15 @@ export default function OperatorBookingsPage() {
   };
 
   const handleStatusUpdate = async (id: string, status: 'approved' | 'rejected') => {
-    if (!firestore || !operatorBuses) return;
+    if (!firestore || !operatorBuses || !user) return;
     const requestDocRef = doc(firestore, 'bookingRequests', id);
     
     const formState = quoteForms[id] || {};
 
-    const updateData: { status: 'approved' | 'rejected'; operatorQuote?: OperatorQuote } = { status };
+    let operatorQuoteUpdate: OperatorQuote = {
+        operatorId: user.uid,
+        operatorName: user.displayName || 'N/A'
+    };
 
     if (status === 'approved') {
         const finalCost = parseFloat(formState.finalCost);
@@ -119,7 +124,8 @@ export default function OperatorBookingsPage() {
 
         const selectedBus = operatorBuses.find(bus => bus.id === formState.availableBusId);
 
-        updateData.operatorQuote = {
+        operatorQuoteUpdate = {
+            ...operatorQuoteUpdate,
             finalCost,
             availableBus: selectedBus ? `${selectedBus.seatingCapacity} Seater ${selectedBus.busType} (${selectedBus.registrationNumber})` : 'Details not available',
             costVariance: parseFloat(formState.costVariance) || 0,
@@ -129,6 +135,11 @@ export default function OperatorBookingsPage() {
             exteriorImageUrl: selectedBus?.exteriorImageUrl,
         };
     }
+    
+    const updateData = {
+        status,
+        operatorQuote: operatorQuoteUpdate
+    };
     
     updateDocumentNonBlocking(requestDocRef, updateData);
   };
@@ -171,6 +182,9 @@ export default function OperatorBookingsPage() {
                     : request.status === 'approved' ? 'text-green-500' 
                     : request.status === 'quote_rejected' ? 'text-orange-500'
                     : 'text-red-500'}`}>{request.status.replace('_', ' ')}</span>
+                    {request.operatorQuote?.operatorName && request.status !== 'pending' && (
+                        <span className="text-xs text-muted-foreground"> by {request.operatorQuote.operatorName}</span>
+                    )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow space-y-3">
