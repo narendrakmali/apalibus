@@ -12,7 +12,7 @@ export const useOperatorDashboardData = () => {
   const { firestore, user } = useFirebase();
   const { role, isLoading: isRoleLoading } = useUserRole();
 
-  const canQuery = role === 'operator' && !isRoleLoading && !!user;
+  const canQuery = !isRoleLoading && role === 'operator' && !!user;
 
   // Query for the operator's buses
   const busesQuery = useMemoFirebase(() => 

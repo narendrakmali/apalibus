@@ -36,7 +36,7 @@ export const useAdminDashboardData = () => {
   const { firestore } = useFirebase();
   const { role, isLoading: isRoleLoading } = useUserRole();
 
-  const canQuery = role === 'admin' && !isRoleLoading;
+  const canQuery = !isRoleLoading && role === 'admin';
 
   const usersQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'users') : null, [firestore, canQuery]);
   const operatorsQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'busOperators') : null, [firestore, canQuery]);
@@ -62,7 +62,7 @@ export const useAdminDashboardData = () => {
 export const useAdminUserData = () => {
     const { firestore } = useFirebase();
     const { role, isLoading: isRoleLoading } = useUserRole();
-    const canQuery = role === 'admin' && !isRoleLoading;
+    const canQuery = !isRoleLoading && role === 'admin';
 
     const usersQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'users') : null, [firestore, canQuery]);
     const { data, isLoading } = useCollection<User>(usersQuery);
@@ -73,7 +73,7 @@ export const useAdminUserData = () => {
 export const useAdminOperatorData = () => {
     const { firestore } = useFirebase();
     const { role, isLoading: isRoleLoading } = useUserRole();
-    const canQuery = role === 'admin' && !isRoleLoading;
+    const canQuery = !isRoleLoading && role === 'admin';
     
     const operatorsQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'busOperators') : null, [firestore, canQuery]);
     const { data, isLoading } = useCollection<BusOperator>(operatorsQuery);
@@ -84,7 +84,7 @@ export const useAdminOperatorData = () => {
 export const useAdminBookingData = () => {
     const { firestore } = useFirebase();
     const { role, isLoading: isRoleLoading } = useUserRole();
-    const canQuery = role === 'admin' && !isRoleLoading;
+    const canQuery = !isRoleLoading && role === 'admin';
 
     const bookingsQuery = useMemoFirebase(() => canQuery ? collection(firestore, 'bookingRequests') : null, [firestore, canQuery]);
     const { data, isLoading } = useCollection<BookingRequest>(bookingsQuery);
