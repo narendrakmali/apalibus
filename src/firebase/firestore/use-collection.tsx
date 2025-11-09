@@ -77,15 +77,18 @@ export function useCollection<T = any>(
         }
 
         let path = '[unknown path]';
+
         try {
-          if ('path' in memoizedTargetRefOrQuery) {
-            path = memoizedTargetRefOrQuery.path;
-          } else if ('parent' in memoizedTargetRefOrQuery && memoizedTargetRefOrQuery.parent?.path) {
-            path = memoizedTargetRefOrQuery.parent.path;
-          }
-        } catch {
-          path = '[path extraction failed]';
-        }
+              if ('path' in memoizedTargetRefOrQuery && typeof memoizedTargetRefOrQuery.path === 'string') {
+             path = memoizedTargetRefOrQuery.path;
+              } 
+              else if ('parent' in memoizedTargetRefOrQuery && memoizedTargetRefOrQuery.parent && typeof memoizedTargetRefOrQuery.parent.path === 'string')
+                 {
+                   path = memoizedTargetRefOrQuery.parent.path;
+  }
+} catch {
+  path = '[path extraction failed]';
+}
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',

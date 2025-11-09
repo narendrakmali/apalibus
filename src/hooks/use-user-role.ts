@@ -8,49 +8,53 @@ import { doc, getDoc } from 'firebase/firestore';
 type UserRole = 'operator' | 'admin' | 'user' | null;
 
 export const useUserRole = () => {
-  const { user, firestore, isUserLoading } = useFirebase();
+  const { user, firestore, isUserLoading: isAuthLoading } = useFirebase();
   const [role, setRole] = useState<UserRole>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // If Firebase auth is still loading, we are definitely loading the role.
-    if (isUserLoading) {
+    // Start loading whenever the auth state is loading.
+    if (isAuthLoading) {
       setIsLoading(true);
       return;
     }
 
-    // If there is no authenticated user, the role is null and we are done loading.
+    // If there's no user, role is null and we are done loading.
     if (!user || !firestore) {
       setRole(null);
       setIsLoading(false);
       return;
     }
 
-    // If we have a user and firestore, start the async check. We are in a loading state.
+    // If there is a user, start the async check.
     setIsLoading(true);
     let isCancelled = false;
 
     const checkUserRole = async () => {
       try {
-        // 1. Check for Admin status.
+        // Check for Admin
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
-        if (!isCancelled && userDocSnap.exists() && userDocSnap.data()?.isAdmin === true) {
-          setRole('admin');
-          setIsLoading(false);
-          return;
+        if (userDocSnap.exists() && userDocSnap.data()?.isAdmin === true) {
+          if (!isCancelled) {
+            setRole('admin');
+            setIsLoading(false);
+          }
+          return; // Found role, no need to check further
         }
 
-        // 2. If not an admin, check for Operator status.
+        // Check for Operator
         const operatorDocRef = doc(firestore, 'busOperators', user.uid);
         const operatorDocSnap = await getDoc(operatorDocRef);
-        if (!isCancelled && operatorDocSnap.exists()) {
-          setRole('operator');
-          setIsLoading(false);
-          return;
+        if (operatorDocSnap.exists()) {
+          if (!isCancelled) {
+            setRole('operator');
+            setIsLoading(false);
+          }
+          return; // Found role
         }
 
-        // 3. If neither, they are a standard 'user'.
+        // If neither, they are a standard 'user'
         if (!isCancelled) {
           setRole('user');
           setIsLoading(false);
@@ -58,7 +62,7 @@ export const useUserRole = () => {
       } catch (error) {
         console.error("Error checking user role:", error);
         if (!isCancelled) {
-          setRole('user'); // Default to 'user' on error to be safe.
+          setRole('user'); // Default to 'user' on error
           setIsLoading(false);
         }
       }
@@ -69,7 +73,7 @@ export const useUserRole = () => {
     return () => {
       isCancelled = true;
     };
-  }, [user, firestore, isUserLoading]);
+  }, [user, firestore, isAuthLoading]);
 
   return { role, isLoading };
 };
