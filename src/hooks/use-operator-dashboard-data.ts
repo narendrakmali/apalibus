@@ -5,26 +5,28 @@ import { useFirebase } from '@/firebase';
 import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
+import { useUserRole } from './use-user-role';
 
 // Hook to get high-level stats for the operator dashboard
 export const useOperatorDashboardData = () => {
   const { firestore, user } = useFirebase();
+  const { role, isLoading: isRoleLoading } = useUserRole();
 
   // Query for the operator's buses
   const busesQuery = useMemoFirebase(() => 
-    firestore && user ? collection(firestore, `busOperators/${user.uid}/buses`) : null,
-    [firestore, user]
+    firestore && user && role === 'operator' ? collection(firestore, `busOperators/${user.uid}/buses`) : null,
+    [firestore, user, role]
   );
   
-  // Query for pending booking requests
+  // Query for pending booking requests - only if user is an operator
   const pendingRequestsQuery = useMemoFirebase(() => 
-    firestore ? query(collection(firestore, 'bookingRequests'), where('status', '==', 'pending')) : null,
-    [firestore]
+    firestore && role === 'operator' ? query(collection(firestore, 'bookingRequests'), where('status', '==', 'pending')) : null,
+    [firestore, role]
   );
   
   // Query for upcoming journeys in the next 24 hours
   const upcomingJourneysQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || role !== 'operator') return null;
     const now = Timestamp.now();
     const in24Hours = new Timestamp(now.seconds + 24 * 3600, now.nanoseconds);
     
@@ -35,7 +37,7 @@ export const useOperatorDashboardData = () => {
         where('journeyDate', '>=', now.toDate().toISOString().split('T')[0]),
         where('journeyDate', '<=', in24Hours.toDate().toISOString().split('T')[0])
     );
-  }, [firestore, user]);
+  }, [firestore, user, role]);
 
 
   const { data: buses, isLoading: isLoadingBuses } = useCollection(busesQuery);
@@ -50,6 +52,6 @@ export const useOperatorDashboardData = () => {
 
   return {
     stats,
-    isLoading: isLoadingBuses || isLoadingRequests || isLoadingUpcoming,
+    isLoading: isRoleLoading || isLoadingBuses || isLoadingRequests || isLoadingUpcoming,
   };
 };

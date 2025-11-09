@@ -1,34 +1,35 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Bus, BookingRequest } from '@/components/operator/fleet-dashboard';
 import { useMemoFirebase } from '@/firebase/provider';
+import { useUserRole } from './use-user-role';
 
 
 export const useOperatorFleet = () => {
     const { firestore, user, isUserLoading } = useFirebase();
+    const { role, isLoading: isRoleLoading } = useUserRole();
     const [error, setError] = useState<string | null>(null);
 
     // 1. Fetch the operator's buses
     const operatorBusesQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
+        if (!firestore || !user || role !== 'operator') return null;
         return collection(firestore, `busOperators/${user.uid}/buses`);
-    }, [firestore, user]);
+    }, [firestore, user, role]);
 
     const { data: buses, isLoading: isLoadingBuses, error: busesError } = useCollection<Bus>(operatorBusesQuery);
 
-    // 2. Fetch all booking requests (operators need to see all to assign buses)
+    // 2. Fetch all relevant booking requests for an operator
     const bookingRequestsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        // In a real-world app with many operators, you'd likely have a more complex query,
-        // perhaps on a field that operators can see, or via a backend function.
-        // For now, we fetch all and filter client-side, which is fine for a small number of requests.
-        return query(collection(firestore, 'bookingRequests'), where('status', 'in', ['pending', 'approved']));
-    }, [firestore]);
+        if (!firestore || role !== 'operator') return null;
+        // Fetch all requests that are either pending (for any operator to claim)
+        // or have already been actioned by the current operator.
+        return query(collection(firestore, 'bookingRequests'), where('status', 'in', ['pending', 'approved', 'rejected', 'quote_rejected']));
+    }, [firestore, role]);
 
     const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<BookingRequest>(bookingRequestsQuery);
 
@@ -48,7 +49,7 @@ export const useOperatorFleet = () => {
     return {
         buses,
         bookings,
-        isLoading: isUserLoading || isLoadingBuses || isLoadingBookings,
+        isLoading: isUserLoading || isRoleLoading || isLoadingBuses || isLoadingBookings,
         error,
     };
 };
