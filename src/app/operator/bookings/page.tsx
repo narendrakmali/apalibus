@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { useFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, doc, query, updateDoc } from 'firebase/firestore';
+import { collection, doc, query } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useMemoFirebase } from '@/firebase/provider';
@@ -153,6 +153,8 @@ export default function OperatorBookingsPage() {
     );
   }
 
+  const displayedRequests = bookingRequests?.filter(req => req.status === 'pending' || (req.operatorQuote?.operatorId === user.uid));
+
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
       <header className="mb-8">
@@ -162,17 +164,17 @@ export default function OperatorBookingsPage() {
         </p>
       </header>
        {isLoading && <p>Loading requests...</p>}
-      {!isLoading && (!bookingRequests || bookingRequests.length === 0) ? (
+      {!isLoading && (!displayedRequests || displayedRequests.length === 0) ? (
         <Card>
             <CardContent className="pt-6">
                 <div className="text-center text-muted-foreground py-20">
-                    <p>There are no pending booking requests.</p>
+                    <p>There are no booking requests for you to manage at this time.</p>
                 </div>
             </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {bookingRequests?.map((request) => (
+          {displayedRequests?.map((request) => (
             <Card key={request.id} className="flex flex-col">
               <CardHeader>
                 <CardTitle className="text-xl">{request.fromLocation.address} to {request.toLocation.address}</CardTitle>

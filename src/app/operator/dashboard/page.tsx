@@ -10,10 +10,12 @@ import {
   } from '@/components/ui/card';
   import { useFirebase } from '@/firebase';
   import { useUserRole } from '@/hooks/use-user-role';
-  import { Bus, PlusCircle, CalendarDays } from 'lucide-react';
+  import { useOperatorDashboardData } from '@/hooks/use-operator-dashboard-data';
+  import { Bus, PlusCircle, CalendarDays, Hourglass } from 'lucide-react';
   import Link from 'next/link';
   import { useRouter } from 'next/navigation';
   import { useEffect } from 'react';
+  import { Skeleton } from '@/components/ui/skeleton';
   
   const operatorSections = [
     {
@@ -39,6 +41,7 @@ import {
   export default function OperatorDashboardPage() {
     const { user, isUserLoading } = useFirebase();
     const { role, isLoading: isRoleLoading } = useUserRole();
+    const { stats, isLoading: isStatsLoading } = useOperatorDashboardData();
     const router = useRouter();
   
     useEffect(() => {
@@ -75,6 +78,27 @@ import {
             Welcome back, {user.displayName || user.email}. Manage your operations from here.
           </p>
         </header>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Your Buses</CardTitle>
+                    <Bus className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    {isStatsLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats.totalBuses}</div>}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+                    <Hourglass className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    {isStatsLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats.pendingRequests}</div>}
+                </CardContent>
+            </Card>
+        </div>
   
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {operatorSections.map((section) => (

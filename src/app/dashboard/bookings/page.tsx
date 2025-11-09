@@ -109,6 +109,7 @@ export default function UserBookingsPage() {
                 <CardContent className="pt-6">
                     <div className="text-center text-muted-foreground py-20">
                         <p>You have not made any booking requests yet.</p>
+                        <Button variant="link" onClick={() => router.push('/search')}>Make a Request</Button>
                     </div>
                 </CardContent>
             </Card>
