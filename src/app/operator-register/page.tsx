@@ -51,30 +51,17 @@ export default function OperatorRegisterPage() {
     }
 
     try {
-      // Ensure the container is clean before rendering a new verifier
-      const recaptchaContainer = document.getElementById('recaptcha-container');
-      if (recaptchaContainer) {
-        recaptchaContainer.innerHTML = '';
-      }
-      
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'normal',
-        'callback': (response: any) => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        },
-        'expired-callback': () => {
-          setError("reCAPTCHA has expired. Please try again.");
-        }
-      });
-      const result = await signInWithPhoneNumber(auth, `+91${phone}`, verifier);
+      // NOTE: The RecaptchaVerifier is removed for a simplified development flow.
+      // This requires using test phone numbers configured in the Firebase Console.
+      const result = await signInWithPhoneNumber(auth, `+91${phone}`, new RecaptchaVerifier(auth, 'recaptcha-container', {'size': 'invisible'}));
       setConfirmationResult(result);
       setIsOtpSent(true);
     } catch (err: any) {
       console.error(err);
-      if (err.code === 'auth/captcha-check-failed') {
-          setError("reCAPTCHA check failed. This usually means your app's domain is not authorized in the Firebase Console. Go to Authentication -> Settings -> Authorized Domains and add your development domain. For local development, this is often 'localhost'.");
+      if (err.code === 'auth/captcha-check-failed' || err.code === 'auth/invalid-phone-number') {
+          setError("OTP sending failed. Please use a test phone number for development (e.g., '9999999999' with OTP '123456'). You must add test numbers in the Firebase Console under Authentication -> Phone.");
       } else if (err.code === 'auth/too-many-requests') {
-          setError("You've made too many requests. Please use a test number (e.g., '9999999999' with OTP '123456') for development or try again later.");
+          setError("You've made too many requests. Please try again later.");
       } else {
         setError(`Failed to send OTP: ${err.message}`);
       }
@@ -123,6 +110,7 @@ export default function OperatorRegisterPage() {
 
   return (
     <>
+      <div id="recaptcha-container"></div>
       <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] py-12 bg-background">
         <Card className="mx-auto max-w-sm">
           <CardHeader>
@@ -131,7 +119,7 @@ export default function OperatorRegisterPage() {
               {isOtpSent ? "Enter the OTP sent to your phone" : "Enter your details to get an OTP"}
             </CardDescription>
              <CardDescription className="text-xs text-blue-600 pt-2">
-                <strong>Development Note:</strong> If you see a CAPTCHA error, authorize your domain in the Firebase Console or use a test number like <code className="font-mono">9999999999</code> with test OTP <code className="font-mono">123456</code>.
+                <strong>Development Note:</strong> For a CAPTCHA-free experience, use a test number like <code className="font-mono">9999999999</code> with test OTP <code className="font-mono">123456</code>.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -185,7 +173,6 @@ export default function OperatorRegisterPage() {
                       />
                     </div>
                   </div>
-                  <div id="recaptcha-container" className="my-4 flex justify-center"></div>
                   <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10 || !operatorName || !email || !password}>
                     Send OTP
                   </Button>
