@@ -17,19 +17,21 @@ export const useOperatorFleet = () => {
 
     // 1. Fetch the operator's buses
     const operatorBusesQuery = useMemoFirebase(() => {
-        if (!firestore || !user || role !== 'operator') return null;
+        // Wait until role is confirmed as 'operator' and user is logged in
+        if (isRoleLoading || role !== 'operator' || !firestore || !user) return null;
         return collection(firestore, `busOperators/${user.uid}/buses`);
-    }, [firestore, user, role]);
+    }, [firestore, user, role, isRoleLoading]);
 
     const { data: buses, isLoading: isLoadingBuses, error: busesError } = useCollection<Bus>(operatorBusesQuery);
 
     // 2. Fetch all relevant booking requests for an operator
     const bookingRequestsQuery = useMemoFirebase(() => {
-        if (!firestore || role !== 'operator') return null;
+        // Wait until role is confirmed as 'operator'
+        if (isRoleLoading || role !== 'operator' || !firestore) return null;
         // Fetch all requests that are either pending (for any operator to claim)
         // or have already been actioned by the current operator.
         return query(collection(firestore, 'bookingRequests'), where('status', 'in', ['pending', 'approved', 'rejected', 'quote_rejected']));
-    }, [firestore, role]);
+    }, [firestore, role, isRoleLoading]);
 
     const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<BookingRequest>(bookingRequestsQuery);
 
@@ -49,6 +51,7 @@ export const useOperatorFleet = () => {
     return {
         buses,
         bookings,
+        // The overall loading state depends on all async operations
         isLoading: isUserLoading || isRoleLoading || isLoadingBuses || isLoadingBookings,
         error,
     };

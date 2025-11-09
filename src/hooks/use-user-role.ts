@@ -13,12 +13,17 @@ export const useUserRole = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Start loading whenever the user or firestore instance might be changing.
+    setIsLoading(true);
+    setRole(null);
+
     // Don't do anything until Firebase auth is resolved and Firestore is available
     if (isUserLoading || !firestore) {
+      // Keep loading state true, role remains null
       return;
     }
 
-    // If there's no user, they have no role
+    // If there's no user, they have no role. Stop loading.
     if (!user) {
       setRole(null);
       setIsLoading(false);
@@ -26,8 +31,6 @@ export const useUserRole = () => {
     }
 
     const checkUserRole = async () => {
-      setIsLoading(true);
-
       // 1. Check for Admin status first
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
@@ -51,7 +54,7 @@ export const useUserRole = () => {
         console.error("Error checking user role:", error);
         setRole('user'); // Default to 'user' on error
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Finished checking, stop loading.
       }
     };
 
