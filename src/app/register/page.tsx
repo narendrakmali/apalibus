@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -35,6 +35,15 @@ export default function RegisterPage() {
   const router = useRouter();
   const { auth, firestore } = useFirebase();
 
+  useEffect(() => {
+    if (!auth) return;
+    // Cleanup any existing verifier
+    if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.clear();
+    }
+  }, [auth]);
+
+
   const handleSendOtp = async () => {
     setError(null);
     if (!name || !email || !password) {
@@ -50,30 +59,30 @@ export default function RegisterPage() {
       return;
     }
 
-    if (!(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-      });
-    }
-    const appVerifier = (window as any).recaptchaVerifier;
-
     try {
-      const result = await signInWithPhoneNumber(auth, `+91${phone}`, appVerifier);
+        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'normal', // Use 'normal' to make it visible
+             'callback': (response: any) => {
+                // reCAPTCHA solved, allow signInWithPhoneNumber.
+            },
+            'expired-callback': () => {
+                // Response expired. Ask user to solve reCAPTCHA again.
+                setError("reCAPTCHA has expired. Please try again.");
+            }
+        });
+        (window as any).recaptchaVerifier = recaptchaVerifier;
+
+      const result = await signInWithPhoneNumber(auth, `+91${phone}`, recaptchaVerifier);
       setConfirmationResult(result);
       setIsOtpSent(true);
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/captcha-check-failed') {
-          setError("CAPTCHA check failed. This can happen in development if the domain is not authorized in your Firebase project. Please use a test phone number like '9999999999' and test OTP '123456'.");
+          setError("reCAPTCHA check failed. This usually means your app's domain is not authorized in the Firebase Console. Go to Authentication -> Settings -> Authorized Domains and add your development domain. For local development, this is often 'localhost'.");
       } else if (err.code === 'auth/too-many-requests') {
           setError("You've made too many requests. Please use a test number (e.g., '9999999999' with OTP '123456') for development or try again later.");
       } else {
         setError(`Failed to send OTP: ${err.message}`);
-      }
-       if (appVerifier && typeof (window as any).grecaptcha !== 'undefined' && (window as any).grecaptcha.reset) {
-        appVerifier.render().then((widgetId: any) => {
-          (window as any).grecaptcha.reset(widgetId);
-        });
       }
     }
   };
@@ -187,6 +196,7 @@ export default function RegisterPage() {
                       />
                     </div>
                   </div>
+                   <div id="recaptcha-container" className="my-4 flex justify-center"></div>
                   <Button onClick={handleSendOtp} className="w-full bg-primary hover:bg-primary/90" disabled={phone.length !== 10 || !name || !email || !password}>
                     Send OTP
                   </Button>
@@ -208,7 +218,7 @@ export default function RegisterPage() {
                   </Button>
                 </>
               )}
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
             </div>
 
             <div className="mt-4 text-center text-sm">
