@@ -23,9 +23,6 @@ export default function Footer() {
                 <Link href="/contact" className="text-xs hover:underline underline-offset-4 text-secondary-foreground/80">
                   Contact
                 </Link>
-                <Link href="/admin/login" className="text-xs hover:underline underline-offset-4 text-secondary-foreground/80">
-                  Admin
-                </Link>
               </nav>
             </div>
         </footer>

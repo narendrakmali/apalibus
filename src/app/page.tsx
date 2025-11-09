@@ -66,7 +66,7 @@ export default function HomePage() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
                <Button asChild size="lg" className="w-full sm:w-auto">
-                <Link href="/register">Register Now</Link>
+                <Link href="/search">Get an Estimate</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
                 <Link href="/search">Explore Routes</Link>

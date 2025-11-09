@@ -10,10 +10,7 @@ import PlacesAutocomplete from "@/components/places-autocomplete";
 import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
-import { useFirebase } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 
 const libraries: ("places")[] = ["places"];
@@ -47,10 +44,8 @@ export default function SearchPage() {
 
   const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [isConfirmationAlertOpen, setIsConfirmationAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { user, firestore, isUserLoading } = useFirebase();
   const router = useRouter();
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -151,11 +146,6 @@ export default function SearchPage() {
   };
   
   const handleShare = () => {
-    if (!user) {
-      alert("Please log in to share estimates.");
-      return;
-    }
-    
     if (!estimate) {
         alert("Please calculate an estimate first before sharing.");
         return;
@@ -194,54 +184,9 @@ Sakpal Travels
     window.location.href = mailtoLink;
   };
 
-  const handleCreateRequest = async () => {
-    if (!user) {
-      router.push('/user-login');
-      return;
-    }
-
-    if (!estimate) {
-      // First calculate estimate, then create request
-      calculateDistanceAndEstimate();
-    } else {
-      createBookingRequest(estimate);
-    }
+  const handleCreateRequest = () => {
+      alert("Booking requests are temporarily disabled. Please contact us directly to book.");
   };
-
-  // Effect to trigger request creation after estimate is calculated
-  useEffect(() => {
-    if (estimate && !isAlertOpen) {
-        createBookingRequest(estimate);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estimate, isAlertOpen]);
-
-
-  const createBookingRequest = (currentEstimate: EstimateDetails) => {
-     if (!firestore || !user) {
-      setError("An unexpected error occurred. Please log in and try again.");
-      setIsAlertOpen(true);
-      return;
-    }
-    const requestData = {
-      fromLocation,
-      toLocation,
-      journeyDate,
-      returnDate,
-      seats,
-      busType,
-      seatType,
-      estimate: currentEstimate,
-      userId: user.uid,
-      status: 'pending',
-      createdAt: serverTimestamp(),
-    };
-
-    const requestsCollection = collection(firestore, 'bookingRequests');
-    addDocumentNonBlocking(requestsCollection, requestData);
-    
-    setIsConfirmationAlertOpen(true);
-  }
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4">
@@ -256,10 +201,10 @@ Sakpal Travels
       
       <div id="search" className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border">
          <h2 className="text-3xl font-bold text-center mb-2 font-display text-primary-foreground">Find a Bus</h2>
-         <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate and create a booking request.</p>
+         <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate for your trip.</p>
         
         {isLoaded ? (
-            <form onSubmit={(e) => { e.preventDefault(); handleCreateRequest(); }}>
+            <form onSubmit={(e) => { e.preventDefault(); calculateDistanceAndEstimate(); }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 
                 <div className="grid gap-2">
@@ -334,9 +279,9 @@ Sakpal Travels
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
-                 <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate} disabled={isUserLoading || !user}>Estimate Cost</Button>
-                 <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleShare} disabled={isUserLoading || !user}>Share</Button>
-                 <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isUserLoading || !user}>Create Request</Button>
+                 <Button type="submit" className="w-full sm:w-auto">Estimate Cost</Button>
+                 <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleShare}>Share Estimate</Button>
+                 <Button type="button" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleCreateRequest}>Contact to Book</Button>
               </div>
 
           </form>
@@ -399,21 +344,6 @@ Sakpal Travels
           </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={isConfirmationAlertOpen} onOpenChange={setIsConfirmationAlertOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Request Submitted!</AlertDialogTitle>
-              <AlertDialogDescription>
-                Your booking request has been sent to the operators. You will be notified once it is reviewed. You can check the status in 'My Bookings'.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogAction onClick={() => setIsConfirmationAlertOpen(false)}>OK</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
     </div>
   );
 }
-
-    
