@@ -79,7 +79,7 @@ import {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {operatorSections.map((section) => (
             <Link href={section.href} key={section.title}>
-              <Card className="hover:border8-primary hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
+              <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-lg font-medium">{section.title}</CardTitle>
                   {section.icon}
