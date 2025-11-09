@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -11,6 +10,8 @@ export default function Header() {
       { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
       { href: "/search", label: "Book Now" },
+      { href: "/operator-register", label: "Operator Signup"},
+      { href: "/operator-dashboard", label: "Operator Dashboard"},
   ]
 
   return (
