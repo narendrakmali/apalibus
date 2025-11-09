@@ -61,7 +61,8 @@ export default function AdminLoginPage() {
           <CardTitle className="text-2xl font-display">Admin Login</CardTitle>
           <CardDescription>
             Enter your credentials to access the admin dashboard.
-            (To create an admin, manually set `isAdmin: true` on a user document in Firestore)
+            <br /><br />
+            <strong className="font-semibold">How to become an admin:</strong> Register a normal user, then go to your Firestore `users` collection and manually set the `isAdmin` field to `true` for that user's document.
           </CardDescription>
         </CardHeader>
         <CardContent>
