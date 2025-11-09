@@ -14,6 +14,7 @@ import { useFirebase } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import Image from "next/image";
 
 const libraries: ("places")[] = ["places"];
 
@@ -243,102 +244,109 @@ Sakpal Travels
   }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-      <div id="search" className="container px-4 md:px-6 py-12">
-        <div className="w-full max-w-6xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl border">
-           <h2 className="text-3xl font-bold text-center mb-2 font-inter">Find a Bus</h2>
-           <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate and create a booking request.</p>
-          {isLoaded ? (
-              <form onSubmit={(e) => { e.preventDefault(); handleCreateRequest(); }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end mb-6">
-                  {/* From & To */}
-                  <div className="grid gap-2 text-left">
-                    <Label htmlFor="from">From</Label>
-                    <PlacesAutocomplete 
-                      onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
-                      initialValue={fromLocation.address}
-                    />
-                  </div>
-                  <div className="grid gap-2 text-left">
-                    <Label htmlFor="to">To</Label>
-                    <PlacesAutocomplete 
-                      onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} 
-                      initialValue={toLocation.address}
-                    />
-                  </div>
-                  
-                  {/* Dates */}
-                  <div className="grid gap-2 text-left">
-                    <Label htmlFor="start-date">Journey Date</Label>
-                    <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
-                  </div>
-                  <div className="grid gap-2 text-left">
-                    <Label htmlFor="return-date">Return Date</Label>
-                    <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
-                  </div>
+    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4">
+      <Image 
+        src="https://picsum.photos/seed/bus-terminal/1920/1080"
+        alt="Bus terminal background"
+        fill
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        data-ai-hint="bus terminal"
+      />
+      <div className="absolute inset-0 bg-black/50 z-10"></div>
+      
+      <div id="search" className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border">
+         <h2 className="text-3xl font-bold text-center mb-2 font-display text-primary-foreground">Find a Bus</h2>
+         <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate and create a booking request.</p>
+        
+        {isLoaded ? (
+            <form onSubmit={(e) => { e.preventDefault(); handleCreateRequest(); }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="from">From</Label>
+                  <PlacesAutocomplete 
+                    onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
+                    initialValue={fromLocation.address}
+                  />
+                </div>
 
-                  {/* Seating */}
-                  <div className="grid gap-2 text-left">
-                    <Label htmlFor="seats">Seats</Label>
-                    <Select onValueChange={setSeats} value={seats}>
-                      <SelectTrigger id="seats">
-                        <SelectValue placeholder="Number of seats" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 Seater</SelectItem>
-                        <SelectItem value="30">30 Seater</SelectItem>
-                        <SelectItem value="40">40 Seater</SelectItem>
-                        <SelectItem value="50">50 Seater</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Bus Type */}
-                  <div className="grid gap-2 text-left">
-                    <Label htmlFor="bus-type">Bus Type</Label>
-                    <Select onValueChange={setBusType} value={busType}>
-                      <SelectTrigger id="bus-type">
-                        <SelectValue placeholder="AC / Non-AC" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="AC">AC</SelectItem>
-                        <SelectItem value="Non-AC">Non-AC</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Seat Type */}
-                  <div className="grid gap-2 text-left">
-                    <Label htmlFor="seat-type">Seat Type</Label>
-                     <Select onValueChange={setSeatType} value={seatType}>
-                      <SelectTrigger id="seat-type">
-                        <SelectValue placeholder="Select seat type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="General">General</SelectItem>
-                        <SelectItem value="Pushback">Pushback</SelectItem>
-                        <SelectItem value="Semi Sleeper">Semi Sleeper</SelectItem>
-                        <SelectItem value="Sleeper">Sleeper</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="to">To</Label>
+                  <PlacesAutocomplete 
+                    onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} 
+                    initialValue={toLocation.address}
+                  />
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate} disabled={isUserLoading || !user}>Estimate Cost</Button>
-                   <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleShare} disabled={isUserLoading || !user}>Share</Button>
-                   <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isUserLoading || !user}>Create Request</Button>
+                <div className="grid gap-2">
+                  <Label htmlFor="start-date">Journey Date</Label>
+                  <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="return-date">Return Date</Label>
+                  <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
                 </div>
 
-            </form>
-          ) : (
-             <div className="text-center p-8 text-muted-foreground">
-              <h3 className="font-semibold text-lg text-foreground mb-2">Google Maps Not Configured</h3>
-              <p>Please add your Google Maps API key to the <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> file to enable location search.</p>
-              <p>Create a file named <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> and add: <code className="bg-muted text-foreground p-1 rounded-sm text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_API_KEY</code></p>
-             </div>
-          )}
-        </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="seats">Seats</Label>
+                  <Select onValueChange={setSeats} value={seats}>
+                    <SelectTrigger id="seats">
+                      <SelectValue placeholder="Number of seats" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 Seater</SelectItem>
+                      <SelectItem value="30">30 Seater</SelectItem>
+                      <SelectItem value="40">40 Seater</SelectItem>
+                      <SelectItem value="50">50 Seater</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="bus-type">Bus Type</Label>
+                  <Select onValueChange={setBusType} value={busType}>
+                    <SelectTrigger id="bus-type">
+                      <SelectValue placeholder="AC / Non-AC" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AC">AC</SelectItem>
+                      <SelectItem value="Non-AC">Non-AC</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="seat-type">Seat Type</Label>
+                   <Select onValueChange={setSeatType} value={seatType}>
+                    <SelectTrigger id="seat-type">
+                      <SelectValue placeholder="Select seat type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="General">General</SelectItem>
+                      <SelectItem value="Pushback">Pushback</SelectItem>
+                      <SelectItem value="Semi Sleeper">Semi Sleeper</SelectItem>
+                      <SelectItem value="Sleeper">Sleeper</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
+                 <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={calculateDistanceAndEstimate} disabled={isUserLoading || !user}>Estimate Cost</Button>
+                 <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleShare} disabled={isUserLoading || !user}>Share</Button>
+                 <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isUserLoading || !user}>Create Request</Button>
+              </div>
+
+          </form>
+        ) : (
+           <div className="text-center p-8 text-muted-foreground">
+            <h3 className="font-semibold text-lg text-foreground mb-2">Google Maps Not Configured</h3>
+            <p>Please add your Google Maps API key to the <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> file to enable location search.</p>
+            <p>Create a file named <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> and add: <code className="bg-muted text-foreground p-1 rounded-sm text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_API_KEY</code></p>
+           </div>
+        )}
       </div>
       
        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
@@ -407,3 +415,5 @@ Sakpal Travels
     </div>
   );
 }
+
+    
