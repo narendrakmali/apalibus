@@ -41,12 +41,12 @@ export default function HomePage() {
           company: "Corporate Client"
       },
       {
-          quote: "I used Traverse for a family trip, and it was a fantastic experience. The booking process is simple, and their operator network is reliable.",
+          quote: "I used Sakpal Travels for a family trip, and it was a fantastic experience. The booking process is simple, and their operator network is reliable.",
           author: "Priya Desai",
           company: "Family Traveler"
       },
        {
-          quote: "As an operator, Traverse has helped me reach more customers. The dashboard is easy to use and has improved my business.",
+          quote: "As an operator, Sakpal Travels has helped me reach more customers. The dashboard is easy to use and has improved my business.",
           author: "Mr. Shinde",
           company: "Bus Operator"
       }
@@ -152,3 +152,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
