@@ -14,8 +14,10 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -23,6 +25,33 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { auth, firestore } = useFirebase();
+
+  const handleAdminCheck = (user: User) => {
+    if (!firestore) return;
+    const userDocRef = doc(firestore, 'users', user.uid);
+      
+    getDoc(userDocRef).then(userDocSnap => {
+       if (userDocSnap.exists() && userDocSnap.data()?.isAdmin === true) {
+        // User is an admin, proceed to dashboard
+        router.push('/admin/dashboard');
+      } else {
+        // Not an admin, sign out and show an error
+        signOut(auth);
+        setError('You do not have administrative privileges.');
+      }
+    }).catch(err => {
+        // Create and emit the detailed permission error
+        const permissionError = new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        
+        // Also sign the user out and show a generic message in the UI
+        signOut(auth);
+        setError('A permission error occurred while verifying your admin status.');
+    });
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,22 +64,10 @@ export default function AdminLoginPage() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Verify the user has the isAdmin flag
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists() && userDocSnap.data()?.isAdmin === true) {
-        // User is an admin, proceed to dashboard
-        router.push('/admin/dashboard');
-      } else {
-        // Not an admin, sign out and show an error
-        await signOut(auth);
-        setError('You do not have administrative privileges.');
-      }
+      // On successful login, proceed to check for admin status
+      handleAdminCheck(userCredential.user);
     } catch (err: any) {
-      setError('Invalid credentials or permission error.');
+      setError('Invalid credentials.');
     }
   };
 
