@@ -11,7 +11,7 @@ import {
   import { useFirebase } from '@/firebase';
   import { useUserRole } from '@/hooks/use-user-role';
   import { useOperatorDashboardData } from '@/hooks/use-operator-dashboard-data';
-  import { Bus, PlusCircle, CalendarDays, Hourglass } from 'lucide-react';
+  import { Bus, PlusCircle, CalendarDays, Hourglass, AlertTriangle, Lock } from 'lucide-react';
   import Link from 'next/link';
   import { useRouter } from 'next/navigation';
   import { useEffect } from 'react';
@@ -19,7 +19,7 @@ import {
   
   const operatorSections = [
     {
-      title: 'Manage Fleet',
+      title: 'Fleet',
       description: 'View bus schedules and manage your fleet.',
       icon: <Bus className="h-8 w-8 text-primary" />,
       href: '/operator/fleet',
@@ -79,7 +79,7 @@ import {
           </p>
         </header>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Your Buses</CardTitle>
@@ -98,9 +98,18 @@ import {
                     {isStatsLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats.pendingRequests}</div>}
                 </CardContent>
             </Card>
+             <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Upcoming Journeys (24h)</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    {isStatsLoading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats.upcomingJourneys}</div>}
+                </CardContent>
+            </Card>
         </div>
   
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
           {operatorSections.map((section) => (
             <Link href={section.href} key={section.title}>
               <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
@@ -117,20 +126,40 @@ import {
             </Link>
           ))}
         </div>
-  
-         <div className="mt-12">
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Journeys</CardTitle>
-                <CardDescription>A summary of trips scheduled for the next 24 hours.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center text-muted-foreground py-12">
-                  <p>Upcoming journeys will be displayed here.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+
+        <div className="grid gap-8 mt-12 md:grid-cols-3">
+            <div className="md:col-span-2">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Upcoming Journeys</CardTitle>
+                        <CardDescription>A summary of trips scheduled for the next 24 hours.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-center text-muted-foreground py-12">
+                        <p>Upcoming journeys will be displayed here.</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+             <div>
+                <Card className="bg-yellow-50 border-yellow-200">
+                    <CardHeader className="flex flex-row items-start gap-4">
+                        <Lock className="h-6 w-6 text-yellow-600 mt-1" />
+                        <div>
+                            <CardTitle className="text-yellow-800">Fare Chart Notice</CardTitle>
+                            <CardDescription className="text-yellow-700">
+                                Operators can only define vehicle-specific rates.
+                            </CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-yellow-700">
+                           The base fare chart, including minimum km per day and standard driver allowances, is managed by the platform admin to ensure consistency. You can set your own rate-per-km when adding or editing a bus in your fleet.
+                        </p>
+                    </CardContent>
+                </Card>
+             </div>
+        </div>
       </div>
     );
   }
