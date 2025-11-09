@@ -15,7 +15,7 @@ const ptSans = PT_Sans({
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
 export const metadata: Metadata = {
-  title: "Sakpal Travels",
+  title: "Traverse",
   description: "A comprehensive web-based bus booking platform.",
 };
 

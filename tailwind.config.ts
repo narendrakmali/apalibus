@@ -21,8 +21,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-        inter: ["var(--font-inter)", ...fontFamily.sans],
+        sans: ["var(--font-pt-sans)", ...fontFamily.sans],
+        display: ["var(--font-space-grotesk)", ...fontFamily.sans],
       },
       colors: {
         border: "hsl(var(--border))",

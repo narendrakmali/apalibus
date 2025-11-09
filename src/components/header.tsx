@@ -22,12 +22,32 @@ export default function Header() {
     }
   };
 
+  const navLinks = [
+      { href: "/", label: "Home" },
+      { href: "/about", label: "About" },
+      { href: "/contact", label: "Contact" },
+      { href: "/search", label: "Book Now" },
+  ]
+
   return (
-    <header className="px-4 lg:px-6 h-16 flex items-center bg-card shadow-sm border-b">
-      <Link href="/" className="flex items-center justify-center">
+    <header className="px-4 lg:px-6 h-16 flex items-center bg-card shadow-sm border-b sticky top-0 z-50">
+      <Link href="/" className="flex items-center justify-center mr-6">
         <BusFront className="h-6 w-6 text-primary" />
-        <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
+        <span className="ml-2 text-lg font-bold font-inter">Traverse</span>
       </Link>
+      
+      <nav className="hidden md:flex gap-4 sm:gap-6 items-center">
+        {navLinks.map(link => (
+             <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+        ))}
+      </nav>
+
       <nav className="ml-auto flex gap-2 sm:gap-4 items-center">
         {isUserLoading || isRoleLoading ? (
            <div className="flex gap-4 sm:gap-6 items-center">
@@ -37,32 +57,31 @@ export default function Header() {
         ) : user ? (
           <>
             {role === 'operator' && (
-              <Link
-                href="/operator/dashboard"
-                className="text-sm font-medium hover:underline underline-offset-4"
-              >
-                Operator Dashboard
-              </Link>
+              <Button variant="ghost" size="sm" asChild>
+                  <Link href="/operator/dashboard">Operator Dashboard</Link>
+              </Button>
+            )}
+             {role === 'admin' && (
+              <Button variant="ghost" size="sm" asChild>
+                  <Link href="/admin/dashboard">Admin Dashboard</Link>
+              </Button>
             )}
              {role === 'user' && (
-              <Link
-                href="/dashboard/bookings"
-                className="text-sm font-medium hover:underline underline-offset-4"
-              >
-                My Bookings
-              </Link>
+                <Button variant="ghost" size="sm" asChild>
+                    <Link href="/dashboard/bookings">My Bookings</Link>
+                </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Logout">
+            <Button variant="outline" size="sm" onClick={handleLogout} aria-label="Logout">
                 Logout
             </Button>
           </>
         ) : (
           <>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/user-login">User Login</Link>
+              <Link href="/user-login">Login</Link>
             </Button>
-             <Button variant="outline" size="sm" asChild>
-              <Link href="/operator-login">Operator Login</Link>
+             <Button size="sm" asChild>
+              <Link href="/register">Register</Link>
             </Button>
           </>
         )}
