@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -35,24 +35,6 @@ export default function OperatorRegisterPage() {
   const router = useRouter();
   const { auth, firestore } = useFirebase();
 
-  useEffect(() => {
-    if (!auth) return;
-
-    // We only want to create the verifier once.
-    if (!(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'normal',
-        'callback': (response: any) => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        },
-        'expired-callback': () => {
-          setError("reCAPTCHA has expired. Please try again.");
-        }
-      });
-    }
-  }, [auth]);
-
-
   const handleSendOtp = async () => {
     setError(null);
     if (!operatorName || !email || !password) {
@@ -69,7 +51,21 @@ export default function OperatorRegisterPage() {
     }
 
     try {
-      const verifier = (window as any).recaptchaVerifier;
+      // Ensure the container is clean before rendering a new verifier
+      const recaptchaContainer = document.getElementById('recaptcha-container');
+      if (recaptchaContainer) {
+        recaptchaContainer.innerHTML = '';
+      }
+      
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'normal',
+        'callback': (response: any) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+        'expired-callback': () => {
+          setError("reCAPTCHA has expired. Please try again.");
+        }
+      });
       const result = await signInWithPhoneNumber(auth, `+91${phone}`, verifier);
       setConfirmationResult(result);
       setIsOtpSent(true);
