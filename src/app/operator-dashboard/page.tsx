@@ -79,7 +79,7 @@ export default function OperatorDashboardPage() {
       <header className="flex justify-between items-center mb-8">
         <div>
             <h1 className="text-3xl font-bold font-display text-primary">Operator Dashboard</h1>
-            <p className="text-muted-foreground">Welcome, {operatorName ? <strong>{operatorName}</strong> : <Skeleton className="h-5 w-32 inline-block" />}. Manage your fleet and bookings.</p>
+            <div className="text-muted-foreground">Welcome, {operatorName ? <strong>{operatorName}</strong> : <Skeleton className="h-5 w-32 inline-block" />}. Manage your fleet and bookings.</div>
         </div>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </header>
