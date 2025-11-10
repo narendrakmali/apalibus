@@ -1,4 +1,3 @@
-
 'use client';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -270,8 +269,8 @@ Sakpal Travels
       <div className="absolute inset-0 bg-black/50 z-10"></div>
       
       <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border">
-         <h2 className="text-3xl font-bold text-center mb-2 font-display text-primary-foreground">Find a Bus</h2>
-         <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate for your trip.</p>
+         <h2 className="text-3xl font-bold text-center mb-2 font-display text-primary-foreground">Rent a Bus</h2>
+         <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate for your group trip.</p>
         
         {isLoaded ? (
             <form onSubmit={(e) => { e.preventDefault(); calculateDistanceAndEstimate(); }}>
@@ -462,5 +461,3 @@ Sakpal Travels
     </div>
   );
 }
-
-    
