@@ -3,61 +3,27 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FleetDashboard, type Bus, type BookingRequest } from '@/components/operator/fleet-dashboard';
+import { FleetDashboard } from '@/components/operator/fleet-dashboard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initializeFirebase } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
-
-// Mock data - in a real app, this would come from a Firestore hook
-const mockBuses: Bus[] = [
-  { id: 'bus1', registrationNumber: 'MH-04-A-1234', seatingCapacity: 40, busType: 'AC' },
-  { id: 'bus2', registrationNumber: 'MH-04-B-5678', seatingCapacity: 50, busType: 'Non-AC' },
-  { id: 'bus3', registrationNumber: 'MH-04-C-9012', seatingCapacity: 30, busType: 'AC Sleeper' },
-];
-
-const mockBookings: BookingRequest[] = [
-   { 
-      id: 'req1', 
-      fromLocation: { address: 'Mumbai' }, 
-      toLocation: { address: 'Pune' },
-      journeyDate: '2024-08-05', 
-      returnDate: '2024-08-07', 
-      status: 'approved',
-      operatorQuote: { availableBus: "40 Seater AC (MH-04-A-1234)" }
-    },
-    { 
-      id: 'req2', 
-      fromLocation: { address: 'Delhi' },
-      toLocation: { address: 'Agra' },
-      journeyDate: '2024-08-10', 
-      returnDate: '2024-08-11', 
-      status: 'pending',
-      operatorQuote: { availableBus: "30 Seater AC Sleeper (MH-04-C-9012)" }
-    },
-     { 
-      id: 'req3', 
-      fromLocation: { address: 'Goa' },
-      toLocation: { address: 'Bangalore' },
-      journeyDate: '2024-08-20', 
-      returnDate: '2024-08-25', 
-      status: 'approved',
-      operatorQuote: { availableBus: "50 Seater Non-AC (MH-04-B-5678)" }
-    }
-];
+import { useOperatorData } from '@/hooks/use-operator-data';
 
 export default function OperatorDashboardPage() {
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 7, 1)); // August 2024
+  const [currentDate, setCurrentDate] = useState(new Date());
   const { auth, firestore } = initializeFirebase();
-  const [user, loading] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   const [operatorName, setOperatorName] = useState('');
-  const [isOperator, setIsOperator] = useState(false);
+  
+  const { buses, requests, loading: dataLoading, error } = useOperatorData(user?.uid);
+  const isLoading = authLoading || dataLoading;
 
   useEffect(() => {
-    if (loading) return;
+    if (authLoading) return;
     if (!user) {
       router.push('/operator-login');
       return;
@@ -68,16 +34,15 @@ export default function OperatorDashboardPage() {
         const operatorDoc = await getDoc(operatorDocRef);
         if (operatorDoc.exists()) {
             setOperatorName(operatorDoc.data().name);
-            setIsOperator(true);
         } else {
             // This user is not a registered operator, sign them out and redirect
-            auth.signOut();
+            await auth.signOut();
             router.push('/operator-login');
         }
     };
     fetchOperatorData();
 
-  }, [user, loading, router, auth, firestore]);
+  }, [user, authLoading, router, auth, firestore]);
   
   const handlePrevMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -96,7 +61,7 @@ export default function OperatorDashboardPage() {
     router.push('/operator-login');
   };
 
-  if (loading || !user || !isOperator) {
+  if (isLoading) {
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             <Skeleton className="h-8 w-64 mb-4" />
@@ -144,7 +109,8 @@ export default function OperatorDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <FleetDashboard buses={mockBuses} bookings={mockBookings} currentDate={currentDate} />
+            {error && <p className="text-destructive text-center">{error}</p>}
+            <FleetDashboard buses={buses} bookings={requests} currentDate={currentDate} />
           </CardContent>
         </Card>
 

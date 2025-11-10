@@ -3,27 +3,7 @@
 
 import { useMemo } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-// Types from backend.json (simplified for frontend use)
-export interface Bus {
-  id: string;
-  registrationNumber: string;
-  seatingCapacity: number;
-  busType: string;
-}
-
-export interface BookingRequest {
-  id: string;
-  busId?: string; // This might not be directly on the request initially
-  journeyDate: string;
-  returnDate: string;
-  status: 'pending' | 'approved' | 'rejected' | 'quote_rejected';
-  fromLocation: { address: string };
-  toLocation: { address: string };
-  operatorQuote?: {
-    availableBus?: string; // Format: "40 Seater AC (MH-01-AB-1234)"
-  };
-}
+import type { Bus, BookingRequest } from '@/lib/types';
 
 interface FleetDashboardProps {
   buses: Bus[];
@@ -31,14 +11,28 @@ interface FleetDashboardProps {
   currentDate: Date;
 }
 
+const formatDate = (dateStr: string | { toDate: () => Date }) => {
+    if (typeof dateStr === 'string') {
+        return new Date(dateStr).toLocaleDateString();
+    }
+    if (dateStr && typeof dateStr.toDate === 'function') {
+        return dateStr.toDate().toLocaleDateString();
+    }
+    return 'N/A';
+};
+
+
 // Helper to check if a date falls within a booking's range
 const isDateInBooking = (date: Date, booking: BookingRequest) => {
   const checkDate = new Date(date);
   checkDate.setHours(0, 0, 0, 0);
-  const journeyDate = new Date(booking.journeyDate);
+
+  const journeyDate = booking.journeyDate.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate);
   journeyDate.setHours(0, 0, 0, 0);
-  const returnDate = new Date(booking.returnDate);
+
+  const returnDate = booking.returnDate.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate);
   returnDate.setHours(0, 0, 0, 0);
+  
   return checkDate >= journeyDate && checkDate <= returnDate;
 };
 
@@ -72,10 +66,18 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         
         const relevantBooking = bookings.find(booking => {
             const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
-            if (quoteReg !== bus.registrationNumber) {
+            if (quoteReg && quoteReg !== bus.registrationNumber) {
                 return false;
             }
-            return (booking.status === 'approved' || booking.status === 'pending') && isDateInBooking(date, booking);
+             // For pending requests, they might not have a bus assigned yet, so we show them on all buses
+            if (booking.status === 'pending' && !quoteReg) {
+                 return isDateInBooking(date, booking);
+            }
+            // For approved, it must match the bus
+            if (booking.status === 'approved' && quoteReg === bus.registrationNumber) {
+                 return isDateInBooking(date, booking);
+            }
+            return false;
         });
 
         busSchedule[bus.id][day] = relevantBooking || 'available';
@@ -84,6 +86,17 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
 
     return busSchedule;
   }, [buses, bookings, daysArray, month, year]);
+
+  if (buses.length === 0) {
+    return (
+        <div className="text-center py-10 px-4 border rounded-lg bg-gray-50">
+            <h3 className="text-lg font-semibold">No Buses Found</h3>
+            <p className="text-muted-foreground mt-2">
+                You haven't added any buses to your fleet yet. Please contact support to add your buses.
+            </p>
+        </div>
+    );
+  }
 
   return (
     <div className="border rounded-lg overflow-x-auto">
@@ -125,7 +138,7 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
                             <div className="space-y-2">
                                 <h4 className="font-semibold">{status.fromLocation.address} to {status.toLocation.address}</h4>
                                 <p className="text-sm text-muted-foreground">
-                                    {new Date(status.journeyDate).toLocaleDateString()} - {new Date(status.returnDate).toLocaleDateString()}
+                                    {formatDate(status.journeyDate)} - {formatDate(status.returnDate)}
                                 </p>
                                 <div className={`text-sm font-bold capitalize ${status.status === 'approved' ? 'text-green-600' : 'text-yellow-600'}`}>
                                     Status: {status.status}
