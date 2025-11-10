@@ -60,8 +60,8 @@ export function RequestsTable({ requests }: { requests: BookingRequest[] }) {
                     <TableRow key={req.id}>
                         <TableCell className="font-medium">{formatFirebaseTimestamp(req.createdAt)}</TableCell>
                         <TableCell>
-                            <div>{req.contact.name}</div>
-                            <div className="text-xs text-muted-foreground">{req.contact.mobile}</div>
+                            <div>{req.contact?.name}</div>
+                            <div className="text-xs text-muted-foreground">{req.contact?.mobile}</div>
                         </TableCell>
                         <TableCell>
                             <div className="flex items-center gap-2">
