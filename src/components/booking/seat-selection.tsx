@@ -1,8 +1,9 @@
+
 'use client';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Woman, PersonStanding } from 'lucide-react';
+import { ArrowLeft, User, PersonStanding } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -48,7 +49,7 @@ const Seat = ({ seat, onSelect, isSelected }: { seat: Seat, onSelect: (id: strin
     }
 
     const getIcon = () => {
-        if (seat.isLadySeat) return <Woman className="h-4 w-4" />;
+        if (seat.isLadySeat) return <User className="h-4 w-4" />;
         if (seat.isSeniorSeat) return <PersonStanding className="h-4 w-4" />;
         return null;
     }
