@@ -40,10 +40,7 @@
       "required": [
         "id",
         "email",
-        "name",
-        "mobileNumber",
-        "address",
-        "pincode"
+        "name"
       ]
     },
     "BusOperator": {
@@ -304,6 +301,7 @@
   },
   "auth": {
     "providers": [
+      "email",
       "phone",
       "anonymous"
     ]
@@ -411,5 +409,3 @@
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization independence is achieved through denormalization. For instance, any authorization-relevant data from the BusOperator entity that's required for bus entities authorization should be copied to each Bus document. This eliminates the need for `get()` calls in security rules. Structural segregation is used to maintain a homogeneous security posture within collections. Each collection contains documents with similar access control needs.\n\nAccess modeling follows a consistent pattern: User-owned data (like bookings) is nested under the `/users/{userId}` path, ensuring clear ownership. Membership maps are not explicitly required based on entities provided, but if collaboration features are included later, they will be used. No custom claims will be used, relying instead on roles stored directly in Firestore (DBAC).\n\nThe structure facilitates secure `list` operations (QAPs) by segregating data based on access requirements. For example, operator-owned buses are stored under `/busOperators/{operatorId}/buses/{busId}` and user bookings are stored under `/users/{userId}/bookings/{bookingId}`. A top-level `bookingRequests` collection is created to allow operators to easily query for all pending requests across all users. This allows rules to easily filter lists based on ownership without being filters themselves. The data structure models state explicitly using dedicated fields where relevant (e.g., a `status` field), promotes a predictable schema, and enforces consistent naming conventions."
   }
 }
-
-    

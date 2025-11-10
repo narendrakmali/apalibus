@@ -1,101 +1,76 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
 import { initializeFirebase } from '@/firebase';
-import { doc, setDoc, getFirestore } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import PinInput from 'react-otp-input';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { auth, firestore } = initializeFirebase();
   const router = useRouter();
 
-
-  const handleSendOtp = async () => {
+  const handleRegister = async () => {
     setError(null);
-    if (!auth) {
-        setError("Firebase Auth is not initialized.");
-        return;
+    setIsLoading(true);
+
+    if (!name || !email || !password || !confirmPassword) {
+      setError("Please fill in all fields.");
+      setIsLoading(false);
+      return;
     }
-     if (!phone || phone.length !== 10) {
-      setError("Please enter a valid 10-digit phone number.");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setIsLoading(false);
       return;
     }
 
     try {
-      // Use a fresh verifier each time to avoid "DUPE" errors
-      const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible'
-      });
-      const result = await signInWithPhoneNumber(auth, `+91${phone}`, recaptchaVerifier);
-      setConfirmationResult(result);
-      setIsOtpSent(true);
-    } catch (err: any) {
-      console.error("OTP Send Error:", err);
-      let errorMessage = "Failed to send OTP. Please ensure your domain is authorized in the Firebase console and try again.";
-       if (err.code === 'auth/invalid-phone-number') {
-        errorMessage = "The phone number is not valid.";
-      } else if (err.code === 'auth/too-many-requests') {
-        errorMessage = "You've requested an OTP too many times. Please try again later.";
-      } else if (err.code === 'auth/captcha-check-failed') {
-        errorMessage = "reCAPTCHA verification failed. Please make sure this app's domain is authorized in the Firebase console for Authentication.";
-      }
-      setError(errorMessage);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    setError(null);
-    if (!name || !email) {
-      setError("Please fill in your name and email.");
-      return;
-    }
-
-    if (!confirmationResult) {
-      setError("Something went wrong. Please try sending the OTP again.");
-      return;
-    }
-
-    try {
-      const userCredential = await confirmationResult.confirm(otp);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Save user details to Firestore
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
         name: name,
-        email: email,
-        mobileNumber: user.phoneNumber,
-        address: "", // Can be collected later
-        pincode: "", // Can be collected later
-        isAdmin: false, // Default to not admin
+        email: user.email,
+        mobileNumber: "", // Phone number is no longer collected at sign-up
+        address: "",
+        pincode: "",
+        isAdmin: false,
       });
 
       console.log("User registered successfully!");
-      router.push('/'); // Redirect to home page after successful registration
+      // Optionally send a verification email
+      // await sendEmailVerification(user);
+      // alert("Registration successful! Please check your email to verify your account.");
+      router.push('/login'); // Redirect to login page after successful registration
 
     } catch (err: any) {
-      console.error("OTP Verification Error:", err);
-       let errorMessage = "Failed to verify OTP. Please check the code and try again.";
-      if (err.code === 'auth/invalid-verification-code') {
-        errorMessage = "The OTP you entered is incorrect.";
-      } else if (err.code === 'auth/code-expired') {
-        errorMessage = "The OTP has expired. Please send a new one.";
+      console.error("Registration Error:", err);
+      let errorMessage = "An unknown error occurred during registration.";
+      if (err.code === 'auth/email-already-in-use') {
+        errorMessage = "This email address is already registered.";
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = "Please enter a valid email address.";
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = "The password is too weak. It must be at least 6 characters long.";
       }
       setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -108,62 +83,26 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {!isOtpSent ? (
-              <>
-                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" type="text" placeholder="Enter your full name" value={name} onChange={(e) => setName(e.target.value)} required />
-                </div>
-                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                   <div className="flex items-center gap-2">
-                      <span className="p-2 bg-muted rounded-md text-sm">+91</span>
-                      <Input id="phone" type="tel" placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={10} required />
-                   </div>
-                </div>
-                <Button onClick={handleSendOtp} className="w-full">Send OTP</Button>
-              </>
-            ) : (
-              <>
-                <div className="space-y-2 text-center">
-                  <Label htmlFor="otp">Enter OTP</Label>
-                  <p className="text-sm text-muted-foreground">An OTP has been sent to +91 {phone}</p>
-                   <PinInput
-                        value={otp}
-                        onChange={setOtp}
-                        length={6}
-                        inputStyle={{
-                            width: '2.5rem',
-                            height: '2.5rem',
-                            margin: '0 0.25rem',
-                            fontSize: '1.25rem',
-                            borderRadius: '4px',
-                            border: '1px solid hsl(var(--border))',
-                            textAlign: 'center',
-                            backgroundColor: 'hsl(var(--background))',
-                            color: 'hsl(var(--foreground))'
-                        }}
-                        containerStyle={{
-                            justifyContent: 'center'
-                        }}
-                        focusStyle={{
-                            border: '1px solid hsl(var(--ring))',
-                            outline: 'none'
-                        }}
-                    />
-                </div>
-                <Button onClick={handleVerifyOtp} className="w-full">Verify OTP & Register</Button>
-                <Button variant="link" onClick={() => setIsOtpSent(false)} className="w-full">
-                  Change Number
-                </Button>
-              </>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input id="name" type="text" placeholder="Enter your full name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" placeholder="Create a password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input id="confirm-password" type="password" placeholder="Confirm your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            </div>
             {error && <p className="text-center text-sm text-destructive">{error}</p>}
-            <div id="recaptcha-container" className="flex justify-center mt-4"></div>
+            <Button onClick={handleRegister} disabled={isLoading} className="w-full">
+              {isLoading ? 'Registering...' : 'Register'}
+            </Button>
           </div>
         </CardContent>
       </Card>
