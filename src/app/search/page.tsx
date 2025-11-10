@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 import { useCurrentLocation } from "@/hooks/use-current-location";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const libraries: ("places")[] = ["places"];
 
@@ -38,9 +39,14 @@ export default function SearchPage() {
   const [toLocation, setToLocation] = useState<Location>({ address: "" });
   const [journeyDate, setJourneyDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
-  const [seats, setSeats] = useState("");
+  const [passengers, setPassengers] = useState("");
+  const [busCapacity, setBusCapacity] = useState("");
   const [busType, setBusType] = useState("");
   const [seatType, setSeatType] = useState("");
+
+  const [fullName, setFullName] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [email, setEmail] = useState("");
 
   const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -74,8 +80,14 @@ export default function SearchPage() {
       return;
     }
 
-    if (!busType || !seats || !journeyDate || !returnDate) {
-      setError("Please select Bus Type, Seats, Journey Date, and Return Date.");
+    if (!busType || !busCapacity || !journeyDate || !returnDate || !passengers) {
+      setError("Please fill all trip details: Bus Capacity, Bus Type, Passengers, Journey Date, and Return Date.");
+      setIsAlertOpen(true);
+      return;
+    }
+
+    if (!fullName || !mobileNumber || !email) {
+       setError("Please provide your contact information: Name, Mobile, and Email.");
       setIsAlertOpen(true);
       return;
     }
@@ -103,7 +115,7 @@ export default function SearchPage() {
           const oneWayDistance = result.routes[0].legs[0].distance!.value / 1000; // in km
 
           const rateInfo = rateCard.find(
-            (rate) => rate.busType === busType && rate.seatingCapacity === parseInt(seats)
+            (rate) => rate.busType === busType && rate.seatingCapacity === parseInt(busCapacity)
           );
 
           if (!rateInfo) {
@@ -153,16 +165,16 @@ export default function SearchPage() {
 
     const subject = "Bus Trip Estimate from Sakpal Travels";
     const body = `
-Hello,
+Hello ${fullName},
 
-Here is the estimated cost for your bus journey:
+Here is the estimated cost for your bus journey for ${passengers} passengers:
 
 From: ${fromLocation.address}
 To: ${toLocation.address}
 Journey Date: ${journeyDate}
 Return Date: ${returnDate}
+Bus Capacity: ${busCapacity} Seater
 Bus Type: ${busType}
-Seats: ${seats} Seater
 Seat Type: ${seatType || 'Not specified'}
 
 Estimated Cost Breakdown:
@@ -180,7 +192,7 @@ Thank you,
 Sakpal Travels
     `;
 
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
   };
 
@@ -199,7 +211,7 @@ Sakpal Travels
       />
       <div className="absolute inset-0 bg-black/50 z-10"></div>
       
-      <div id="search" className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border">
+      <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border">
          <h2 className="text-3xl font-bold text-center mb-2 font-display text-primary-foreground">Find a Bus</h2>
          <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate for your trip.</p>
         
@@ -207,6 +219,10 @@ Sakpal Travels
             <form onSubmit={(e) => { e.preventDefault(); calculateDistanceAndEstimate(); }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 
+                <div className="grid gap-2 md:col-span-2">
+                    <h3 className="text-lg font-semibold text-primary-foreground border-b pb-2 mb-2">Trip Details</h3>
+                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="from">From</Label>
                   <PlacesAutocomplete 
@@ -233,11 +249,16 @@ Sakpal Travels
                   <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
                 </div>
 
+                 <div className="grid gap-2">
+                  <Label htmlFor="passengers">Number of Passengers</Label>
+                  <Input id="passengers" type="number" placeholder="e.g., 25" value={passengers} onChange={e => setPassengers(e.target.value)} required />
+                </div>
+
                 <div className="grid gap-2">
-                  <Label htmlFor="seats">Seats</Label>
-                  <Select onValueChange={setSeats} value={seats}>
-                    <SelectTrigger id="seats">
-                      <SelectValue placeholder="Number of seats" />
+                  <Label htmlFor="bus-capacity">Bus Capacity</Label>
+                  <Select onValueChange={setBusCapacity} value={busCapacity}>
+                    <SelectTrigger id="bus-capacity">
+                      <SelectValue placeholder="Select bus capacity" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="15">15 Seater</SelectItem>
@@ -268,12 +289,31 @@ Sakpal Travels
                       <SelectValue placeholder="Select seat type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="General">General</SelectItem>
-                      <SelectItem value="Pushback">Pushback</SelectItem>
-                      <SelectItem value="Semi Sleeper">Semi Sleeper</SelectItem>
+                      <SelectItem value="General">General (Seater)</SelectItem>
+                      <SelectItem value="Pushback">Pushback (Seater)</SelectItem>
+                      <SelectItem value="Semi Sleeper">Seater cum Sleeper</SelectItem>
                       <SelectItem value="Sleeper">Sleeper</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="grid gap-2 md:col-span-2">
+                    <h3 className="text-lg font-semibold text-primary-foreground border-b pb-2 mb-2 mt-4">Your Contact Information</h3>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="full-name">Full Name</Label>
+                    <Input id="full-name" type="text" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="mobile">Mobile Number</Label>
+                    <Input id="mobile" type="tel" placeholder="Enter your mobile number" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
+                </div>
+
+                <div className="grid gap-2 md:col-span-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input id="email" type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required />
                 </div>
 
               </div>
@@ -300,7 +340,7 @@ Sakpal Travels
               <AlertDialogTitle>{error ? 'Error' : 'Estimated Fare Breakdown'}</AlertDialogTitle>
               {estimate && !error && (
                 <AlertDialogDescription>
-                  This is an approximate cost for a {estimate.numDays}-day trip. Actual cost may vary.
+                  This is an approximate cost for a {estimate.numDays}-day trip for {passengers} passengers. Actual cost may vary.
                 </AlertDialogDescription>
               )}
             </AlertDialogHeader>
@@ -331,7 +371,7 @@ Sakpal Travels
                   </div>
                   <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                     <span>Total Estimate</span>
-                    <span>{estimate.totalCost.toLocaleString('en-IN')}</span>
+                    <span>₹{estimate.totalCost.toLocaleString('en-IN')}</span>
                   </div>
                 </>
               ) : (
