@@ -10,6 +10,7 @@ export default function Header() {
       { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
       { href: "/search", label: "Book Now" },
+      { href: "/register", label: "User Signup" },
       { href: "/operator-register", label: "Operator Signup"},
       { href: "/operator-dashboard", label: "Operator Dashboard"},
   ]
