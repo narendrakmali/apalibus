@@ -13,6 +13,7 @@ export default function Header() {
       { href: "/contact", label: "Contact" },
       { href: "/search", label: "Group Booking" },
       { href: "/explore-routes", label: "Book Tickets" },
+      { href: "/msrtc-booking", label: "MSRTC Booking" },
       { href: "/register", label: "User Signup" },
       { href: "/login", label: "User Login" },
       { href: "/operator-register", label: "Operator Register"},
