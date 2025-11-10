@@ -1,10 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FleetDashboard, type Bus, type BookingRequest } from '@/components/operator/fleet-dashboard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { initializeFirebase } from '@/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useRouter } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
 
 // Mock data - in a real app, this would come from a Firestore hook
 const mockBuses: Bus[] = [
@@ -43,21 +47,34 @@ const mockBookings: BookingRequest[] = [
     }
 ];
 
-// In a real app, you would use a hook like this:
-// import { useOperatorDashboardData } from '@/hooks/use-operator-dashboard-data';
-
 export default function OperatorDashboardPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 7, 1)); // August 2024
-  
-  // MOCK HOOK USAGE
-  const isLoading = false; // Set to true to see skeleton loaders
-  const buses = mockBuses;
-  const bookingRequests = mockBookings;
-  const operatorName = "Example Travels";
+  const { auth, firestore } = initializeFirebase();
+  const [user, loading] = useAuthState(auth);
+  const router = useRouter();
+  const [operatorName, setOperatorName] = useState('');
 
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      router.push('/operator-login');
+      return;
+    }
 
-  // REAL HOOK USAGE (to be used once Firestore is connected)
-  // const { buses, bookingRequests, operatorName, isLoading } = useOperatorDashboardData();
+    const fetchOperatorData = async () => {
+        const operatorDocRef = doc(firestore, "busOperators", user.uid);
+        const operatorDoc = await getDoc(operatorDocRef);
+        if (operatorDoc.exists()) {
+            setOperatorName(operatorDoc.data().name);
+        } else {
+            // This user is not a registered operator, sign them out and redirect
+            auth.signOut();
+            router.push('/operator-login');
+        }
+    };
+    fetchOperatorData();
+
+  }, [user, loading, router, auth, firestore]);
   
   const handlePrevMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -70,13 +87,33 @@ export default function OperatorDashboardPage() {
   const handleToday = () => {
     setCurrentDate(new Date());
   };
+  
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/operator-login');
+  };
 
+  if (loading || !user) {
+    return (
+        <div className="container mx-auto py-8 px-4 md:px-6">
+            <Skeleton className="h-8 w-64 mb-4" />
+            <Skeleton className="h-6 w-80 mb-10" />
+            <div className="space-y-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-40 w-full" />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold font-display text-primary">Operator Dashboard</h1>
-        <p className="text-muted-foreground">Welcome, {isLoading ? <Skeleton className="h-5 w-32 inline-block" /> : <strong>{operatorName}</strong>}. Manage your fleet and bookings.</p>
+      <header className="flex justify-between items-center mb-8">
+        <div>
+            <h1 className="text-3xl font-bold font-display text-primary">Operator Dashboard</h1>
+            <p className="text-muted-foreground">Welcome, {operatorName ? <strong>{operatorName}</strong> : <Skeleton className="h-5 w-32 inline-block" />}. Manage your fleet and bookings.</p>
+        </div>
+        <Button onClick={handleLogout} variant="outline">Logout</Button>
       </header>
       
       <div className="space-y-8">
@@ -104,19 +141,9 @@ export default function OperatorDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-               <div className="space-y-4">
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                </div>
-            ) : (
-                <FleetDashboard buses={buses} bookings={bookingRequests} currentDate={currentDate} />
-            )}
+            <FleetDashboard buses={mockBuses} bookings={mockBookings} currentDate={currentDate} />
           </CardContent>
         </Card>
-
-        {/* Other dashboard components like Booking Requests would go here */}
 
       </div>
     </div>
