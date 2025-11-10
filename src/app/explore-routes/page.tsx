@@ -15,7 +15,7 @@ const routes = [
     departureTime: '08:00 PM',
     arrivalTime: '07:00 AM',
     busType: '30-Seater Sleeper A/C',
-    baseFare: 1200,
+    baseFare: 750,
   },
   {
     id: 'vashi-sangli',
@@ -24,7 +24,7 @@ const routes = [
     departureTime: '09:00 PM',
     arrivalTime: '07:30 AM',
     busType: '30-Seater Sleeper A/C',
-    baseFare: 1200,
+    baseFare: 750,
   },
 ];
 
