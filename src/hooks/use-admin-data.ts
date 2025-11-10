@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { initializeFirebase } from '@/firebase';
 import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
+import type { User, BusOperator } from '@/lib/types';
+
 
 export interface BookingRequest {
   id: string;
@@ -21,7 +23,7 @@ export interface BookingRequest {
     numDays: number;
     totalKm: number;
   } | null;
-  contact: {
+  contact?: {
     name: string;
     mobile: string;
     email: string;
@@ -32,36 +34,56 @@ export interface BookingRequest {
 
 export const useAdminData = () => {
   const [requests, setRequests] = useState<BookingRequest[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [operators, setOperators] = useState<BusOperator[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const { firestore } = initializeFirebase();
 
   useEffect(() => {
-    const fetchRequests = async () => {
+    const fetchAllData = async () => {
       try {
         setLoading(true);
-        const requestsCol = collection(firestore, 'bookingRequests');
-        const q = query(requestsCol, orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
         
-        const requestsData = querySnapshot.docs.map(doc => ({
+        // Fetch Requests
+        const requestsCol = collection(firestore, 'bookingRequests');
+        const reqQuery = query(requestsCol, orderBy('createdAt', 'desc'));
+        const reqSnapshot = await getDocs(reqQuery);
+        const requestsData = reqSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         })) as BookingRequest[];
-        
         setRequests(requestsData);
 
+        // Fetch Users
+        const usersCol = collection(firestore, 'users');
+        const usersSnapshot = await getDocs(usersCol);
+        const usersData = usersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as User[];
+        setUsers(usersData);
+
+        // Fetch Operators
+        const operatorsCol = collection(firestore, 'busOperators');
+        const operatorsSnapshot = await getDocs(operatorsCol);
+        const operatorsData = operatorsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as BusOperator[];
+        setOperators(operatorsData);
+
       } catch (err: any) {
-        console.error("Error fetching booking requests:", err);
+        console.error("Error fetching admin data:", err);
         setError(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRequests();
+    fetchAllData();
   }, [firestore]);
 
-  return { requests, loading, error };
+  return { requests, users, operators, loading, error };
 };

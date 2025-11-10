@@ -26,7 +26,7 @@ export interface BookingRequest {
     numDays: number;
     totalKm: number;
   } | null;
-  contact: {
+  contact?: {
     name: string;
     mobile: string;
     email: string;
@@ -36,4 +36,19 @@ export interface BookingRequest {
   operatorQuote?: {
     availableBus?: string;
   };
+}
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    mobileNumber: string;
+    isAdmin: boolean;
+}
+
+export interface BusOperator {
+    id: string;
+    name: string;
+    email: string;
+    contactNumber: string;
 }

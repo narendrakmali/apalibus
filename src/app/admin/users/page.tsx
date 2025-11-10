@@ -1,0 +1,68 @@
+'use client';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { useAdminData } from '@/hooks/use-admin-data';
+import { UsersTable } from '@/components/admin/users-table';
+import { ArrowLeft } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { initializeFirebase } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+export default function AdminUsersPage() {
+  const { auth } = initializeFirebase();
+  const [user, authLoading] = useAuthState(auth);
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/admin/login');
+    }
+  }, [user, authLoading, router]);
+
+  const { users, loading: dataLoading } = useAdminData();
+  
+  const isLoading = authLoading || dataLoading;
+
+  return (
+    <div className="container mx-auto py-8 px-4 md:px-6">
+      <div className="mb-8">
+        <Button asChild variant="outline" size="sm" className="mb-4">
+            <Link href="/admin">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+            </Link>
+        </Button>
+        <h1 className="text-3xl font-bold font-display text-primary">Manage Users</h1>
+        <p className="text-muted-foreground">View and manage all registered users.</p>
+      </div>
+      
+      <Card>
+          <CardHeader>
+              <CardTitle>All Users</CardTitle>
+              {isLoading ? (
+                <Skeleton className="h-5 w-48 mt-1" />
+              ) : (
+                <CardDescription>
+                  A total of {users.length} users found.
+                </CardDescription>
+              )}
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            ) : (
+                <UsersTable users={users} />
+            )}
+          </CardContent>
+      </Card>
+    </div>
+  );
+}

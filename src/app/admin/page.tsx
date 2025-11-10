@@ -71,8 +71,8 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <CardDescription>Manage bus operators and their fleets.</CardDescription>
-             <Button asChild className="mt-4" variant="secondary" disabled>
-                <Link href="#">Coming Soon</Link>
+             <Button asChild className="mt-4">
+                <Link href="/admin/operators">Manage Operators</Link>
             </Button>
           </CardContent>
         </Card>
@@ -84,8 +84,8 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <CardDescription>View and manage registered users.</CardDescription>
-             <Button asChild className="mt-4" variant="secondary" disabled>
-                <Link href="#">Coming Soon</Link>
+             <Button asChild className="mt-4">
+                <Link href="/admin/users">Manage Users</Link>
             </Button>
           </CardContent>
         </Card>
