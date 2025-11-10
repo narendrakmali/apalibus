@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -13,6 +14,7 @@ export default function Header() {
       { href: "/search", label: "Book Now" },
       { href: "/register", label: "User Signup" },
       { href: "/login", label: "User Login" },
+      { href: "/operator-register", label: "Operator Register"},
       { href: "/operator-login", label: "Operator Login"},
       { href: "/admin/login", label: "Admin Login"},
   ]
@@ -48,9 +50,9 @@ export default function Header() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Navigation Menu</SheetTitle>
-              <SheetDescription>
+            <SheetHeader>
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <SheetDescription className="sr-only">
                 A list of links to navigate the Sakpal Travels website.
               </SheetDescription>
             </SheetHeader>

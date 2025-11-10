@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +54,7 @@ export default function OperatorDashboardPage() {
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const [operatorName, setOperatorName] = useState('');
+  const [isOperator, setIsOperator] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -66,6 +68,7 @@ export default function OperatorDashboardPage() {
         const operatorDoc = await getDoc(operatorDocRef);
         if (operatorDoc.exists()) {
             setOperatorName(operatorDoc.data().name);
+            setIsOperator(true);
         } else {
             // This user is not a registered operator, sign them out and redirect
             auth.signOut();
@@ -93,7 +96,7 @@ export default function OperatorDashboardPage() {
     router.push('/operator-login');
   };
 
-  if (loading || !user) {
+  if (loading || !user || !isOperator) {
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             <Skeleton className="h-8 w-64 mb-4" />
