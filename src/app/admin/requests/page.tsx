@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,9 +43,13 @@ export default function AdminRequestsPage() {
       <Card>
           <CardHeader>
               <CardTitle>All Requests</CardTitle>
-              <CardDescription>
-                {isLoading ? <Skeleton className="h-4 w-48" /> : `A total of ${requests.length} requests found.`}
-              </CardDescription>
+              {isLoading ? (
+                <Skeleton className="h-5 w-48 mt-1" />
+              ) : (
+                <CardDescription>
+                  A total of {requests.length} requests found.
+                </CardDescription>
+              )}
           </CardHeader>
           <CardContent>
             {isLoading ? (
