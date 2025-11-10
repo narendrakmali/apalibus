@@ -106,8 +106,8 @@ export default function OperatorDashboardPage() {
           </CardHeader>
           <CardContent>
             <CardDescription>Review and respond to booking requests.</CardDescription>
-             <Button asChild className="mt-4" variant="secondary" disabled>
-                <Link href="#">Manage Bookings</Link>
+             <Button asChild className="mt-4">
+                <Link href="/operator-dashboard/requests">Manage Bookings</Link>
             </Button>
           </CardContent>
         </Card>
