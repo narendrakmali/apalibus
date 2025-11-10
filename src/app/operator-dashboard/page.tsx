@@ -49,7 +49,7 @@ export default function OperatorDashboardPage() {
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-6 w-96 mb-10" />
+            <div className="h-6 w-96 mb-10"><Skeleton className="h-5 w-32 inline-block" /></div>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 <Skeleton className="h-40 w-full" />
                 <Skeleton className="h-40 w-full" />
@@ -93,8 +93,8 @@ export default function OperatorDashboardPage() {
           </CardHeader>
           <CardContent>
             <CardDescription>Add a new bus to your fleet.</CardDescription>
-             <Button asChild className="mt-4" variant="secondary" disabled>
-                <Link href="#">Coming Soon</Link>
+             <Button asChild className="mt-4">
+                <Link href="/operator-dashboard/add-bus">Add Bus</Link>
             </Button>
           </CardContent>
         </Card>
