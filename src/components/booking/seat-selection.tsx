@@ -142,7 +142,7 @@ export default function SeatSelection({ route, journeyDate, onBack }: { route: a
                         </div>
                         <div>
                             <p className="font-medium">Total Fare:</p>
-                             <p className="text-2xl font-bold">₹{totalFare.toLocaleString('en-IN')}</p>
+                             <p className="text-2xl font-bold">{totalFare.toLocaleString('en-IN')}</p>
                         </div>
                        
                         <AlertDialog>
@@ -155,7 +155,7 @@ export default function SeatSelection({ route, journeyDate, onBack }: { route: a
                                 <AlertDialogHeader>
                                 <AlertDialogTitle>Confirm Booking</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    You are about to book {selectedSeats.length} seat(s) for a total of ₹{totalFare.toLocaleString('en-IN')}. Do you want to continue?
+                                    You are about to book {selectedSeats.length} seat(s) for a total of {totalFare.toLocaleString('en-IN')}. Do you want to continue?
                                 </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>

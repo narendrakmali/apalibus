@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -84,7 +85,7 @@ export default function ExploreRoutesPage() {
                     </CardDescription>
                 </div>
                  <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">₹{route.baseFare}</p>
+                    <p className="text-2xl font-bold text-primary">{route.baseFare}</p>
                     <p className="text-xs text-muted-foreground">per seat</p>
                 </div>
               </div>

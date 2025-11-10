@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -430,7 +431,7 @@ Sakpal Travels
                   </div>
                   <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                     <span>Total Estimate</span>
-                    <span>₹{estimate.totalCost.toLocaleString('en-IN')}</span>
+                    <span>{estimate.totalCost.toLocaleString('en-IN')}</span>
                   </div>
                 </>
               ) : (
