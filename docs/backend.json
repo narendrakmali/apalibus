@@ -274,6 +274,7 @@
         "busType": { "type": "string" },
         "seatType": { "type": "string" },
         "estimate": { "type": "object" },
+        "contact": { "type": "object" },
         "status": { "type": "string", "enum": ["pending", "approved", "rejected", "quote_rejected"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "operatorQuote": {
@@ -298,7 +299,7 @@
           }
         }
       },
-      "required": ["userId", "fromLocation", "toLocation", "journeyDate", "returnDate", "seats", "busType", "status", "createdAt"]
+      "required": ["userId", "fromLocation", "toLocation", "journeyDate", "returnDate", "seats", "busType", "contact", "status", "createdAt"]
     }
   },
   "auth": {

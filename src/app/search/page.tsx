@@ -8,11 +8,14 @@ import { useState, useEffect } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import { rateCard } from "@/lib/rate-card";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { initializeFirebase } from "@/firebase";
+import { signInAnonymously } from "firebase/auth";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 const libraries: ("places")[] = ["places"];
 
@@ -51,8 +54,11 @@ export default function SearchPage() {
   const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRequestConfirm, setShowRequestConfirm] = useState(false);
 
   const router = useRouter();
+  const { auth, firestore } = initializeFirebase();
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -196,8 +202,60 @@ Sakpal Travels
     window.location.href = mailtoLink;
   };
 
-  const handleCreateRequest = () => {
-      alert("Booking requests are temporarily disabled. Please contact us directly to book.");
+  const handleCreateRequest = async () => {
+    if (isSubmitting) return;
+
+    if (!fromLocation.address || !toLocation.address || !journeyDate || !returnDate || !passengers || !busCapacity || !busType || !fullName || !mobileNumber || !email) {
+      setError("Please fill out all fields before submitting a request.");
+      setIsAlertOpen(true);
+      return;
+    }
+    setShowRequestConfirm(false);
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      let user = auth.currentUser;
+      if (!user) {
+        const userCredential = await signInAnonymously(auth);
+        user = userCredential.user;
+      }
+
+      if (!user) {
+        throw new Error("Could not create an anonymous user.");
+      }
+
+      const requestData = {
+        userId: user.uid,
+        fromLocation,
+        toLocation,
+        journeyDate,
+        returnDate,
+        seats: passengers,
+        busType,
+        seatType,
+        estimate,
+        contact: {
+          name: fullName,
+          mobile: mobileNumber,
+          email: email,
+        },
+        status: "pending",
+        createdAt: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(collection(firestore, "bookingRequests"), requestData);
+
+      console.log("Booking request created with ID: ", docRef.id);
+      router.push(`/request-status/${docRef.id}`);
+
+    } catch (e: any) {
+      console.error("Error creating booking request:", e);
+      setError(`Failed to create booking request: ${e.message}`);
+      setIsAlertOpen(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -321,7 +379,9 @@ Sakpal Travels
               <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
                  <Button type="submit" className="w-full sm:w-auto">Estimate Cost</Button>
                  <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleShare}>Share Estimate</Button>
-                 <Button type="button" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleCreateRequest}>Contact to Book</Button>
+                 <Button type="button" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setShowRequestConfirm(true)} disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : 'Raise Request'}
+                  </Button>
               </div>
 
           </form>
@@ -384,6 +444,23 @@ Sakpal Travels
           </AlertDialogContent>
         </AlertDialog>
 
+        <AlertDialog open={showRequestConfirm} onOpenChange={setShowRequestConfirm}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Booking Request</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will submit your request to our operators. They will review it and provide a final quote. Are you sure you want to proceed?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleCreateRequest}>Submit Request</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
     </div>
   );
 }
+
+    
