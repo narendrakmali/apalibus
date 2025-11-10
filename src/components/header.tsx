@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from "./ui/button";
 import { BusFront, Menu } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Header() {
   const navLinks = [
@@ -49,6 +49,12 @@ export default function Header() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+              <SheetDescription>
+                A list of links to navigate the Sakpal Travels website.
+              </SheetDescription>
+            </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
               <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
                 <BusFront className="h-6 w-6 text-primary" />
