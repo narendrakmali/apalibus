@@ -69,7 +69,7 @@ export default function HomePage() {
                 <Link href="/search">Get an Estimate</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-                <Link href="/search">Explore Routes</Link>
+                <Link href="/explore-routes">Explore Routes</Link>
               </Button>
             </div>
             {/* Feature Highlights */}
