@@ -13,6 +13,7 @@ export default function Header() {
       { href: "/register", label: "User Signup" },
       { href: "/operator-register", label: "Operator Signup"},
       { href: "/operator-dashboard", label: "Operator Dashboard"},
+      { href: "/admin/login", label: "Admin Login"},
   ]
 
   return (
