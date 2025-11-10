@@ -1,26 +1,22 @@
-
 'use client';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FleetDashboard } from '@/components/operator/fleet-dashboard';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initializeFirebase } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
-import { useOperatorData } from '@/hooks/use-operator-data';
+import Link from 'next/link';
+import { Bus, PlusCircle, Calendar } from 'lucide-react';
 
 export default function OperatorDashboardPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
   const { auth, firestore } = initializeFirebase();
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   const [operatorName, setOperatorName] = useState('');
   
-  const { buses, requests, loading: dataLoading, error } = useOperatorData(user?.uid);
-  const isLoading = authLoading || dataLoading;
+  const isLoading = authLoading;
 
   useEffect(() => {
     if (authLoading) return;
@@ -44,32 +40,22 @@ export default function OperatorDashboardPage() {
 
   }, [user, authLoading, router, auth, firestore]);
   
-  const handlePrevMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
-  
-  const handleToday = () => {
-    setCurrentDate(new Date());
-  };
-  
   const handleLogout = async () => {
     await auth.signOut();
     router.push('/operator-login');
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
-            <Skeleton className="h-8 w-64 mb-4" />
-            <Skeleton className="h-6 w-80 mb-10" />
-            <div className="space-y-4">
-                <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-6 w-96 mb-10" />
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-40 w-full" />
+                <Skeleton className="h-40 w-full" />
                 <Skeleton className="h-40 w-full" />
             </div>
+             <Skeleton className="h-40 w-full mt-8" />
         </div>
     )
   }
@@ -79,42 +65,65 @@ export default function OperatorDashboardPage() {
       <header className="flex justify-between items-center mb-8">
         <div>
             <h1 className="text-3xl font-bold font-display text-primary">Operator Dashboard</h1>
-            <div className="text-muted-foreground">Welcome, {operatorName ? <strong>{operatorName}</strong> : <Skeleton className="h-5 w-32 inline-block" />}. Manage your fleet and bookings.</div>
+            <div className="text-muted-foreground">
+                Welcome back, {operatorName ? <strong>{operatorName}</strong> : user.email}. Manage your operations from here.
+            </div>
         </div>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </header>
       
-      <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Fleet Availability Calendar</CardTitle>
-            <div className="flex items-center gap-4 pt-2">
-               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={handlePrevMonth}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-lg font-semibold w-36 text-center">
-                  {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                </span>
-                <Button variant="outline" size="icon" onClick={handleNextMonth}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button variant="outline" onClick={handleToday}>Today</Button>
-               <div className="flex items-center gap-4 text-sm ml-auto">
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-100 border"></div><span>Available</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-300 border"></div><span>Pending</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-red-400 border"></div><span>Booked</span></div>
-                </div>
-            </div>
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-base font-medium">Manage Fleet</CardTitle>
+            <Bus className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {error && <p className="text-destructive text-center">{error}</p>}
-            <FleetDashboard buses={buses} bookings={requests} currentDate={currentDate} />
+             <CardDescription>View bus schedules and manage your fleet.</CardDescription>
+             <Button asChild className="mt-4" variant="secondary">
+                <Link href="/operator-dashboard/fleet">Manage Fleet</Link>
+            </Button>
           </CardContent>
         </Card>
-
+        
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-base font-medium">Add New Bus</CardTitle>
+             <PlusCircle className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Add a new bus to your fleet.</CardDescription>
+             <Button asChild className="mt-4" variant="secondary" disabled>
+                <Link href="#">Coming Soon</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-base font-medium">Manage Bookings</CardTitle>
+            <Calendar className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Review and respond to booking requests.</CardDescription>
+             <Button asChild className="mt-4" variant="secondary" disabled>
+                <Link href="#">Manage Bookings</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
+
+       <Card>
+          <CardHeader>
+            <CardTitle>Upcoming Journeys</CardTitle>
+            <CardDescription>A summary of trips scheduled for the next 24 hours.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-muted-foreground py-8">
+                Upcoming journeys will be displayed here.
+            </div>
+          </CardContent>
+        </Card>
     </div>
   );
 }
