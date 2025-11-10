@@ -43,8 +43,7 @@ export default function SearchPage() {
   const [journeyDate, setJourneyDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState("");
-  const [busCapacity, setBusCapacity] = useState("");
-  const [busType, setBusType] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState("");
   const [seatType, setSeatType] = useState("");
 
   const [fullName, setFullName] = useState("");
@@ -85,9 +84,9 @@ export default function SearchPage() {
       setIsAlertOpen(true);
       return;
     }
-
-    if (!busType || !busCapacity || !journeyDate || !returnDate || !passengers) {
-      setError("Please fill all trip details: Bus Capacity, Bus Type, Passengers, Journey Date, and Return Date.");
+    
+    if (!selectedVehicle || !journeyDate || !returnDate || !passengers) {
+      setError("Please fill all trip details: Vehicle Type, Passengers, Journey Date, and Return Date.");
       setIsAlertOpen(true);
       return;
     }
@@ -120,9 +119,7 @@ export default function SearchPage() {
         if (status === window.google.maps.DirectionsStatus.OK && result) {
           const oneWayDistance = result.routes[0].legs[0].distance!.value / 1000; // in km
 
-          const rateInfo = rateCard.find(
-            (rate) => rate.busType === busType && rate.seatingCapacity === parseInt(busCapacity)
-          );
+          const rateInfo = rateCard[parseInt(selectedVehicle)];
 
           if (!rateInfo) {
             setError("No rate information found for the selected bus configuration.");
@@ -168,6 +165,7 @@ export default function SearchPage() {
         alert("Please calculate an estimate first before sharing.");
         return;
     }
+    const rateInfo = rateCard[parseInt(selectedVehicle)];
 
     const subject = "Bus Trip Estimate from Sakpal Travels";
     const body = `
@@ -179,8 +177,7 @@ From: ${fromLocation.address}
 To: ${toLocation.address}
 Journey Date: ${journeyDate}
 Return Date: ${returnDate}
-Bus Capacity: ${busCapacity} Seater
-Bus Type: ${busType}
+Vehicle: ${rateInfo.vehicleType} (${rateInfo.seatingCapacity} Seater ${rateInfo.busType})
 Seat Type: ${seatType || 'Not specified'}
 
 Estimated Cost Breakdown:
@@ -204,8 +201,10 @@ Sakpal Travels
 
   const handleCreateRequest = async () => {
     if (isSubmitting) return;
+    
+    const rateInfo = selectedVehicle ? rateCard[parseInt(selectedVehicle)] : null;
 
-    if (!fromLocation.address || !toLocation.address || !journeyDate || !returnDate || !passengers || !busCapacity || !busType || !fullName || !mobileNumber || !email) {
+    if (!fromLocation.address || !toLocation.address || !journeyDate || !returnDate || !passengers || !rateInfo || !fullName || !mobileNumber || !email) {
       setError("Please fill out all fields before submitting a request.");
       setIsAlertOpen(true);
       return;
@@ -232,7 +231,7 @@ Sakpal Travels
         journeyDate,
         returnDate,
         seats: passengers,
-        busType,
+        busType: `${rateInfo.vehicleType} (${rateInfo.seatingCapacity} Seater ${rateInfo.busType})`,
         seatType,
         estimate,
         contact: {
@@ -311,37 +310,25 @@ Sakpal Travels
                   <Label htmlFor="passengers">Number of Passengers</Label>
                   <Input id="passengers" type="number" placeholder="e.g., 25" value={passengers} onChange={e => setPassengers(e.target.value)} required />
                 </div>
-
+                
                 <div className="grid gap-2">
-                  <Label htmlFor="bus-capacity">Bus Capacity</Label>
-                  <Select onValueChange={setBusCapacity} value={busCapacity}>
-                    <SelectTrigger id="bus-capacity">
-                      <SelectValue placeholder="Select bus capacity" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 Seater</SelectItem>
-                      <SelectItem value="30">30 Seater</SelectItem>
-                      <SelectItem value="40">40 Seater</SelectItem>
-                      <SelectItem value="50">50 Seater</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Label htmlFor="vehicle-type">Vehicle Type</Label>
+                    <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
+                        <SelectTrigger id="vehicle-type">
+                            <SelectValue placeholder="Select vehicle type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {rateCard.map((vehicle, index) => (
+                                <SelectItem key={index} value={index.toString()}>
+                                    {vehicle.vehicleType} ({vehicle.seatingCapacity} Seater, {vehicle.busType})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label htmlFor="bus-type">Bus Type</Label>
-                  <Select onValueChange={setBusType} value={busType}>
-                    <SelectTrigger id="bus-type">
-                      <SelectValue placeholder="AC / Non-AC" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AC">AC</SelectItem>
-                      <SelectItem value="Non-AC">Non-AC</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="seat-type">Seat Type</Label>
+                  <Label htmlFor="seat-type">Seat Type (Optional)</Label>
                    <Select onValueChange={setSeatType} value={seatType}>
                     <SelectTrigger id="seat-type">
                       <SelectValue placeholder="Select seat type" />
@@ -429,7 +416,10 @@ Sakpal Travels
                     <span className="text-muted-foreground">Permit Charges ({estimate.numDays} days)</span>
                     <span>{estimate.permitCharges.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+
+                  <div className="border-t my-2"></div>
+
+                  <div className="flex justify-between font-bold text-lg pt-2 mt-2">
                     <span>Total Estimate</span>
                     <span>{estimate.totalCost.toLocaleString('en-IN')}</span>
                   </div>
@@ -462,3 +452,5 @@ Sakpal Travels
     </div>
   );
 }
+
+    
