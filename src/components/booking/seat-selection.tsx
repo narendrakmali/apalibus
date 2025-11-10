@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, PersonStanding } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface Seat {
   id: string;
@@ -36,6 +38,28 @@ const generateSeats = (): Seat[] => {
 
   return seats;
 };
+
+const pickupPoints = [
+  "Borivali E - Axis Bank Nr. National Park",
+  "Kandivali E - Samta Nagar Police Chowki",
+  "Malad E - Omkar Building Altamontegate Shantaram Talav Busstop",
+  "Goregaon East",
+  "Jogeshwari E - Lal Building",
+  "Airport",
+  "Hanuman Road Bus Stop Andheri E - End Of Fly Over",
+  "Santacruz - Vakola Signal",
+  "Bandra",
+  "Sion",
+  "Chembur E - Opp Yogi Restaurant",
+  "Mankhurd - Shivaji Nagar",
+  "Vashi",
+  "Sanpada - Sanpada Signal",
+  "Nerul",
+  "Belapur - CBD Belapur",
+  "Kharghar",
+  "Kamothe",
+  "Amboli - Kalamboli Opp Mcdonald Restaurant"
+];
 
 
 const Seat = ({ seat, onSelect, isSelected }: { seat: Seat, onSelect: (id: string) => void, isSelected: boolean }) => {
@@ -71,6 +95,8 @@ const Seat = ({ seat, onSelect, isSelected }: { seat: Seat, onSelect: (id: strin
 export default function SeatSelection({ route, journeyDate, onBack }: { route: any, journeyDate: string, onBack: () => void }) {
   const [seats, setSeats] = useState<Seat[]>(generateSeats());
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [selectedPickupPoint, setSelectedPickupPoint] = useState<string>('');
+
 
   const handleSelectSeat = (seatId: string) => {
     const seat = seats.find(s => s.id === seatId);
@@ -129,9 +155,22 @@ export default function SeatSelection({ route, journeyDate, onBack }: { route: a
                 </div>
 
                 {/* Booking Summary */}
-                <div className="w-full lg:w-64">
+                <div className="w-full lg:w-80">
                     <h3 className="text-lg font-semibold mb-4">Booking Summary</h3>
                     <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="pickup-point">Pickup Point</Label>
+                            <Select onValueChange={setSelectedPickupPoint} value={selectedPickupPoint}>
+                                <SelectTrigger id="pickup-point" className="w-full">
+                                    <SelectValue placeholder="Select a pickup point" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {pickupPoints.map(point => (
+                                        <SelectItem key={point} value={point}>{point}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div>
                             <p className="font-medium">Selected Seats:</p>
                             <div className="flex flex-wrap gap-2 mt-1">
@@ -147,7 +186,7 @@ export default function SeatSelection({ route, journeyDate, onBack }: { route: a
                        
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button className="w-full" disabled={selectedSeats.length === 0}>
+                                <Button className="w-full" disabled={selectedSeats.length === 0 || !selectedPickupPoint}>
                                     Proceed to Book
                                 </Button>
                             </AlertDialogTrigger>
@@ -155,7 +194,7 @@ export default function SeatSelection({ route, journeyDate, onBack }: { route: a
                                 <AlertDialogHeader>
                                 <AlertDialogTitle>Confirm Booking</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    You are about to book {selectedSeats.length} seat(s) for a total of {totalFare.toLocaleString('en-IN')}. Do you want to continue?
+                                    You are about to book {selectedSeats.length} seat(s) for a total of {totalFare.toLocaleString('en-IN')}. Your pickup point is {selectedPickupPoint}. Do you want to continue?
                                 </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
