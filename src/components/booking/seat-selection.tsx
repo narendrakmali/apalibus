@@ -18,27 +18,6 @@ interface Seat {
   isSeniorSeat: boolean;
 }
 
-// Generate a 30-seat sleeper layout
-const generateSeats = (): Seat[] => {
-  const seats: Seat[] = [];
-  // Lower Deck: 15 seats
-  for (let i = 1; i <= 15; i++) {
-    seats.push({ id: `L${i}`, number: `L${i}`, isBooked: Math.random() > 0.8, type: 'lower', isLadySeat: false, isSeniorSeat: false });
-  }
-  // Upper Deck: 15 seats
-  for (let i = 1; i <= 15; i++) {
-    seats.push({ id: `U${i}`, number: `U${i}`, isBooked: Math.random() > 0.7, type: 'upper', isLadySeat: false, isSeniorSeat: false });
-  }
-  // Pre-assign some special seats for demonstration
-  const ladySeat = seats.find(s => s.id === 'L5');
-  if(ladySeat) ladySeat.isLadySeat = true;
-
-  const seniorSeat = seats.find(s => s.id === 'L2');
-  if(seniorSeat) seniorSeat.isSeniorSeat = true;
-
-  return seats;
-};
-
 const pickupPoints = [
   "Borivali E - Axis Bank Nr. National Park",
   "Kandivali E - Samta Nagar Police Chowki",
@@ -92,8 +71,8 @@ const Seat = ({ seat, onSelect, isSelected }: { seat: Seat, onSelect: (id: strin
     )
 }
 
-export default function SeatSelection({ route, journeyDate, onBack }: { route: any, journeyDate: string, onBack: () => void }) {
-  const [seats, setSeats] = useState<Seat[]>(generateSeats());
+export default function SeatSelection({ route, journeyDate, onBack, initialSeats }: { route: any, journeyDate: string, onBack: () => void, initialSeats: Seat[] }) {
+  const [seats, setSeats] = useState<Seat[]>(initialSeats);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [selectedPickupPoint, setSelectedPickupPoint] = useState<string>('');
 
