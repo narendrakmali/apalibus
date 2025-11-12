@@ -27,5 +27,3 @@ export default function RequestStatusPage({ params }: { params: { id: string } }
     </div>
   );
 }
-
-    
