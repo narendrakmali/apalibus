@@ -15,7 +15,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { initializeFirebase } from "@/firebase";
 import { signInAnonymously } from "firebase/auth";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
 
 const libraries: ("places")[] = ["places"];
 
@@ -199,6 +199,15 @@ Sakpal Travels
     window.location.href = mailtoLink;
   };
 
+  const generateAlphanumericId = (length: number): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
   const handleCreateRequest = async () => {
     if (isSubmitting) return;
     
@@ -224,7 +233,11 @@ Sakpal Travels
         throw new Error("Could not create an anonymous user.");
       }
 
+      const requestId = generateAlphanumericId(8);
+      const docRef = doc(firestore, "bookingRequests", requestId);
+
       const requestData = {
+        id: requestId,
         userId: user.uid,
         fromLocation,
         toLocation,
@@ -242,11 +255,11 @@ Sakpal Travels
         status: "pending",
         createdAt: serverTimestamp(),
       };
+      
+      await setDoc(docRef, requestData);
 
-      const docRef = await addDoc(collection(firestore, "bookingRequests"), requestData);
-
-      console.log("Booking request created with ID: ", docRef.id);
-      router.push(`/request-status/${docRef.id}`);
+      console.log("Booking request created with ID: ", requestId);
+      router.push(`/request-status/${requestId}`);
 
     } catch (e: any) {
       console.error("Error creating booking request:", e);
