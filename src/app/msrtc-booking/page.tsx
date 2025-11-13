@@ -8,13 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, UserPlus, Upload, Download } from 'lucide-react';
+import { Trash2, UserPlus, Upload, Download, FileDown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface Passenger {
   name: string;
@@ -47,6 +49,8 @@ export default function MsrtcBookingPage() {
   
   const [uploadMode, setUploadMode] = useState<'manual' | 'file'>('manual');
   const [passengerFile, setPassengerFile] = useState<File | null>(null);
+
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
 
   useEffect(() => {
@@ -89,7 +93,6 @@ export default function MsrtcBookingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic to handle form submission (e.g., PDF generation, API call) will be added here
     console.log({
       organizerName,
       contactNumber,
@@ -102,8 +105,75 @@ export default function MsrtcBookingPage() {
       passengers,
       passengerFile
     });
-    alert('Request submitted! (See console for data)');
+    setIsSubmitted(true);
   };
+
+  const handleDownloadPdf = () => {
+    // This is a placeholder. In a real scenario, you'd generate a PDF
+    // with the actual seat layout based on the passenger list.
+    alert("PDF download functionality will be implemented here.");
+    const doc = new jsPDF();
+    doc.text("MSRTC Group Booking Request", 14, 16);
+    doc.setFontSize(12);
+    doc.text(`Organizer: ${organizerName}`, 14, 24);
+    doc.text(`Travel Date: ${travelDate ? format(travelDate, "PPP") : 'N/A'}`, 14, 30);
+    doc.text(`Route: ${origin} to ${destination}`, 14, 36);
+
+    const tableColumn = ["Name", "Age", "Gender"];
+    const tableRows: (string | number)[][] = [];
+
+    passengers.forEach(p => {
+        const passengerData = [
+            p.name,
+            p.age,
+            p.gender
+        ];
+        tableRows.push(passengerData);
+    });
+
+    (doc as any).autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 42,
+    });
+    
+    doc.text("Seat allocation details will be shown here.", 14, (doc as any).lastAutoTable.finalY + 10);
+
+    doc.save(`msrtc_booking_request.pdf`);
+  }
+  
+  if (isSubmitted) {
+    return (
+        <div className="container mx-auto py-12 px-4 md:px-6">
+            <Card className="max-w-2xl mx-auto text-center">
+                <CardHeader>
+                    <CardTitle className="text-2xl font-display">Request Submitted Successfully!</CardTitle>
+                    <CardDescription>Your group booking request has been received. You will be contacted shortly with a confirmation and seat allocation details.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <p className="font-semibold">Here is a summary of your request:</p>
+                        <ul className="text-sm text-muted-foreground list-disc list-inside text-left mx-auto max-w-sm">
+                            <li><strong>Organizer:</strong> {organizerName}</li>
+                            <li><strong>Route:</strong> {origin} to {destination}</li>
+                            <li><strong>Date:</strong> {travelDate ? format(travelDate, "PPP") : 'Not set'}</li>
+                            <li><strong>Passengers:</strong> {uploadMode === 'file' ? `Uploaded from ${passengerFile?.name}` : `${passengers.length} passengers`}</li>
+                        </ul>
+                        <div className="flex gap-4 justify-center pt-4">
+                            <Button onClick={handleDownloadPdf}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Download Request Summary PDF
+                            </Button>
+                             <Button variant="outline" onClick={() => setIsSubmitted(false)}>
+                                Make a New Request
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
 
 
   return (
@@ -293,3 +363,5 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
+
+    

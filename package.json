@@ -1,3 +1,4 @@
+
 {
   "name": "sakpal-travels",
   "version": "0.1.0",
@@ -29,9 +30,12 @@
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "date-fns": "^3.6.0",
-    "react-day-picker": "^8.10.1"
+    "react-day-picker": "^8.10.1",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2"
   },
   "devDependencies": {
+    "@types/jspdf": "^2.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -40,3 +44,5 @@
     "typescript": "^5"
   }
 }
+
+    
