@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,12 +14,18 @@ import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Passenger {
   name: string;
   age: number | string;
   gender: 'Male' | 'Female' | 'Other' | '';
   idProof: File | null;
+}
+
+interface Depot {
+    id: number;
+    name: string;
 }
 
 export default function MsrtcBookingPage() {
@@ -35,6 +41,28 @@ export default function MsrtcBookingPage() {
   const [passengers, setPassengers] = useState<Passenger[]>([
     { name: '', age: '', gender: '', idProof: null },
   ]);
+
+  const [depots, setDepots] = useState<Depot[]>([]);
+  const [loadingDepots, setLoadingDepots] = useState(true);
+
+  useEffect(() => {
+    const fetchDepots = async () => {
+      try {
+        setLoadingDepots(true);
+        const response = await fetch('/api/msrtc');
+        const data = await response.json();
+        if (data.depots) {
+          setDepots(data.depots);
+        }
+      } catch (error) {
+        console.error("Failed to fetch depots:", error);
+      } finally {
+        setLoadingDepots(false);
+      }
+    };
+
+    fetchDepots();
+  }, []);
 
   const handleAddPassenger = () => {
     setPassengers([...passengers, { name: '', age: '', gender: '', idProof: null }]);
@@ -144,25 +172,29 @@ export default function MsrtcBookingPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="origin">Origin</Label>
+                  {loadingDepots ? <Skeleton className="h-10 w-full" /> : (
                   <Select onValueChange={setOrigin} value={origin}>
                      <SelectTrigger><SelectValue placeholder="Select origin depot" /></SelectTrigger>
                      <SelectContent>
-                        <SelectItem value="Mumbai Central">Mumbai Central</SelectItem>
-                        <SelectItem value="Pune (Swargate)">Pune (Swargate)</SelectItem>
-                        <SelectItem value="Nashik">Nashik</SelectItem>
+                        {depots.map(depot => (
+                            <SelectItem key={depot.id} value={depot.name}>{depot.name}</SelectItem>
+                        ))}
                      </SelectContent>
                   </Select>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destination">Destination</Label>
+                   {loadingDepots ? <Skeleton className="h-10 w-full" /> : (
                    <Select onValueChange={setDestination} value={destination}>
                      <SelectTrigger><SelectValue placeholder="Select destination depot" /></SelectTrigger>
                      <SelectContent>
-                        <SelectItem value="Mumbai Central">Mumbai Central</SelectItem>
-                        <SelectItem value="Pune (Swargate)">Pune (Swargate)</SelectItem>
-                        <SelectItem value="Nashik">Nashik</SelectItem>
+                        {depots.map(depot => (
+                           <SelectItem key={depot.id} value={depot.name}>{depot.name}</SelectItem>
+                        ))}
                      </SelectContent>
                   </Select>
+                  )}
                 </div>
                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="purpose">Purpose of Travel</Label>
