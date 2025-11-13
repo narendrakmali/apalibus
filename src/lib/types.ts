@@ -32,7 +32,7 @@ export interface BookingRequest {
     email: string;
   };
   status: 'pending' | 'approved' | 'rejected' | 'quote_rejected';
-  createdAt: Timestamp;
+  createdAt: Timestamp | string;
   operatorQuote?: {
     availableBus?: string;
   };

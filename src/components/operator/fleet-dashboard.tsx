@@ -11,14 +11,10 @@ interface FleetDashboardProps {
   currentDate: Date;
 }
 
-const formatDate = (dateStr: string | { toDate: () => Date }) => {
-    if (typeof dateStr === 'string') {
-        return new Date(dateStr).toLocaleDateString();
-    }
-    if (dateStr && typeof dateStr.toDate === 'function') {
-        return dateStr.toDate().toLocaleDateString();
-    }
-    return 'N/A';
+const formatDate = (dateInput: any) => {
+    if (!dateInput) return 'N/A';
+    const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 
@@ -138,12 +134,16 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
                             <div className="space-y-2">
                                 <h4 className="font-semibold">{status.fromLocation.address} to {status.toLocation.address}</h4>
                                 <p className="text-sm text-muted-foreground">
-                                    {formatDate(status.journeyDate)} - {formatDate(status.returnDate)}
+                                    Travel: {formatDate(status.journeyDate)} - {formatDate(status.returnDate)}
                                 </p>
                                 <div className={`text-sm font-bold capitalize ${status.status === 'approved' ? 'text-green-600' : 'text-yellow-600'}`}>
                                     Status: {status.status}
                                 </div>
-                                <p className="text-xs border-t pt-2 mt-2">Request ID: {status.id}</p>
+                                 <div className="text-xs text-muted-foreground border-t pt-2 mt-2">
+                                    <p>Requested by: {status.contact?.name}</p>
+                                    <p>Request Date: {formatDate(status.createdAt)}</p>
+                                    <p>Request ID: {status.id}</p>
+                                 </div>
                             </div>
                         </PopoverContent>
                     </Popover>
