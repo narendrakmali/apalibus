@@ -8,7 +8,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import Link from 'next/link';
-import { Bus, PlusCircle, Calendar } from 'lucide-react';
+import { Bus, PlusCircle, Calendar, TrendingUp, Users } from 'lucide-react';
 
 export default function OperatorDashboardPage() {
   const { auth, firestore } = initializeFirebase();
@@ -112,6 +112,36 @@ export default function OperatorDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+        <Card className="mb-12">
+            <CardHeader>
+                <CardTitle>Booking Summary</CardTitle>
+                <CardDescription>A quick overview of today's booking activity.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+                <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-lg">
+                    <Bus className="h-8 w-8 text-primary" />
+                    <div>
+                        <p className="text-sm text-muted-foreground">Buses Booked Today</p>
+                        <p className="text-2xl font-bold">5</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-lg">
+                    <Users className="h-8 w-8 text-primary" />
+                    <div>
+                        <p className="text-sm text-muted-foreground">Total Seats Booked</p>
+                        <p className="text-2xl font-bold">128</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-lg">
+                    <TrendingUp className="h-8 w-8 text-primary" />
+                    <div>
+                        <p className="text-sm text-muted-foreground">Revenue Estimate</p>
+                        <p className="text-2xl font-bold">₹85,000</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
 
        <Card>
           <CardHeader>
