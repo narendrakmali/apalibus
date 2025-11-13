@@ -1,3 +1,4 @@
+
 // src/lib/stageCalculator.ts
 import axios from 'axios';
 import * as turf from '@turf/turf';
@@ -33,8 +34,8 @@ export const loadDepots = async (): Promise<Depot[]> => {
 export const calculateStage = (origin: Depot, dest: Depot) => {
   const distance = turf.distance([origin.lon, origin.lat], [dest.lon, dest.lat], { units: 'kilometers' });
   // MSRTC stage calculation is complex. This is a simplified approximation.
-  // Generally, a stage is ~6km, but the first few stages can be shorter.
-  // We'll use a slightly simplified model here.
-  const stages = Math.max(1, Math.round(distance / 6)); 
-  return { stages, distance: distance.toFixed(1) };
+  // It now includes an additional fixed number of stages.
+  const distanceStages = Math.max(1, Math.round(distance / 6)); 
+  const finalStages = distanceStages + 4; // Add 4 extra stages as per requirement
+  return { stages: finalStages, distance: distance.toFixed(1) };
 };
