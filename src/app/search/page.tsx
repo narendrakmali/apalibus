@@ -421,22 +421,22 @@ Sakpal Travels
                   </div>
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Base Fare ({estimate.totalKm} km)</span>
-                    <span>&#8377;{estimate.baseFare.toLocaleString('en-IN')}</span>
+                    <span dangerouslySetInnerHTML={{ __html: `&#8377;${estimate.baseFare.toLocaleString('en-IN')}` }}></span>
                   </div>
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Driver Allowance ({estimate.numDays} days)</span>
-                    <span>&#8377;{estimate.driverAllowance.toLocaleString('en-IN')}</span>
+                    <span dangerouslySetInnerHTML={{ __html: `&#8377;${estimate.driverAllowance.toLocaleString('en-IN')}` }}></span>
                   </div>
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Permit Charges ({estimate.numDays} days)</span>
-                    <span>&#8377;{estimate.permitCharges.toLocaleString('en-IN')}</span>
+                    <span dangerouslySetInnerHTML={{ __html: `&#8377;${estimate.permitCharges.toLocaleString('en-IN')}` }}></span>
                   </div>
 
                   <div className="border-t my-2"></div>
 
                   <div className="flex justify-between font-bold text-lg pt-2 mt-2">
                     <span>Total Estimate</span>
-                    <span>&#8377;{estimate.totalCost.toLocaleString('en-IN')}</span>
+                    <span dangerouslySetInnerHTML={{ __html: `&#8377;${estimate.totalCost.toLocaleString('en-IN')}` }}></span>
                   </div>
                 </>
               ) : (
@@ -467,3 +467,5 @@ Sakpal Travels
     </div>
   );
 }
+
+    

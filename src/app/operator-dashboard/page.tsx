@@ -148,7 +148,7 @@ export default function OperatorDashboardPage() {
           <CardHeader>
             <CardTitle>Upcoming Journeys</CardTitle>
             <CardDescription>A summary of trips scheduled for the next 24 hours.</CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent>
             <div className="text-center text-muted-foreground py-8">
                 Upcoming journeys will be be displayed here.
