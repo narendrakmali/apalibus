@@ -18,6 +18,9 @@ export interface BookingRequest {
   seats: string;
   busType: string;
   seatType: string;
+  numPassengers?: number;
+  numConcession?: number;
+  estimatedFare?: number;
   estimate: {
     totalCost: number;
     baseFare: number;

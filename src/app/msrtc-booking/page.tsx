@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, UserPlus, Upload, Download, FileDown, ChevronsUpDown, Check } from 'lucide-react';
+import { Trash2, UserPlus, Upload, Download, FileDown, ChevronsUpDown, Check, Users, Ticket, Percent } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -20,19 +20,13 @@ import 'jspdf-autotable';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useCurrentLocation } from '@/hooks/use-current-location';
 import { Combobox } from '@/components/ui/combobox';
+import { loadDepots, calculateStage, type Depot } from '@/lib/stageCalculator';
 
 interface Passenger {
   name: string;
   age: number | string;
   gender: 'Male' | 'Female' | 'Other' | '';
   idProof: File | null;
-}
-
-interface Depot {
-    id: number;
-    name: string;
-    lat: number;
-    lon: number;
 }
 
 const libraries: ("places")[] = ["places"];
@@ -74,6 +68,12 @@ export default function MsrtcBookingPage() {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // New state for passenger counts and fare
+  const [numPassengers, setNumPassengers] = useState<number>(0);
+  const [numConcession, setNumConcession] = useState<number>(0);
+  const [estimatedFare, setEstimatedFare] = useState<number | null>(null);
+
+
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const { isLoaded } = useJsApiLoader({
@@ -90,19 +90,16 @@ export default function MsrtcBookingPage() {
     const fetchDepots = async () => {
       try {
         setLoadingDepots(true);
-        const response = await fetch('/api/msrtc');
-        const data = await response.json();
-        if (data.depots) {
-          if (coords) {
-            const sortedDepots = data.depots.map((depot: Depot) => ({
-              ...depot,
-              distance: getDistance(coords.lat, coords.lng, depot.lat, depot.lon),
-            })).sort((a: any, b: any) => a.distance - b.distance);
-            setDepots(sortedDepots);
-            setOrigin(sortedDepots[0]?.name.toLowerCase() || ''); // Pre-select the nearest depot
-          } else {
-             setDepots(data.depots);
-          }
+        const data = await loadDepots();
+        if (coords) {
+          const sortedDepots = data.map((depot: Depot) => ({
+            ...depot,
+            distance: getDistance(coords.lat, coords.lng, depot.lat, depot.lon),
+          })).sort((a: any, b: any) => a.distance - b.distance);
+          setDepots(sortedDepots);
+          setOrigin(sortedDepots[0]?.name.toLowerCase() || ''); // Pre-select the nearest depot
+        } else {
+            setDepots(data);
         }
       } catch (error) {
         console.error("Failed to fetch depots:", error);
@@ -113,6 +110,35 @@ export default function MsrtcBookingPage() {
 
     fetchDepots();
   }, [coords]);
+
+  // Effect to calculate fare
+  useEffect(() => {
+    if (origin && destination && numPassengers > 0) {
+      const o = depots.find((d) => d.name.toLowerCase() === origin);
+      const d = depots.find((d) => d.name.toLowerCase() === destination);
+      if (o && d) {
+        const { stages } = calculateStage(o, d);
+        const baseRatePerStage = 10; // Average rate for ordinary bus
+        
+        const fullFarePassengers = numPassengers - numConcession;
+        const concessionPassengers = numConcession;
+        
+        const fareForFull = fullFarePassengers * stages * baseRatePerStage;
+        const fareForConcession = concessionPassengers * stages * baseRatePerStage * 0.5; // 50% concession
+        
+        let totalFare = fareForFull + fareForConcession;
+        
+        // Night service charge
+        const isNight = new Date().getHours() >= 22 || new Date().getHours() < 5;
+        if (isNight) totalFare *= 1.18; // 18% extra for night service
+
+        setEstimatedFare(Math.ceil(totalFare));
+      }
+    } else {
+      setEstimatedFare(null);
+    }
+  }, [origin, destination, numPassengers, numConcession, depots]);
+
 
   const handleAddPassenger = () => {
     setPassengers([...passengers, { name: '', age: '', gender: '', idProof: null }]);
@@ -144,6 +170,9 @@ export default function MsrtcBookingPage() {
       destination,
       busType,
       purpose,
+      numPassengers,
+      numConcession,
+      estimatedFare,
       passengers,
       passengerFile
     });
@@ -215,7 +244,8 @@ export default function MsrtcBookingPage() {
                             <li><strong>Organizer:</strong> {organizerName}</li>
                             <li><strong>Route:</strong> {depotOptions.find(d => d.value === origin)?.label} to {depotOptions.find(d => d.value === destination)?.label}</li>
                             <li><strong>Date:</strong> {travelDate ? format(travelDate, "PPP") : 'Not set'}</li>
-                            <li><strong>Passengers:</strong> {uploadMode === 'file' ? `Uploaded from ${passengerFile?.name}` : `${passengers.length} passengers`}</li>
+                            <li><strong>Passengers:</strong> {numPassengers} ({numConcession} with concession)</li>
+                            <li><strong>Estimated Fare:</strong> {estimatedFare ? `₹${estimatedFare.toLocaleString()}` : 'N/A'}</li>
                         </ul>
                         <div className="flex gap-4 justify-center pt-4">
                             <Button onClick={handleDownloadPdf}>
@@ -265,7 +295,7 @@ export default function MsrtcBookingPage() {
             {/* Travel Details */}
             <fieldset className="space-y-4 p-4 border rounded-lg">
               <legend className="text-lg font-semibold px-2">2. Travel Details</legend>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                    <Label htmlFor="travelDate">Travel Date</Label>
                     <Popover>
@@ -329,6 +359,14 @@ export default function MsrtcBookingPage() {
                     />
                   )}
                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="numPassengers">Number of Passengers</Label>
+                    <Input id="numPassengers" type="number" min="1" value={numPassengers} onChange={(e) => setNumPassengers(Number(e.target.value))} placeholder="e.g., 25" required />
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="numConcession">Passengers with Concession</Label>
+                    <Input id="numConcession" type="number" min="0" max={numPassengers} value={numConcession} onChange={(e) => setNumConcession(Number(e.target.value))} placeholder="e.g., 5" required />
+                 </div>
                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="purpose">Purpose of Travel</Label>
                     <Textarea id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g., Pilgrimage, School Trip, etc."/>
@@ -411,6 +449,28 @@ export default function MsrtcBookingPage() {
                   </div>
                 )}
             </fieldset>
+
+             {/* Fare Estimate */}
+            {estimatedFare !== null && (
+                <div className="p-6 border-t border-dashed mt-8">
+                    <h3 className="text-lg font-semibold text-center mb-4">Fare Estimate</h3>
+                    <div className="max-w-md mx-auto space-y-3">
+                         <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground flex items-center gap-2"><Users className="w-4 h-4"/>Total Passengers</span>
+                            <span className="font-semibold">{numPassengers}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground flex items-center gap-2"><Percent className="w-4 h-4"/>Concession Passengers</span>
+                            <span className="font-semibold">{numConcession}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xl font-bold pt-2 border-t mt-2">
+                             <span className="flex items-center gap-2"><Ticket className="w-5 h-5"/>Estimated Total Fare</span>
+                             <span>₹{estimatedFare.toLocaleString()}</span>
+                        </div>
+                    </div>
+                     <p className="text-xs text-muted-foreground pt-4 text-center">This is an estimate for an ordinary bus and may vary. Night charges may be applied separately.</p>
+                </div>
+            )}
             
             <div className="flex justify-end pt-4">
                 <Button type="submit" size="lg">Submit Request</Button>
