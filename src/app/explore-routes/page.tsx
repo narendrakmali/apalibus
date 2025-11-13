@@ -18,46 +18,6 @@ interface Seat {
   isSeniorSeat: boolean;
 }
 
-const generateSeats = () => {
-    const seats: Seat[] = [];
-    // Lower Deck: 3 rows of 5
-    for (let i = 1; i <= 15; i++) {
-        seats.push({
-            id: `L${i}`,
-            number: `L${i}`,
-            isBooked: Math.random() > 0.6,
-            type: 'lower',
-            isLadySeat: false,
-            isSeniorSeat: false,
-        });
-    }
-     // Upper Deck: 3 rows of 5
-    for (let i = 1; i <= 15; i++) {
-        seats.push({
-            id: `U${i}`,
-            number: `U${i}`,
-            isBooked: Math.random() > 0.5,
-            type: 'upper',
-            isLadySeat: false,
-            isSeniorSeat: false,
-        });
-    }
-
-    // Mark some as lady seats
-    seats[2].isLadySeat = true;
-    seats[3].isLadySeat = true;
-    seats[20].isLadySeat = true;
-    
-    // Mark some as senior seats
-    seats[5].isSeniorSeat = true;
-
-    // Mark some booked lady/senior seats
-    if(seats[2].isBooked) seats[2].isLadySeat = true;
-
-
-    return seats;
-};
-
 
 export default function ExploreRoutesPage() {
   const [journeyDate, setJourneyDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
@@ -66,6 +26,46 @@ export default function ExploreRoutesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const generateSeats = () => {
+        const seats: Seat[] = [];
+        // Lower Deck: 3 rows of 5
+        for (let i = 1; i <= 15; i++) {
+            seats.push({
+                id: `L${i}`,
+                number: `L${i}`,
+                isBooked: Math.random() > 0.6,
+                type: 'lower',
+                isLadySeat: false,
+                isSeniorSeat: false,
+            });
+        }
+         // Upper Deck: 3 rows of 5
+        for (let i = 1; i <= 15; i++) {
+            seats.push({
+                id: `U${i}`,
+                number: `U${i}`,
+                isBooked: Math.random() > 0.5,
+                type: 'upper',
+                isLadySeat: false,
+                isSeniorSeat: false,
+            });
+        }
+
+        // Mark some as lady seats
+        seats[2].isLadySeat = true;
+        seats[3].isLadySeat = true;
+        seats[20].isLadySeat = true;
+        
+        // Mark some as senior seats
+        seats[5].isSeniorSeat = true;
+
+        // Mark some booked lady/senior seats
+        if(seats[2].isBooked) seats[2].isLadySeat = true;
+
+
+        return seats;
+    };
+
     const generatedRoutes = operatorData.map(op => {
         const totalSeats = 45;
         const initialSeats = generateSeats();
@@ -193,7 +193,7 @@ export default function ExploreRoutesPage() {
                         </div>
                         <div className="bg-secondary/30 p-6 flex flex-col justify-center items-center md:items-end text-center md:text-right">
                            <div className="text-sm text-muted-foreground">Fare starting from</div>
-                           <div className="text-2xl font-bold mb-4" dangerouslySetInnerHTML={{ __html: `&#8377;${route.fare_range.replace(/₹/g, '')}` }}></div>
+                           <div className="text-2xl font-bold mb-4">{route.fare_range.replace(/₹/g, '')}</div>
                            <Button onClick={() => setSelectedRoute(route)} className="w-full md:w-auto">
                                 Book Now
                             </Button>
