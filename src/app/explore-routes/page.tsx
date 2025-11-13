@@ -1,12 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Bus, Clock, DollarSign, Users, Armchair } from 'lucide-react';
 import { operatorData } from '@/lib/operator-data';
 import SeatSelection from '@/components/booking/seat-selection';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Seat {
   id: string;
@@ -58,31 +59,37 @@ const generateSeats = () => {
 };
 
 
-const routes = operatorData.map(op => {
-    const totalSeats = 45;
-    const initialSeats = generateSeats();
-    const seatsBooked = initialSeats.filter(s => s.isBooked).length;
-    const seatsAvailable = totalSeats - seatsBooked;
-    return {
-      ...op,
-      from: 'Mumbai',
-      to: 'Sangli',
-      totalSeats,
-      seatsAvailable,
-      seatsBooked,
-      baseFare: 800,
-      departureTime: op.departure_times[0],
-      arrivalTime: '06:00',
-      duration: '9h 30m',
-      rating: (Math.random() * (5 - 4) + 4).toFixed(1),
-      initialSeats,
-    }
-});
-
-
 export default function ExploreRoutesPage() {
   const [journeyDate, setJourneyDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [selectedRoute, setSelectedRoute] = useState<any | null>(null);
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const generatedRoutes = operatorData.map(op => {
+        const totalSeats = 45;
+        const initialSeats = generateSeats();
+        const seatsBooked = initialSeats.filter(s => s.isBooked).length;
+        const seatsAvailable = totalSeats - seatsBooked;
+        return {
+          ...op,
+          from: 'Mumbai',
+          to: 'Sangli',
+          totalSeats,
+          seatsAvailable,
+          seatsBooked,
+          baseFare: 800,
+          departureTime: op.departure_times[0],
+          arrivalTime: '06:00',
+          duration: '9h 30m',
+          rating: (Math.random() * (5 - 4) + 4).toFixed(1),
+          initialSeats,
+        }
+    });
+    setRoutes(generatedRoutes);
+    setLoading(false);
+  }, []);
+
 
   if (selectedRoute) {
     return (
@@ -121,58 +128,80 @@ export default function ExploreRoutesPage() {
       </div>
 
       <div className="max-w-5xl mx-auto grid gap-6">
-        {routes.map((route) => (
-            <Card key={route.operator} className="hover:shadow-lg transition-shadow overflow-hidden">
-                <div className="grid md:grid-cols-4">
-                    <div className="md:col-span-3 p-6">
-                        <CardHeader className="p-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <CardTitle className="text-2xl font-display text-primary">{route.operator}</CardTitle>
-                                <div className="flex items-center gap-1 text-sm font-bold text-white bg-green-600 px-2 py-1 rounded">
-                                    {route.rating} <span className="text-xs font-normal">★</span>
-                                </div>
+        {loading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="overflow-hidden">
+                    <div className="grid md:grid-cols-4">
+                        <div className="md:col-span-3 p-6 space-y-4">
+                            <Skeleton className="h-8 w-1/2" />
+                            <Skeleton className="h-4 w-1/3" />
+                            <div className="flex items-center justify-between">
+                                <Skeleton className="h-6 w-1/4" />
+                                <Skeleton className="h-4 w-1/3" />
+                                <Skeleton className="h-6 w-1/4" />
                             </div>
-                            <CardDescription className="flex items-center gap-2 pt-2">
-                                <Bus className="h-4 w-4" /> {route.bus_types.join(' / ')}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-0 pt-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-lg">{route.departureTime}</span>
-                                    <span className="text-muted-foreground">{route.from}</span>
-                                </div>
-                                <div className="flex-grow text-center px-4">
-                                    <div className="text-xs text-muted-foreground">{route.duration}</div>
-                                    <div className="w-full h-px bg-border my-1"></div>
-                                </div>
-                                <div className="flex flex-col text-right">
-                                    <span className="font-bold text-lg">{route.arrivalTime}</span>
-                                    <span className="text-muted-foreground">{route.to}</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground pt-4">
-                                <div className="flex items-center gap-1">
-                                    <Armchair className="h-4 w-4" />
-                                    <span>{route.seatsAvailable} seats left</span>
-                                </div>
-                                 <div className="flex items-center gap-1">
-                                    <Users className="h-4 w-4" />
-                                    <span>{route.totalSeats} capacity</span>
-                                </div>
-                            </div>
-                        </CardContent>
+                        </div>
+                        <div className="bg-secondary/30 p-6 flex flex-col justify-center items-end space-y-2">
+                            <Skeleton className="h-6 w-1/2" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
                     </div>
-                    <div className="bg-secondary/30 p-6 flex flex-col justify-center items-center md:items-end text-center md:text-right">
-                       <div className="text-sm text-muted-foreground">Fare starting from</div>
-                       <div className="text-2xl font-bold mb-4" dangerouslySetInnerHTML={{ __html: `&#8377;${route.fare_range.replace(/₹/g, '')}` }}></div>
-                       <Button onClick={() => setSelectedRoute(route)} className="w-full md:w-auto">
-                            Book Now
-                        </Button>
+                </Card>
+            ))
+        ) : (
+            routes.map((route) => (
+                <Card key={route.operator} className="hover:shadow-lg transition-shadow overflow-hidden">
+                    <div className="grid md:grid-cols-4">
+                        <div className="md:col-span-3 p-6">
+                            <CardHeader className="p-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                    <CardTitle className="text-2xl font-display text-primary">{route.operator}</CardTitle>
+                                    <div className="flex items-center gap-1 text-sm font-bold text-white bg-green-600 px-2 py-1 rounded">
+                                        {route.rating} <span className="text-xs font-normal">★</span>
+                                    </div>
+                                </div>
+                                <CardDescription className="flex items-center gap-2 pt-2">
+                                    <Bus className="h-4 w-4" /> {route.bus_types.join(' / ')}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0 pt-4">
+                                <div className="flex items-center justify-between text-sm">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-lg">{route.departureTime}</span>
+                                        <span className="text-muted-foreground">{route.from}</span>
+                                    </div>
+                                    <div className="flex-grow text-center px-4">
+                                        <div className="text-xs text-muted-foreground">{route.duration}</div>
+                                        <div className="w-full h-px bg-border my-1"></div>
+                                    </div>
+                                    <div className="flex flex-col text-right">
+                                        <span className="font-bold text-lg">{route.arrivalTime}</span>
+                                        <span className="text-muted-foreground">{route.to}</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground pt-4">
+                                    <div className="flex items-center gap-1">
+                                        <Armchair className="h-4 w-4" />
+                                        <span>{route.seatsAvailable} seats left</span>
+                                    </div>
+                                     <div className="flex items-center gap-1">
+                                        <Users className="h-4 w-4" />
+                                        <span>{route.totalSeats} capacity</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </div>
+                        <div className="bg-secondary/30 p-6 flex flex-col justify-center items-center md:items-end text-center md:text-right">
+                           <div className="text-sm text-muted-foreground">Fare starting from</div>
+                           <div className="text-2xl font-bold mb-4" dangerouslySetInnerHTML={{ __html: `&#8377;${route.fare_range.replace(/₹/g, '')}` }}></div>
+                           <Button onClick={() => setSelectedRoute(route)} className="w-full md:w-auto">
+                                Book Now
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            </Card>
-        ))}
+                </Card>
+            ))
+        )}
       </div>
     </div>
   );
