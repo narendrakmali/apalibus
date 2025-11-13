@@ -3,17 +3,18 @@ import { NextResponse } from 'next/server';
 
 // This is a mocked response. In a real-world scenario, you would fetch this 
 // data from the npublic.msrcors.com API.
+// Added latitude and longitude for proximity search.
 const MOCKED_DEPOTS = [
-    { id: 1, name: "Mumbai Central" },
-    { id: 2, name: "Pune (Swargate)" },
-    { id: 3, name: "Nashik" },
-    { id: 4, name: "Aurangabad" },
-    { id: 5, name: "Nagpur" },
-    { id: 6, name: "Kolhapur" },
-    { id: 7, name: "Sangli" },
-    { id: 8, name: "Satara" },
-    { id: 9, name: "Solapur" },
-    { id: 10, name: "Ratnagiri" }
+    { id: 1, name: "Mumbai Central", lat: 18.9733, lon: 72.8223 },
+    { id: 2, name: "Pune (Swargate)", lat: 18.502, lon: 73.8633 },
+    { id: 3, name: "Nashik", lat: 19.9975, lon: 73.7898 },
+    { id: 4, name: "Aurangabad", lat: 19.8762, lon: 75.3433 },
+    { id: 5, name: "Nagpur", lat: 21.1458, lon: 79.0882 },
+    { id: 6, name: "Kolhapur", lat: 16.7050, lon: 74.2433 },
+    { id: 7, name: "Sangli", lat: 16.8524, lon: 74.5815 },
+    { id: 8, name: "Satara", lat: 17.6802, lon: 74.0183 },
+    { id: 9, name: "Solapur", lat: 17.6599, lon: 75.9064 },
+    { id: 10, name: "Ratnagiri", lat: 16.9904, lon: 73.3120 }
 ];
 
 export async function GET(request: Request) {

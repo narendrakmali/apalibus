@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useJsApiLoader } from '@react-google-maps/api';
+import { useCurrentLocation } from '@/hooks/use-current-location';
 
 interface Passenger {
   name: string;
@@ -28,7 +30,26 @@ interface Passenger {
 interface Depot {
     id: number;
     name: string;
+    lat: number;
+    lon: number;
 }
+
+const libraries: ("places")[] = ["places"];
+
+// Haversine formula to calculate distance between two lat-lon points
+const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return d;
+};
+
 
 export default function MsrtcBookingPage() {
   const [organizerName, setOrganizerName] = useState('');
@@ -52,6 +73,17 @@ export default function MsrtcBookingPage() {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: googleMapsApiKey!,
+    libraries,
+    language: 'en',
+    skip: !googleMapsApiKey,
+  });
+
+  const { coords } = useCurrentLocation(isLoaded);
 
   useEffect(() => {
     const fetchDepots = async () => {
@@ -60,7 +92,16 @@ export default function MsrtcBookingPage() {
         const response = await fetch('/api/msrtc');
         const data = await response.json();
         if (data.depots) {
-          setDepots(data.depots);
+          if (coords) {
+            const sortedDepots = data.depots.map((depot: Depot) => ({
+              ...depot,
+              distance: getDistance(coords.lat, coords.lng, depot.lat, depot.lon),
+            })).sort((a: any, b: any) => a.distance - b.distance);
+            setDepots(sortedDepots);
+            setOrigin(sortedDepots[0]?.name || ''); // Pre-select the nearest depot
+          } else {
+             setDepots(data.depots);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch depots:", error);
@@ -70,7 +111,7 @@ export default function MsrtcBookingPage() {
     };
 
     fetchDepots();
-  }, []);
+  }, [coords]);
 
   const handleAddPassenger = () => {
     setPassengers([...passengers, { name: '', age: '', gender: '', idProof: null }]);
