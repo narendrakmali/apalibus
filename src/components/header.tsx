@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -14,6 +13,8 @@ export default function Header() {
       { href: "/search", label: "Group Booking" },
       { href: "/explore-routes", label: "Book Tickets" },
       { href: "/msrtc-booking", label: "MSRTC Booking" },
+      { href: "/stage-calculator", label: "Stage Calculator" },
+      { href: "/depot-map", label: "Depot Map" },
       { href: "/register", label: "User Signup" },
       { href: "/login", label: "User Login" },
       { href: "/operator-register", label: "Operator Register"},
