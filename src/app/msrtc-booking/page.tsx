@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, UserPlus, Upload, Download, FileDown } from 'lucide-react';
+import { Trash2, UserPlus, Upload, Download, FileDown, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -19,6 +19,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useCurrentLocation } from '@/hooks/use-current-location';
+import { Combobox } from '@/components/ui/combobox';
 
 interface Passenger {
   name: string;
@@ -98,7 +99,7 @@ export default function MsrtcBookingPage() {
               distance: getDistance(coords.lat, coords.lng, depot.lat, depot.lon),
             })).sort((a: any, b: any) => a.distance - b.distance);
             setDepots(sortedDepots);
-            setOrigin(sortedDepots[0]?.name || ''); // Pre-select the nearest depot
+            setOrigin(sortedDepots[0]?.name.toLowerCase() || ''); // Pre-select the nearest depot
           } else {
              setDepots(data.depots);
           }
@@ -193,6 +194,11 @@ export default function MsrtcBookingPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  const depotOptions = depots.map(depot => ({
+      value: depot.name.toLowerCase(),
+      label: depot.name
+  }));
   
   if (isSubmitted) {
     return (
@@ -207,7 +213,7 @@ export default function MsrtcBookingPage() {
                         <p className="font-semibold">Here is a summary of your request:</p>
                         <ul className="text-sm text-muted-foreground list-disc list-inside text-left mx-auto max-w-sm">
                             <li><strong>Organizer:</strong> {organizerName}</li>
-                            <li><strong>Route:</strong> {origin} to {destination}</li>
+                            <li><strong>Route:</strong> {depotOptions.find(d => d.value === origin)?.label} to {depotOptions.find(d => d.value === destination)?.label}</li>
                             <li><strong>Date:</strong> {travelDate ? format(travelDate, "PPP") : 'Not set'}</li>
                             <li><strong>Passengers:</strong> {uploadMode === 'file' ? `Uploaded from ${passengerFile?.name}` : `${passengers.length} passengers`}</li>
                         </ul>
@@ -300,27 +306,27 @@ export default function MsrtcBookingPage() {
                 <div className="space-y-2">
                   <Label htmlFor="origin">Origin</Label>
                   {loadingDepots ? <Skeleton className="h-10 w-full" /> : (
-                  <Select onValueChange={setOrigin} value={origin}>
-                     <SelectTrigger><SelectValue placeholder="Select origin depot" /></SelectTrigger>
-                     <SelectContent>
-                        {depots.map(depot => (
-                            <SelectItem key={depot.id} value={depot.name}>{depot.name}</SelectItem>
-                        ))}
-                     </SelectContent>
-                  </Select>
+                    <Combobox
+                        options={depotOptions}
+                        value={origin}
+                        onChange={setOrigin}
+                        placeholder="Select origin depot..."
+                        searchPlaceholder="Search depot..."
+                        notFoundText="No depot found."
+                    />
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destination">Destination</Label>
                    {loadingDepots ? <Skeleton className="h-10 w-full" /> : (
-                   <Select onValueChange={setDestination} value={destination}>
-                     <SelectTrigger><SelectValue placeholder="Select destination depot" /></SelectTrigger>
-                     <SelectContent>
-                        {depots.map(depot => (
-                           <SelectItem key={depot.id} value={depot.name}>{depot.name}</SelectItem>
-                        ))}
-                     </SelectContent>
-                  </Select>
+                    <Combobox
+                        options={depotOptions}
+                        value={destination}
+                        onChange={setDestination}
+                        placeholder="Select destination depot..."
+                        searchPlaceholder="Search depot..."
+                        notFoundText="No depot found."
+                    />
                   )}
                 </div>
                  <div className="space-y-2 md:col-span-2">
