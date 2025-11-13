@@ -16,6 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { initializeFirebase } from "@/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
+import placeholderImages from '@/lib/placeholder-images.json';
+
 
 const libraries: ("places")[] = ["places"];
 
@@ -273,11 +275,11 @@ Sakpal Travels
   return (
     <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4">
       <Image 
-        src="https://picsum.photos/seed/bus-terminal/1920/1080"
-        alt="Bus terminal background"
+        src={placeholderImages.busTerminal.src}
+        alt={placeholderImages.busTerminal.alt}
         fill
         className="absolute inset-0 w-full h-full object-cover z-0"
-        data-ai-hint="bus terminal"
+        data-ai-hint={placeholderImages.busTerminal.hint}
       />
       <div className="absolute inset-0 bg-black/50 z-10"></div>
       
@@ -465,5 +467,3 @@ Sakpal Travels
     </div>
   );
 }
-
-    

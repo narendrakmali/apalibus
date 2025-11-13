@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { CheckCircle, Search, Book, Star } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import placeholderImages from '@/lib/placeholder-images.json';
+
 
 export default function HomePage() {
 
@@ -84,12 +86,12 @@ export default function HomePage() {
           </div>
           <div className="flex justify-center">
             <Image 
-                src="https://picsum.photos/seed/volvo-bus/600/400" 
-                alt="Bus themed illustration" 
+                src={placeholderImages.busExterior.src}
+                alt={placeholderImages.busExterior.alt}
                 width={600} 
                 height={400} 
                 className="rounded-lg shadow-xl"
-                data-ai-hint="volvo bus"
+                data-ai-hint={placeholderImages.busExterior.hint}
             />
           </div>
         </div>

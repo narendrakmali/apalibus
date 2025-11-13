@@ -1,0 +1,17 @@
+{
+  "busExterior": {
+    "src": "https://picsum.photos/seed/volvo-bus/600/400",
+    "alt": "Modern Volvo bus on a highway",
+    "hint": "volvo bus"
+  },
+  "busTerminal": {
+    "src": "https://picsum.photos/seed/bus-terminal/1920/1080",
+    "alt": "Busy bus terminal with passengers",
+    "hint": "bus terminal"
+  },
+  "busInterior": {
+    "src": "https://picsum.photos/seed/bus-interior/1920/1080",
+    "alt": "Clean and modern interior of a passenger bus",
+    "hint": "bus interior"
+  }
+}

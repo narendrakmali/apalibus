@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useRouter } from 'next/navigation';
 
 interface Seat {
   id: string;
@@ -23,7 +24,7 @@ const pickupPoints = [
   "Kandivali E - Samta Nagar Police Chowki",
   "Malad E - Omkar Building Altamontegate Shantaram Talav Busstop",
   "Goregaon East",
-  "Jogeshwari E - Lal Building",
+  "Jogwari E - Lal Building",
   "Airport",
   "Hanuman Road Bus Stop Andheri E - End Of Fly Over",
   "Santacruz - Vakola Signal",
@@ -75,6 +76,8 @@ export default function SeatSelection({ route, journeyDate, onBack, initialSeats
   const [seats, setSeats] = useState<Seat[]>(initialSeats);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [selectedPickupPoint, setSelectedPickupPoint] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
 
 
   const handleSelectSeat = (seatId: string) => {
@@ -89,6 +92,46 @@ export default function SeatSelection({ route, journeyDate, onBack, initialSeats
   }
 
   const totalFare = selectedSeats.length * route.baseFare;
+
+  const handleConfirmBooking = async () => {
+    setIsProcessing(true);
+    // Step 1: Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+    const paymentSuccess = true; // Assume payment is always successful for now
+
+    if (paymentSuccess) {
+        // Step 2: Finalize booking if payment is successful
+        await finalizeBooking();
+    } else {
+        // Handle payment failure (e.g., show an error message)
+        console.error("Payment failed.");
+        setIsProcessing(false);
+    }
+  };
+
+  const finalizeBooking = async () => {
+    console.log("Finalizing booking...");
+    const bookingId = `SPL${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
+    // In a real app, you would perform Firestore writes here:
+    // 1. Create a new document in the 'bookings' collection with all details.
+    console.log("Creating booking document:", {
+        id: bookingId,
+        busId: route.operator, // Using operator as a stand-in for busId
+        date: journeyDate,
+        seats: selectedSeats,
+        fare: totalFare,
+        pickupPoint: selectedPickupPoint,
+        // passengerInfo, etc.
+    });
+
+    // 2. Update the 'buses' document to mark seats as booked.
+    console.log(`Updating seat status for bus ${route.operator}`);
+    
+    // Redirect to confirmation page
+    router.push(`/booking-confirmation/${bookingId}?fare=${totalFare}&seats=${selectedSeats.join(',')}&route=${route.from}-${route.to}&date=${journeyDate}&time=${route.departureTime}`);
+  };
+
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -165,8 +208,8 @@ export default function SeatSelection({ route, journeyDate, onBack, initialSeats
                        
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button className="w-full" disabled={selectedSeats.length === 0 || !selectedPickupPoint}>
-                                    Proceed to Book
+                                <Button className="w-full" disabled={selectedSeats.length === 0 || !selectedPickupPoint || isProcessing}>
+                                    {isProcessing ? 'Processing...' : 'Proceed to Book'}
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
@@ -178,7 +221,9 @@ export default function SeatSelection({ route, journeyDate, onBack, initialSeats
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction>Confirm</AlertDialogAction>
+                                <AlertDialogAction onClick={handleConfirmBooking} disabled={isProcessing}>
+                                    {isProcessing ? 'Processing...' : 'Confirm'}
+                                </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
