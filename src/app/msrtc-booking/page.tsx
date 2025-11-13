@@ -109,9 +109,6 @@ export default function MsrtcBookingPage() {
   };
 
   const handleDownloadPdf = () => {
-    // This is a placeholder. In a real scenario, you'd generate a PDF
-    // with the actual seat layout based on the passenger list.
-    alert("PDF download functionality will be implemented here.");
     const doc = new jsPDF();
     doc.text("MSRTC Group Booking Request", 14, 16);
     doc.setFontSize(12);
@@ -140,7 +137,21 @@ export default function MsrtcBookingPage() {
     doc.text("Seat allocation details will be shown here.", 14, (doc as any).lastAutoTable.finalY + 10);
 
     doc.save(`msrtc_booking_request.pdf`);
-  }
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = ["Name", "Age", "Gender", "Aadhaar Number (for concession)"];
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "passenger_list_template.csv");
+    document.body.appendChild(link); // Required for FF
+    
+    link.click();
+    document.body.removeChild(link);
+  };
   
   if (isSubmitted) {
     return (
@@ -303,7 +314,7 @@ export default function MsrtcBookingPage() {
                         onChange={(e) => setPassengerFile(e.target.files ? e.target.files[0] : null)}
                         className="max-w-sm"
                       />
-                       <Button type="button" variant="outline">
+                       <Button type="button" variant="outline" onClick={handleDownloadTemplate}>
                         <Download className="mr-2 h-4 w-4" /> Download Template
                       </Button>
                     </div>
@@ -363,5 +374,3 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
-
-    
