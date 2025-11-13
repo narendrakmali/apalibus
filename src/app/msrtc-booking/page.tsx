@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, UserPlus, Upload } from 'lucide-react';
+import { Trash2, UserPlus, Upload, Download } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -37,13 +37,17 @@ export default function MsrtcBookingPage() {
   const [destination, setDestination] = useState('');
   const [busType, setBusType] = useState('');
   const [purpose, setPurpose] = useState('');
-
+  
   const [passengers, setPassengers] = useState<Passenger[]>([
     { name: '', age: '', gender: '', idProof: null },
   ]);
 
   const [depots, setDepots] = useState<Depot[]>([]);
   const [loadingDepots, setLoadingDepots] = useState(true);
+  
+  const [uploadMode, setUploadMode] = useState<'manual' | 'file'>('manual');
+  const [passengerFile, setPassengerFile] = useState<File | null>(null);
+
 
   useEffect(() => {
     const fetchDepots = async () => {
@@ -76,7 +80,7 @@ export default function MsrtcBookingPage() {
   const handlePassengerChange = (index: number, field: keyof Passenger, value: any) => {
     const newPassengers = [...passengers];
     if (field === 'idProof') {
-      newPassengers[index][field] = value.target.files[0];
+      newPassengers[index][field] = value.target.files ? value.target.files[0] : null;
     } else {
         newPassengers[index][field] = value;
     }
@@ -96,6 +100,7 @@ export default function MsrtcBookingPage() {
       busType,
       purpose,
       passengers,
+      passengerFile
     });
     alert('Request submitted! (See console for data)');
   };
@@ -206,43 +211,77 @@ export default function MsrtcBookingPage() {
             {/* Passenger List */}
             <fieldset className="p-4 border rounded-lg">
                 <legend className="text-lg font-semibold px-2">3. Passenger List</legend>
-                <div className="space-y-4">
-                    {passengers.map((passenger, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end p-2 border-b">
-                            <div className="md:col-span-4 space-y-1">
-                                <Label htmlFor={`p-name-${index}`} className="text-xs">Name</Label>
-                                <Input id={`p-name-${index}`} placeholder="Full Name" value={passenger.name} onChange={(e) => handlePassengerChange(index, 'name', e.target.value)} required />
-                            </div>
-                            <div className="md:col-span-2 space-y-1">
-                                <Label htmlFor={`p-age-${index}`} className="text-xs">Age</Label>
-                                <Input id={`p-age-${index}`} type="number" placeholder="Age" value={passenger.age} onChange={(e) => handlePassengerChange(index, 'age', e.target.value)} required />
-                            </div>
-                            <div className="md:col-span-2 space-y-1">
-                                <Label htmlFor={`p-gender-${index}`} className="text-xs">Gender</Label>
-                                <Select onValueChange={(value) => handlePassengerChange(index, 'gender', value)} value={passenger.gender}>
-                                    <SelectTrigger id={`p-gender-${index}`}><SelectValue placeholder="Gender" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Male">Male</SelectItem>
-                                        <SelectItem value="Female">Female</SelectItem>
-                                        <SelectItem value="Other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                             <div className="md:col-span-3 space-y-1">
-                                <Label htmlFor={`p-id-${index}`} className="text-xs">ID Proof</Label>
-                                <Input id={`p-id-${index}`} type="file" onChange={(e) => handlePassengerChange(index, 'idProof', e)} className="h-10 pt-2 text-xs"/>
-                            </div>
-                            <div className="md:col-span-1">
-                                <Button type="button" variant="ghost" size="icon" onClick={() => handleRemovePassenger(index)} disabled={passengers.length === 1}>
-                                    <Trash2 className="h-5 w-5 text-destructive" />
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
-                     <Button type="button" variant="outline" onClick={handleAddPassenger} className="mt-4">
-                        <UserPlus className="mr-2 h-4 w-4" /> Add Passenger
+                <div className="flex gap-4 mb-4 border-b pb-4">
+                    <Button type="button" variant={uploadMode === 'manual' ? 'default' : 'outline'} onClick={() => setUploadMode('manual')}>
+                        Enter Manually
+                    </Button>
+                    <Button type="button" variant={uploadMode === 'file' ? 'default' : 'outline'} onClick={() => setUploadMode('file')}>
+                        Upload File
                     </Button>
                 </div>
+
+                {uploadMode === 'file' ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Upload a CSV or Excel file with passenger details. The file should contain columns for: Name, Age, Gender, and Aadhaar Number (for concessions).
+                    </p>
+                    <div className="flex gap-4 items-center">
+                      <Input 
+                        id="passenger-file" 
+                        type="file" 
+                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                        onChange={(e) => setPassengerFile(e.target.files ? e.target.files[0] : null)}
+                        className="max-w-sm"
+                      />
+                       <Button type="button" variant="outline">
+                        <Download className="mr-2 h-4 w-4" /> Download Template
+                      </Button>
+                    </div>
+                     {passengerFile && (
+                        <div className="text-sm font-medium text-green-600">
+                          File selected: {passengerFile.name}
+                        </div>
+                      )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                      {passengers.map((passenger, index) => (
+                          <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end p-2 border-b">
+                              <div className="md:col-span-4 space-y-1">
+                                  <Label htmlFor={`p-name-${index}`} className="text-xs">Name</Label>
+                                  <Input id={`p-name-${index}`} placeholder="Full Name" value={passenger.name} onChange={(e) => handlePassengerChange(index, 'name', e.target.value)} required />
+                              </div>
+                              <div className="md:col-span-2 space-y-1">
+                                  <Label htmlFor={`p-age-${index}`} className="text-xs">Age</Label>
+                                  <Input id={`p-age-${index}`} type="number" placeholder="Age" value={passenger.age} onChange={(e) => handlePassengerChange(index, 'age', e.target.value)} required />
+                              </div>
+                              <div className="md:col-span-2 space-y-1">
+                                  <Label htmlFor={`p-gender-${index}`} className="text-xs">Gender</Label>
+                                  <Select onValueChange={(value) => handlePassengerChange(index, 'gender', value)} value={passenger.gender}>
+                                      <SelectTrigger id={`p-gender-${index}`}><SelectValue placeholder="Gender" /></SelectTrigger>
+                                      <SelectContent>
+                                          <SelectItem value="Male">Male</SelectItem>
+                                          <SelectItem value="Female">Female</SelectItem>
+                                          <SelectItem value="Other">Other</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                              </div>
+                              <div className="md:col-span-3 space-y-1">
+                                  <Label htmlFor={`p-id-${index}`} className="text-xs">ID Proof (Aadhaar)</Label>
+                                  <Input id={`p-id-${index}`} type="file" onChange={(e) => handlePassengerChange(index, 'idProof', e)} className="h-10 pt-2 text-xs"/>
+                              </div>
+                              <div className="md:col-span-1">
+                                  <Button type="button" variant="ghost" size="icon" onClick={() => handleRemovePassenger(index)} disabled={passengers.length === 1}>
+                                      <Trash2 className="h-5 w-5 text-destructive" />
+                                  </Button>
+                              </div>
+                          </div>
+                      ))}
+                      <Button type="button" variant="outline" onClick={handleAddPassenger} className="mt-4">
+                          <UserPlus className="mr-2 h-4 w-4" /> Add Another Passenger
+                      </Button>
+                  </div>
+                )}
             </fieldset>
             
             <div className="flex justify-end pt-4">
@@ -254,4 +293,3 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
-
