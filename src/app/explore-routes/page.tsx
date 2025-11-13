@@ -165,7 +165,7 @@ export default function ExploreRoutesPage() {
                     </div>
                     <div className="bg-secondary/30 p-6 flex flex-col justify-center items-center md:items-end text-center md:text-right">
                        <div className="text-sm text-muted-foreground">Fare starting from</div>
-                       <div className="text-2xl font-bold mb-4">{route.fare_range}</div>
+                       <div className="text-2xl font-bold mb-4" dangerouslySetInnerHTML={{ __html: `&#8377;${route.fare_range.replace(/₹/g, '')}` }}></div>
                        <Button onClick={() => setSelectedRoute(route)} className="w-full md:w-auto">
                             Book Now
                         </Button>

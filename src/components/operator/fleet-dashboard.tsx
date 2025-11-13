@@ -89,7 +89,7 @@ const FareEditor = ({ bus }: { bus: Bus }) => {
                     <div className="border-t pt-4 mt-4">
                          <div className="flex justify-between font-semibold">
                             <span>Final Fare Preview:</span>
-                            <span>₹4,500</span>
+                            <span>&#8377;4,500</span>
                         </div>
                     </div>
                 </div>

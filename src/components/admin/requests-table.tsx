@@ -93,7 +93,7 @@ export function RequestsTable({ requests }: { requests: BookingRequest[] }) {
                                     <h4 className="font-medium leading-none">Estimated Cost</h4>
                                     {req.estimate ? (
                                         <p className="text-lg font-bold">
-                                           {req.estimate.totalCost.toLocaleString('en-IN')}
+                                           &#8377;{req.estimate.totalCost.toLocaleString('en-IN')}
                                         </p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground">

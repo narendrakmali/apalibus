@@ -61,7 +61,7 @@ export default function BookingConfirmation({ bookingId }: { bookingId: string }
                         </div>
                          <div className="flex justify-between items-center text-lg border-t pt-3 mt-3">
                             <span className="font-bold">Total Fare:</span>
-                            <span className="font-bold">₹{parseInt(fare || '0').toLocaleString('en-IN')}</span>
+                            <span className="font-bold">&#8377;{parseInt(fare || '0').toLocaleString('en-IN')}</span>
                         </div>
                     </div>
 
@@ -87,4 +87,3 @@ export default function BookingConfirmation({ bookingId }: { bookingId: string }
         </div>
     );
 }
-

@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,8 +16,6 @@ export default function OperatorDashboardPage() {
   const router = useRouter();
   const [operatorName, setOperatorName] = useState('');
   
-  const isLoading = authLoading;
-
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -27,6 +24,7 @@ export default function OperatorDashboardPage() {
     }
 
     const fetchOperatorData = async () => {
+        if (!user) return;
         const operatorDocRef = doc(firestore, "busOperators", user.uid);
         const operatorDoc = await getDoc(operatorDocRef);
         if (operatorDoc.exists()) {
@@ -45,8 +43,10 @@ export default function OperatorDashboardPage() {
     await auth.signOut();
     router.push('/operator-login');
   };
+  
+  const isLoading = authLoading || !user || !operatorName;
 
-  if (isLoading || !user) {
+  if (isLoading) {
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             <Skeleton className="h-8 w-64 mb-2" />
@@ -138,7 +138,7 @@ export default function OperatorDashboardPage() {
                     <TrendingUp className="h-8 w-8 text-primary" />
                     <div>
                         <p className="text-sm text-muted-foreground">Revenue Estimate</p>
-                        <p className="text-2xl font-bold">₹85,000</p>
+                        <p className="text-2xl font-bold">&#8377;85,000</p>
                     </div>
                 </div>
             </CardContent>
@@ -148,7 +148,7 @@ export default function OperatorDashboardPage() {
           <CardHeader>
             <CardTitle>Upcoming Journeys</CardTitle>
             <CardDescription>A summary of trips scheduled for the next 24 hours.</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent>
             <div className="text-center text-muted-foreground py-8">
                 Upcoming journeys will be be displayed here.
