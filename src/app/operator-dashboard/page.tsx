@@ -44,13 +44,13 @@ export default function OperatorDashboardPage() {
     router.push('/operator-login');
   };
   
-  const isLoading = authLoading || !user || !operatorName;
+  const isLoading = authLoading || !operatorName;
 
   if (isLoading) {
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             <Skeleton className="h-8 w-64 mb-2" />
-            <div className="h-6 w-96 mb-10"><Skeleton className="h-5 w-32 inline-block" /></div>
+            <Skeleton className="h-6 w-96 mb-10" />
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 <Skeleton className="h-40 w-full" />
                 <Skeleton className="h-40 w-full" />
@@ -58,7 +58,7 @@ export default function OperatorDashboardPage() {
             </div>
              <Skeleton className="h-40 w-full mt-8" />
         </div>
-    )
+    );
   }
 
   return (
@@ -67,7 +67,7 @@ export default function OperatorDashboardPage() {
         <div>
             <h1 className="text-3xl font-bold font-display text-primary">Operator Dashboard</h1>
             <div className="text-muted-foreground">
-                Welcome back, {operatorName ? <strong>{operatorName}</strong> : user.email}. Manage your operations from here.
+                Welcome back, {operatorName ? <strong>{operatorName}</strong> : user?.email}. Manage your operations from here.
             </div>
         </div>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
