@@ -72,6 +72,7 @@ export default function MsrtcBookingPage() {
   const [numPassengers, setNumPassengers] = useState<number>(0);
   const [numConcession, setNumConcession] = useState<number>(0);
   const [estimatedFare, setEstimatedFare] = useState<number | null>(null);
+  const [estimatedStages, setEstimatedStages] = useState<number | null>(null);
 
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -132,10 +133,12 @@ export default function MsrtcBookingPage() {
         const isNight = new Date().getHours() >= 22 || new Date().getHours() < 5;
         if (isNight) totalFare *= 1.18; // 18% extra for night service
 
+        setEstimatedStages(stages);
         setEstimatedFare(Math.ceil(totalFare));
       }
     } else {
       setEstimatedFare(null);
+      setEstimatedStages(null);
     }
   }, [origin, destination, numPassengers, numConcession, depots]);
 
@@ -462,6 +465,10 @@ export default function MsrtcBookingPage() {
                         <div className="flex justify-between items-center">
                             <span className="text-muted-foreground flex items-center gap-2"><Percent className="w-4 h-4"/>Concession Passengers</span>
                             <span className="font-semibold">{numConcession}</span>
+                        </div>
+                         <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground flex items-center gap-2"><ChevronsUpDown className="w-4 h-4"/>Total Stages</span>
+                            <span className="font-semibold">{estimatedStages}</span>
                         </div>
                         <div className="flex justify-between items-center text-xl font-bold pt-2 border-t mt-2">
                              <span className="flex items-center gap-2"><Ticket className="w-5 h-5"/>Estimated Total Fare</span>
