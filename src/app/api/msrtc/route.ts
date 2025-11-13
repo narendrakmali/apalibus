@@ -252,20 +252,48 @@ const MOCKED_DEPOTS = [
     { id: 245, name: 'MSRTC Bus Depot Gaganbawada', lat: 16.37, lon: 73.94 },
     { id: 246, name: 'MSRTC Bus Depot Kurundwad', lat: 16.681111, lon: 74.5925 },
     { id: 247, name: 'MSRTC Bus Depot Malkapur', lat: 16.65, lon: 74.25 },
-    { id: 248, name: "Aurangabad", lat: 19.8762, lon: 75.3433 },
-    { id: 249, name: "Ratnagiri", lat: 16.9904, lon: 73.3120 }
+    { id: 248, name: 'Aurangabad', lat: 19.8762, lon: 75.3433 },
+    { id: 249, name: 'Ratnagiri', lat: 16.9904, lon: 73.312 },
+    { id: 250, name: 'MSRTC Bus Depot Alibag', lat: 18.6473, lon: 72.8722 },
+    { id: 251, name: 'MSRTC Bus Depot Pen', lat: 18.7358, lon: 73.0958 },
+    { id: 252, name: 'MSRTC Bus Depot Roha', lat: 18.4375, lon: 73.1167 },
+    { id: 253, name: 'MSRTC Bus Depot Mahad', lat: 18.0833, lon: 73.4167 },
+    { id: 254, name: 'MSRTC Bus Depot Murud', lat: 18.3278, lon: 72.9625 },
+    { id: 255, name: 'MSRTC Bus Depot Mhasla', lat: 18.1333, lon: 73.1167 },
+    { id: 256, name: 'MSRTC Bus Depot Poladpur', lat: 17.9833, lon: 73.4667 },
+    { id: 257, name: 'MSRTC Bus Depot Mangaon', lat: 18.2333, lon: 73.2833 },
+    { id: 258, name: 'MSRTC Bus Depot Panvel (Old)', lat: 18.99, lon: 73.11 },
+    { id: 259, name: 'MSRTC Bus Depot Karjat', lat: 18.9167, lon: 73.3333 },
+    { id: 260, name: 'MSRTC Bus Depot Khopoli', lat: 18.7833, lon: 73.35 },
+    { id: 261, name: 'MSRTC Bus Depot Ratnagiri', lat: 16.9944, lon: 73.3003 },
+    { id: 262, name: 'MSRTC Bus Depot Chiplun', lat: 17.5333, lon: 73.5167 },
+    { id: 263, name: 'MSRTC Bus Depot Khed', lat: 17.7167, lon: 73.4 },
+    { id: 264, name: 'MSRTC Bus Depot Rajapur', lat: 16.65, lon: 73.5167 },
+    { id: 265, name: 'MSRTC Bus Depot Lanja', lat: 16.8667, lon: 73.55 },
+    { id: 266, name: 'MSRTC Bus Depot Deorukh', lat: 16.95, lon: 73.6167 },
+    { id: 267, name: 'MSRTC Bus Depot Sangameshwar', lat: 17.1833, lon: 73.55 },
+    { id: 268, name: 'MSRTC Bus Depot Dapoli', lat: 17.7667, lon: 73.1833 },
+    { id: 269, name: 'MSRTC Bus Depot Guhagar', lat: 17.4667, lon: 73.2 },
+    { id: 270, name: 'MSRTC Bus Depot Mandangad', lat: 17.9833, lon: 73.25 },
+    { id: 271, name: 'MSRTC Bus Depot Sawantwadi', lat: 15.9, lon: 73.8167 },
+    { id: 272, name: 'MSRTC Bus Depot Kudal', lat: 16.0167, lon: 73.6833 },
+    { id: 273, name: 'MSRTC Bus Depot Malvan', lat: 16.0667, lon: 73.4667 },
+    { id: 274, name: 'MSRTC Bus Depot Vengurla', lat: 15.8667, lon: 73.6333 },
+    { id: 275, name: 'MSRTC Bus Depot Kankavli', lat: 16.2667, lon: 73.7 },
+    { id: 276, name: 'MSRTC Bus Depot Dodamarg', lat: 15.7667, lon: 74 }
 ];
 
 export async function GET(request: Request) {
   try {
-    // In a real implementation, you would use `fetch` here to call the MSRTC API.
-    // For example:
-    // const response = await fetch('https://npublic.msrcors.com/api/getDepots', { headers: {...} });
-    // const data = await response.json();
-    // return NextResponse.json({ depots: data });
+    const uniqueDepotsMap = new Map();
+    MOCKED_DEPOTS.forEach(depot => {
+        if (!uniqueDepotsMap.has(depot.name)) {
+            uniqueDepotsMap.set(depot.name, depot);
+        }
+    });
+    const uniqueDepots = Array.from(uniqueDepotsMap.values());
 
-    // For now, we return mocked data.
-    return NextResponse.json({ depots: MOCKED_DEPOTS });
+    return NextResponse.json({ depots: uniqueDepots });
 
   } catch (error) {
     console.error('MSRTC API error:', error);
