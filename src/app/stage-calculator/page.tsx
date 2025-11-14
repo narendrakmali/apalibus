@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function StageCalculator() {
   const [origin, setOrigin] = useState('');
   const [dest, setDest] = useState('');
+  const [busType, setBusType] = useState('Ordinary');
   const [numFullPassengers, setNumFullPassengers] = useState(1);
   const [numConcessionPassengers, setNumConcessionPassengers] = useState(0);
 
@@ -31,7 +33,18 @@ export default function StageCalculator() {
     if (o && d) {
       const { stages, distance } = calculateStage(o, d);
       
-      const baseRatePerStage = 10;
+      let baseRatePerStage = 10;
+      switch (busType) {
+        case 'Express':
+          baseRatePerStage = 15;
+          break;
+        case 'Shivneri':
+          baseRatePerStage = 50;
+          break;
+        default: // Ordinary
+          baseRatePerStage = 10;
+      }
+
       const reservationChargePerPerson = 5;
 
       let farePerFullTicket = stages * baseRatePerStage;
@@ -59,7 +72,8 @@ export default function StageCalculator() {
           totalFullFare: Math.ceil(totalFullFare),
           totalConcessionFare: Math.ceil(totalConcessionFare),
           totalReservationCharges,
-          totalFare: Math.ceil(totalFare)
+          totalFare: Math.ceil(totalFare),
+          busType: busType,
       });
     } else {
         alert("Please select a valid origin and destination depot.");
@@ -73,7 +87,7 @@ export default function StageCalculator() {
       <Card className="w-full max-w-lg">
           <CardHeader>
               <CardTitle>MSRTC Stage & Fare Calculator</CardTitle>
-              <CardDescription>Select an origin and destination to calculate the approximate stages and fare for an ordinary bus.</CardDescription>
+              <CardDescription>Select an origin and destination to calculate the approximate stages and fare.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -99,6 +113,17 @@ export default function StageCalculator() {
                         notFoundText="No depot found."
                     />
                 </div>
+                <div className="space-y-2">
+                    <Label htmlFor="bus-type">Bus Type</Label>
+                    <Select onValueChange={setBusType} value={busType}>
+                        <SelectTrigger id="bus-type"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Ordinary">Ordinary</SelectItem>
+                            <SelectItem value="Express">Express (Asiad/Hirkani)</SelectItem>
+                            <SelectItem value="Shivneri">Shivneri (AC)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="full-passengers">Passengers (Full Ticket)</Label>
@@ -114,7 +139,7 @@ export default function StageCalculator() {
                 </Button>
                 {result && (
                     <div className="mt-4 p-4 bg-secondary/50 border rounded-lg space-y-3">
-                        <h3 className="font-semibold text-center text-lg mb-2">Fare Estimate</h3>
+                        <h3 className="font-semibold text-center text-lg mb-2">Fare Estimate for {result.busType} Bus</h3>
                         
                         <div className="flex justify-between font-mono text-sm">
                             <span>Approx. Distance:</span>
@@ -144,7 +169,7 @@ export default function StageCalculator() {
                             <span>Total Estimated Fare:</span>
                             <span>₹{result.totalFare.toLocaleString()}</span>
                         </div>
-                     <p className="text-xs text-muted-foreground pt-2 text-center">Fare is an estimate for an ordinary bus and may include night charges if applicable. Final fare may vary.</p>
+                     <p className="text-xs text-muted-foreground pt-2 text-center">Fare is an estimate and may include night charges if applicable. Final fare may vary.</p>
                     </div>
                 )}
             </div>
