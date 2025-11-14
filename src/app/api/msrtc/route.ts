@@ -19,4 +19,7 @@ export async function GET(request: Request) {
     console.error('MSRTC API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch data from MSRTC API.' },
-      { status: 
+      { status: 500 }
+    );
+  }
+}
