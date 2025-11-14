@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -51,31 +52,33 @@ export default function Header() {
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left">
+          <SheetContent side="left" className="flex flex-col">
             <SheetHeader className="text-left">
+              <SheetClose asChild>
+                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+                    <BusFront className="h-6 w-6 text-primary" />
+                    <span className="text-lg font-bold font-inter">Sakpal Travels</span>
+                  </Link>
+              </SheetClose>
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               <SheetDescription className="sr-only">
                 A list of links to navigate the Sakpal Travels website.
               </SheetDescription>
             </SheetHeader>
-            <nav className="grid gap-6 text-lg font-medium">
-              <SheetClose asChild>
-                <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                  <BusFront className="h-6 w-6 text-primary" />
-                  <span className="text-lg font-bold font-inter">Sakpal Travels</span>
-                </Link>
-              </SheetClose>
-               {navLinks.map(link => (
-                 <SheetClose asChild key={link.href}>
-                   <Link
-                      href={link.href}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      {link.label}
-                    </Link>
-                  </SheetClose>
-                ))}
-            </nav>
+            <div className="flex-1 overflow-y-auto">
+              <nav className="grid gap-6 text-base font-medium py-4">
+                 {navLinks.map(link => (
+                   <SheetClose asChild key={link.href}>
+                     <Link
+                        href={link.href}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        {link.label}
+                      </Link>
+                    </SheetClose>
+                  ))}
+              </nav>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
