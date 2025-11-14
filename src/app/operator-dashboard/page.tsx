@@ -16,27 +16,37 @@ export default function OperatorDashboardPage() {
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   const [operatorName, setOperatorName] = useState('');
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
+    // Redirect unauthenticated users immediately
+    if (!authLoading && !user) {
       router.push('/operator-login');
       return;
     }
 
     const fetchOperatorData = async () => {
-        if (!user) return;
-        const operatorDocRef = doc(firestore, "busOperators", user.uid);
-        const operatorDoc = await getDoc(operatorDocRef);
-        if (operatorDoc.exists()) {
-            setOperatorName(operatorDoc.data().name);
-        } else {
-            // This user is not a registered operator, sign them out and redirect
-            await auth.signOut();
-            router.push('/operator-login');
+        if (!user) return; // Wait for user object
+        try {
+            const operatorDocRef = doc(firestore, "busOperators", user.uid);
+            const operatorDoc = await getDoc(operatorDocRef);
+            if (operatorDoc.exists()) {
+                setOperatorName(operatorDoc.data().name);
+            } else {
+                // Handle case where user is authenticated but not an operator
+                setVerificationError("This account is not registered as an operator.");
+                await auth.signOut();
+                router.push('/operator-login');
+            }
+        } catch (error) {
+             console.error("Error fetching operator data:", error);
+             setVerificationError("An error occurred while verifying your operator status.");
         }
     };
-    fetchOperatorData();
+
+    if(user) {
+      fetchOperatorData();
+    }
 
   }, [user, authLoading, router, auth, firestore]);
   
@@ -45,7 +55,7 @@ export default function OperatorDashboardPage() {
     router.push('/operator-login');
   };
   
-  const isLoading = authLoading || !operatorName;
+  const isLoading = authLoading || (!!user && !operatorName && !verificationError);
 
   if (isLoading) {
     return (
@@ -60,6 +70,18 @@ export default function OperatorDashboardPage() {
              <Skeleton className="h-40 w-full mt-8" />
         </div>
     );
+  }
+
+  if (verificationError) {
+      return (
+        <div className="container mx-auto py-8 px-4 md:px-6 text-center">
+            <h1 className="text-2xl font-bold text-destructive mb-4">Access Denied</h1>
+            <p className="text-muted-foreground">{verificationError}</p>
+            <Button asChild className="mt-4">
+                <Link href="/operator-login">Go to Login</Link>
+            </Button>
+        </div>
+      )
   }
 
   return (
