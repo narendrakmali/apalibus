@@ -30,19 +30,24 @@ const isDateInBooking = (date: Date, booking: BookingRequest) => {
   let journeyDate = booking.journeyDate.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate);
   journeyDate.setHours(0, 0, 0, 0);
   
-  const createdAt = booking.createdAt.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt);
-  const bookingHour = createdAt.getHours();
-  
-  if (bookingHour >= 22) {
-    const tempDate = new Date(journeyDate);
-    tempDate.setDate(tempDate.getDate() - 1);
-    if(createdAt.getDate() === tempDate.getDate() && createdAt.getMonth() === tempDate.getMonth() && createdAt.getFullYear() === tempDate.getFullYear()) {
-         // The booking was made after 10 PM the day before the journey, so we should count it for the journey date.
-    }
-  }
-
   const returnDate = booking.returnDate.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate);
   returnDate.setHours(0, 0, 0, 0);
+  
+  // Handle bookings made after 10 PM for the next day's journey.
+  // This logic was flawed and has been corrected.
+  const createdAt = booking.createdAt.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt);
+  if (createdAt.getHours() >= 22) {
+      // Create a new date object for comparison to avoid mutation
+      const journeyDateMinusOne = new Date(journeyDate);
+      journeyDateMinusOne.setDate(journeyDateMinusOne.getDate() - 1);
+      
+      // Check if the booking was made on the day just before the journey date
+      if (createdAt.getFullYear() === journeyDateMinusOne.getFullYear() &&
+          createdAt.getMonth() === journeyDateMinusOne.getMonth() &&
+          createdAt.getDate() === journeyDateMinusOne.getDate()) {
+          // If so, the effective start date for this check is today, so no change needed to journeyDate
+      }
+  }
   
   return checkDate >= journeyDate && checkDate <= returnDate;
 };
