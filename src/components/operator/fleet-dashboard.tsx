@@ -24,32 +24,15 @@ const formatDate = (dateInput: any) => {
 
 
 const isDateInBooking = (date: Date, booking: BookingRequest) => {
-  const checkDate = new Date(date);
-  checkDate.setHours(0, 0, 0, 0);
+  const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-  let journeyDate = booking.journeyDate.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate);
-  journeyDate.setHours(0, 0, 0, 0);
-  
-  const returnDate = booking.returnDate.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate);
-  returnDate.setHours(0, 0, 0, 0);
-  
-  // Handle bookings made after 10 PM for the next day's journey.
-  // This logic was flawed and has been corrected.
-  const createdAt = booking.createdAt.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt);
-  if (createdAt.getHours() >= 22) {
-      // Create a new date object for comparison to avoid mutation
-      const journeyDateMinusOne = new Date(journeyDate);
-      journeyDateMinusOne.setDate(journeyDateMinusOne.getDate() - 1);
-      
-      // Check if the booking was made on the day just before the journey date
-      if (createdAt.getFullYear() === journeyDateMinusOne.getFullYear() &&
-          createdAt.getMonth() === journeyDateMinusOne.getMonth() &&
-          createdAt.getDate() === journeyDateMinusOne.getDate()) {
-          // If so, the effective start date for this check is today, so no change needed to journeyDate
-      }
-  }
-  
-  return checkDate >= journeyDate && checkDate <= returnDate;
+  const journeyDate = booking.journeyDate.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate as string);
+  const journeyDateStart = new Date(journeyDate.getFullYear(), journeyDate.getMonth(), journeyDate.getDate());
+
+  const returnDate = booking.returnDate.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate as string);
+  const returnDateEnd = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
+
+  return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
 
 
