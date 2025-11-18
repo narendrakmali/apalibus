@@ -20,17 +20,27 @@ export const useOperatorData = (operatorId?: string) => {
     }
 
     setLoading(true);
+    let busesLoaded = false;
+    let requestsLoaded = false;
 
+    const checkLoadingComplete = () => {
+        if (busesLoaded && requestsLoaded) {
+            setLoading(false);
+        }
+    };
+    
     // Listener for buses
     const busesQuery = query(collection(firestore, 'busOperators', operatorId, 'buses'));
     const unsubscribeBuses = onSnapshot(busesQuery, (snapshot) => {
       const busesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Bus[];
       setBuses(busesData);
-      if (loading) setLoading(false);
+      busesLoaded = true;
+      checkLoadingComplete();
     }, (err) => {
       console.error("Error fetching buses:", err);
       setError("Failed to fetch bus data.");
-      setLoading(false);
+      busesLoaded = true;
+      checkLoadingComplete();
     });
 
     // Listener for all booking requests
@@ -38,11 +48,13 @@ export const useOperatorData = (operatorId?: string) => {
     const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
       const requestsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as BookingRequest[];
       setRequests(requestsData);
-      if (loading) setLoading(false);
+      requestsLoaded = true;
+      checkLoadingComplete();
     }, (err) => {
       console.error("Error fetching booking requests:", err);
       setError("Failed to fetch booking requests.");
-      setLoading(false);
+      requestsLoaded = true;
+      checkLoadingComplete();
     });
 
 
