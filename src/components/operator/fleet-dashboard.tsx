@@ -17,43 +17,42 @@ interface FleetDashboardProps {
     currentDate: Date;
 }
 
-/**
- * Extracts the bus registration number from a quote string.
- * The expected format is "Vehicle Type (REG-NUMBER)".
- * @param quote - The quote string from booking.operatorQuote.availableBus.
- * @returns The registration number or null if not found.
- */
+// Self-contained helper function to safely extract registration number from a quote.
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
     const match = quote.match(/\(([^)]+)\)/);
     return match ? match[1] : null;
 };
 
-const formatDate = (dateInput: any) => {
+// Self-contained helper function to format dates consistently.
+const formatDate = (dateInput: any): string => {
     if (!dateInput) return 'N/A';
-    // Handles both Firestore Timestamps and string dates
+    // Handles both Firestore Timestamps (with .toDate()) and string dates
     const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
     if (isNaN(date.getTime())) return 'Invalid Date';
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const isDateInBooking = (date: Date, booking: BookingRequest) => {
-  const checkDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+// Self-contained helper function to check if a calendar date falls within a booking's range.
+const isDateInBooking = (calendarDate: Date, booking: BookingRequest): boolean => {
+  // Ensure calendarDate is at UTC midnight
+  const checkDate = new Date(Date.UTC(calendarDate.getFullYear(), calendarDate.getMonth(), calendarDate.getDate()));
 
-  // Robust date parsing: handle Timestamps, strings, and null/undefined
-  const journeyDateVal = (booking.journeyDate && (booking.journeyDate as any).toDate) 
-    ? (booking.journeyDate as any).toDate() 
-    : (booking.journeyDate ? new Date(booking.journeyDate as string) : null);
+  // Safely parse journey and return dates, handling Timestamps, strings, or null/undefined
+  const journeyDateVal = booking.journeyDate
+    ? (booking.journeyDate as any).toDate ? (booking.journeyDate as any).toDate() : new Date(booking.journeyDate as string)
+    : null;
 
-  const returnDateVal = (booking.returnDate && (booking.returnDate as any).toDate) 
-    ? (booking.returnDate as any).toDate() 
-    : (booking.returnDate ? new Date(booking.returnDate as string) : null);
+  const returnDateVal = booking.returnDate
+    ? (booking.returnDate as any).toDate ? (booking.returnDate as any).toDate() : new Date(booking.returnDate as string)
+    : null;
   
-  // If dates are invalid, this booking cannot match
+  // If dates are invalid or null, this booking cannot match
   if (!journeyDateVal || !returnDateVal || isNaN(journeyDateVal.getTime()) || isNaN(returnDateVal.getTime())) {
       return false;
   }
 
+  // Set to UTC midnight to ensure accurate comparison
   const journeyDateStart = new Date(Date.UTC(journeyDateVal.getUTCFullYear(), journeyDateVal.getUTCMonth(), journeyDateVal.getUTCDate()));
   const returnDateEnd = new Date(Date.UTC(returnDateVal.getUTCFullYear(), returnDateVal.getUTCMonth(), returnDateVal.getUTCDate()));
 
@@ -127,19 +126,28 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         const date = new Date(year, month, day);
         
         const relevantBooking = bookings.find(booking => {
+            // Check if the date falls within the booking's journey range
+            if (!isDateInBooking(date, booking)) {
+                return false;
+            }
+
+            // If the booking is approved, it must be assigned to this specific bus
             if (booking.status === 'approved') {
                 if (!booking.operatorQuote?.availableBus) return false;
                 const quoteReg = getBusRegFromQuote(booking.operatorQuote.availableBus);
-                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
+                return quoteReg === bus.registrationNumber;
             }
             
+            // If the booking is pending, it's a potential conflict if the bus type matches
             if (booking.status === 'pending') {
-                // For pending requests, we can check if the bus type matches
-                const busMatchesRequest = bus.busType === booking.busType.split('(')[0].trim();
-                return busMatchesRequest && isDateInBooking(date, booking);
+                const busTypeFromQuote = booking.busType.split('(')[0].trim();
+                return bus.busType === busTypeFromQuote;
             }
+            
+            // Ignore other statuses like 'rejected' or 'quote_rejected'
             return false;
         });
+
          busSchedule[bus.id][day] = relevantBooking || 'available';
       });
     });
@@ -187,7 +195,9 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
               </td>
               {daysArray.map(day => {
                 const status = schedule[bus.id]?.[day];
-                if (status === undefined || status === null) return <td key={day} className="border-l"><div className="h-12 w-full bg-destructive/20" /></td>;
+                if (status === undefined || status === null) {
+                    return <td key={day} className="border-l"><div className="h-12 w-full bg-gray-200 animate-pulse" /></td>;
+                }
 
                 let cellContent;
                 if (status === 'available') {
@@ -218,7 +228,6 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
                         </PopoverContent>
                     </Popover>
                   );
-
                 }
 
                 return (
