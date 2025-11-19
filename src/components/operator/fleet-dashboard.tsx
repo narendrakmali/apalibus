@@ -10,18 +10,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import Link from 'next/link';
-import { getBusRegFromQuote } from '@/lib/booking-utils';
 
-
-interface FleetDashboardProps {
-  buses: Bus[];
-  bookings: BookingRequest[];
-  currentDate: Date;
-}
+// This function will be added to ensure it exists.
+const getBusRegFromQuote = (quote: string | undefined): string | null => {
+    if (!quote) return null;
+    const match = quote.match(/\(([^)]+)\)/);
+    return match ? match[1] : null;
+};
 
 const formatDate = (dateInput: any) => {
     if (!dateInput) return 'N/A';
-    // Handle both Timestamp and string/Date objects
     const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
     if (isNaN(date.getTime())) return 'Invalid Date';
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -30,17 +28,24 @@ const formatDate = (dateInput: any) => {
 const isDateInBooking = (date: Date, booking: BookingRequest) => {
   const checkDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 
-  // Robustly handle both Firestore Timestamps and date strings
-  const journeyDateVal = booking.journeyDate?.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate as string);
-  const returnDateVal = booking.returnDate?.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate as string);
-  
-  if (isNaN(journeyDateVal.getTime()) || isNaN(returnDateVal.getTime())) return false;
-  
+  const journeyDateVal = (booking.journeyDate && (booking.journeyDate as any).toDate)
+    ? (booking.journeyDate as any).toDate()
+    : (booking.journeyDate ? new Date(booking.journeyDate as string) : null);
+
+  const returnDateVal = (booking.returnDate && (booking.returnDate as any).toDate)
+    ? (booking.returnDate as any).toDate()
+    : (booking.returnDate ? new Date(booking.returnDate as string) : null);
+
+  if (!journeyDateVal || !returnDateVal || isNaN(journeyDateVal.getTime()) || isNaN(returnDateVal.getTime())) {
+      return false;
+  }
+
   const journeyDateStart = new Date(Date.UTC(journeyDateVal.getUTCFullYear(), journeyDateVal.getUTCMonth(), journeyDateVal.getUTCDate()));
   const returnDateEnd = new Date(Date.UTC(returnDateVal.getUTCFullYear(), returnDateVal.getUTCMonth(), returnDateVal.getUTCDate()));
 
   return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
+
 
 const FareEditor = ({ bus }: { bus: Bus }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -108,14 +113,18 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         const date = new Date(year, month, day);
         
         const relevantBooking = bookings.find(booking => {
-            if (booking.status === 'approved') {
-                if (!booking.operatorQuote) return false;
-                const quoteReg = getBusRegFromQuote(booking.operatorQuote.availableBus);
-                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
-            }
-            
-            if (booking.status === 'pending') {
-                return isDateInBooking(date, booking);
+            try {
+                if (booking.status === 'approved') {
+                    if (!booking.operatorQuote) return false;
+                    const quoteReg = getBusRegFromQuote(booking.operatorQuote.availableBus);
+                    return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
+                }
+                
+                if (booking.status === 'pending') {
+                    return isDateInBooking(date, booking);
+                }
+            } catch (e: any) {
+                console.error(`Error processing booking ${booking.id} for bus ${bus.id} on day ${day}: ${e.message}`);
             }
             return false;
         });
@@ -213,3 +222,5 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
     </div>
   );
 }
+
+    
