@@ -17,7 +17,12 @@ interface FleetDashboardProps {
     currentDate: Date;
 }
 
-// This function will be added to ensure it exists.
+/**
+ * Extracts the bus registration number from a quote string.
+ * The expected format is "Vehicle Type (REG-NUMBER)".
+ * @param quote - The quote string.
+ * @returns The registration number or null if not found.
+ */
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
     const match = quote.match(/\(([^)]+)\)/);
