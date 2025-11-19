@@ -1,19 +1,114 @@
-
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, PlusCircle } from 'lucide-react';
+import { ArrowLeft, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initializeFirebase } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { useOperatorData } from '@/hooks/use-operator-data';
 import Link from 'next/link';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { Bus } from '@/lib/types';
+import type { Bus, BookingRequest } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
-function BusList({ buses }: { buses: Bus[] }) {
+/**
+ * A robust utility function to convert a Firestore Timestamp or a string into a Date object.
+ * Returns null if the input is invalid, null, or undefined.
+ */
+const safeToDate = (dateInput: any): Date | null => {
+  if (!dateInput) {
+    return null;
+  }
+  // Handle Firestore Timestamps
+  if (typeof dateInput.toDate === 'function') {
+    return dateInput.toDate();
+  }
+  // Handle string or number dates
+  if (typeof dateInput === 'string' || typeof dateInput === 'number') {
+    const d = new Date(dateInput);
+    // Check if the created date is valid
+    if (!isNaN(d.getTime())) {
+      return d;
+    }
+  }
+  // Return null if input is not a recognizable date format
+  return null;
+};
+
+
+const CalendarHeader = ({ date, setDate }: { date: Date, setDate: (d: Date) => void }) => {
+  const prevMonth = () => setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1));
+  const nextMonth = () => setDate(new Date(date.getFullYear(), date.getMonth() + 1, 1));
+
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-xl font-semibold font-display">
+        {date.toLocaleString('default', { month: 'long' })} {date.getFullYear()}
+      </h3>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="icon" onClick={prevMonth}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="icon" onClick={nextMonth}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const FleetCalendar = ({ buses, bookingRequests }: { buses: Bus[], bookingRequests: BookingRequest[] }) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const schedule = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const newSchedule: Record<string, Record<number, 'booked' | 'available'>> = {};
+
+    // Initialize schedule for all buses
+    buses.forEach(bus => {
+      newSchedule[bus.id] = {};
+      for (let day = 1; day <= daysInMonth; day++) {
+        newSchedule[bus.id][day] = 'available';
+      }
+    });
+
+    // Populate schedule with bookings
+    bookingRequests.forEach(booking => {
+      // Safely get the bus ID from the quote. If no quote or bus, skip.
+      const busIdFromQuote = booking.operatorQuote?.availableBus;
+      if (!busIdFromQuote || !newSchedule[busIdFromQuote]) {
+        return;
+      }
+      
+      // Safely convert dates. If dates are invalid, skip.
+      const journeyDate = safeToDate(booking.journeyDate);
+      const returnDate = safeToDate(booking.returnDate);
+      if (!journeyDate || !returnDate) {
+        return;
+      }
+
+      // Normalize dates to midnight to compare days correctly
+      const start = new Date(journeyDate.setHours(0, 0, 0, 0));
+      const end = new Date(returnDate.setHours(0, 0, 0, 0));
+      
+      // Iterate through the date range of the booking
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        // Check if the day is within the currently displayed month
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const dayOfMonth = d.getDate();
+          newSchedule[busIdFromQuote][dayOfMonth] = 'booked';
+        }
+      }
+    });
+
+    return newSchedule;
+  }, [buses, bookingRequests, currentDate]);
+
   if (buses.length === 0) {
     return (
       <div className="text-center py-10 px-4 border rounded-lg bg-gray-50">
@@ -31,27 +126,49 @@ function BusList({ buses }: { buses: Bus[] }) {
     );
   }
 
+  const daysArray = Array.from({ length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() }, (_, i) => i + 1);
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Registration Number</TableHead>
-          <TableHead>Bus Type</TableHead>
-          <TableHead>Seating Capacity</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {buses.map((bus) => (
-          <TableRow key={bus.id}>
-            <TableCell className="font-medium">{bus.registrationNumber}</TableCell>
-            <TableCell>{bus.busType}</TableCell>
-            <TableCell>{bus.seatingCapacity}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div>
+      <CalendarHeader date={currentDate} setDate={setCurrentDate} />
+      <div className="overflow-x-auto border rounded-lg">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/50">
+            <tr className="divide-x divide-border">
+              <th className="sticky left-0 bg-secondary p-2 font-semibold z-10 whitespace-nowrap">Bus</th>
+              {daysArray.map((day) => (
+                <th key={day} className="p-2 font-normal w-12">{day}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {buses.map(bus => (
+              <tr key={bus.id} className="divide-x divide-border">
+                <td className="sticky left-0 bg-background p-2 font-medium whitespace-nowrap z-10">
+                  <p>{bus.registrationNumber}</p>
+                  <p className="text-xs text-muted-foreground">{bus.seatingCapacity} seats</p>
+                </td>
+                {daysArray.map((day) => {
+                  const status = schedule[bus.id]?.[day] || 'available';
+                  return (
+                    <td key={day} className="text-center p-0">
+                       <div className={cn(
+                           "h-full w-full min-w-[3rem] p-2",
+                           status === 'booked' && 'bg-red-200/50 text-red-800'
+                        )}>
+                         {/* Cell content can be added here if needed */}
+                       </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
-}
+};
 
 
 export default function FleetPage() {
@@ -59,7 +176,8 @@ export default function FleetPage() {
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   
-  const { buses, loading: dataLoading, error } = useOperatorData(user?.uid);
+  // We only fetch data once the user object is available
+  const { buses, requests, loading: dataLoading, error } = useOperatorData(user?.uid);
 
   const isLoading = authLoading || dataLoading;
 
@@ -73,9 +191,8 @@ export default function FleetPage() {
     if (isLoading) {
         return (
             <div className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-40 w-full" />
             </div>
         );
     }
@@ -86,7 +203,8 @@ export default function FleetPage() {
             </p>
         );
     }
-    return <BusList buses={buses} />;
+    // Only render the calendar if we are not loading and there's no error
+    return <FleetCalendar buses={buses} bookingRequests={requests} />;
   }
 
   return (
@@ -98,19 +216,19 @@ export default function FleetPage() {
                 Back to Dashboard
             </Link>
         </Button>
-        <h1 className="text-3xl font-bold font-display text-primary">Manage Fleet</h1>
-        <p className="text-muted-foreground">View and manage the buses in your fleet.</p>
+        <h1 className="text-3xl font-bold font-display text-primary">Manage Fleet Schedule</h1>
+        <p className="text-muted-foreground">View the monthly schedule for all buses in your fleet.</p>
       </div>
       
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Fleet</CardTitle>
-            <CardDescription>A list of all buses you have registered.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {renderContent()}
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Fleet Calendar</CardTitle>
+          <CardDescription>A monthly overview of your bus availability and bookings.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {renderContent()}
+        </CardContent>
+      </Card>
     </div>
   );
 }
