@@ -3,22 +3,64 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FleetDashboard } from '@/components/operator/fleet-dashboard';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, PlusCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initializeFirebase } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { useOperatorData } from '@/hooks/use-operator-data';
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { Bus } from '@/lib/types';
+
+function BusList({ buses }: { buses: Bus[] }) {
+  if (buses.length === 0) {
+    return (
+      <div className="text-center py-10 px-4 border rounded-lg bg-gray-50">
+        <h3 className="text-lg font-semibold">No Buses Found</h3>
+        <p className="text-muted-foreground mt-2">
+          You haven't added any buses to your fleet yet.
+        </p>
+        <Button asChild className="mt-4">
+          <Link href="/operator-dashboard/add-bus">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Your First Bus
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Registration Number</TableHead>
+          <TableHead>Bus Type</TableHead>
+          <TableHead>Seating Capacity</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {buses.map((bus) => (
+          <TableRow key={bus.id}>
+            <TableCell className="font-medium">{bus.registrationNumber}</TableCell>
+            <TableCell>{bus.busType}</TableCell>
+            <TableCell>{bus.seatingCapacity}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 
 export default function FleetPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
   const { auth } = initializeFirebase();
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   
-  const { buses, requests, loading: dataLoading, error } = useOperatorData(user?.uid);
+  const { buses, loading: dataLoading, error } = useOperatorData(user?.uid);
+
   const isLoading = authLoading || dataLoading;
 
   useEffect(() => {
@@ -26,40 +68,25 @@ export default function FleetPage() {
       router.push('/operator-login');
     }
   }, [user, authLoading, router]);
-  
-  const handlePrevMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
 
-  const handleNextMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
-  
-  const handleToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  if (isLoading) {
-    return (
-        <div className="container mx-auto py-8 px-4 md:px-6">
-            <Skeleton className="h-8 w-64 mb-4" />
-            <Skeleton className="h-6 w-80 mb-10" />
+  const renderContent = () => {
+    if (isLoading) {
+        return (
             <div className="space-y-4">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-40 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
             </div>
-        </div>
-    )
-  }
-
-  if (error) {
-     return (
-        <div className="container mx-auto py-8 px-4 md:px-6">
-          <p className="text-destructive text-center font-semibold p-4 bg-destructive/10 rounded-md">
-            Error loading data: {error}
-          </p>
-        </div>
-     )
+        );
+    }
+    if (error) {
+        return (
+            <p className="text-destructive text-center font-semibold p-4 bg-destructive/10 rounded-md">
+              Error loading data: {error}
+            </p>
+        );
+    }
+    return <BusList buses={buses} />;
   }
 
   return (
@@ -72,35 +99,16 @@ export default function FleetPage() {
             </Link>
         </Button>
         <h1 className="text-3xl font-bold font-display text-primary">Manage Fleet</h1>
-        <p className="text-muted-foreground">View your bus availability and manage schedules.</p>
+        <p className="text-muted-foreground">View and manage the buses in your fleet.</p>
       </div>
       
         <Card>
           <CardHeader>
-            <CardTitle>Fleet Availability Calendar</CardTitle>
-             <CardDescription>Visualize your fleet's schedule for the selected month.</CardDescription>
-            <div className="flex items-center gap-4 pt-2">
-               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={handlePrevMonth}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-lg font-semibold w-36 text-center">
-                  {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                </span>
-                <Button variant="outline" size="icon" onClick={handleNextMonth}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button variant="outline" onClick={handleToday}>Today</Button>
-               <div className="flex items-center gap-4 text-sm ml-auto">
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-100 border"></div><span>Available</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-300 border"></div><span>Pending</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-red-400 border"></div><span>Booked</span></div>
-                </div>
-            </div>
+            <CardTitle>Your Fleet</CardTitle>
+            <CardDescription>A list of all buses you have registered.</CardDescription>
           </CardHeader>
           <CardContent>
-            {!error && <FleetDashboard buses={buses} bookings={requests} currentDate={currentDate} />}
+            {renderContent()}
           </CardContent>
         </Card>
     </div>
