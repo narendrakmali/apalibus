@@ -21,6 +21,7 @@ interface FleetDashboardProps {
 
 const formatDate = (dateInput: any) => {
     if (!dateInput) return 'N/A';
+    // Handle both Timestamp and string/Date objects
     const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
     if (isNaN(date.getTime())) return 'Invalid Date';
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -29,6 +30,7 @@ const formatDate = (dateInput: any) => {
 const isDateInBooking = (date: Date, booking: BookingRequest) => {
   const checkDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 
+  // Robustly handle both Firestore Timestamps and date strings
   const journeyDateVal = booking.journeyDate?.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate as string);
   const returnDateVal = booking.returnDate?.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate as string);
   
@@ -105,28 +107,19 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
       daysArray.forEach(day => {
         const date = new Date(year, month, day);
         
-        try {
-            const relevantBooking = bookings.find(booking => {
-              try {
-                if (booking.status === 'approved') {
-                    const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
-                    return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
-                }
-                
-                if (booking.status === 'pending') {
-                    return isDateInBooking(date, booking);
-                }
-                return false;
-              } catch (e: any) {
-                  console.error(`Error inside bookings.find for booking ${booking.id}:`, e.message);
-                  return false; // Continue to the next item
-              }
-            });
-             busSchedule[bus.id][day] = relevantBooking || 'available';
-        } catch (error: any) {
-            console.error(`Error processing schedule for bus ${bus.id} on day ${day}: ${error.message}`);
-            busSchedule[bus.id][day] = null; // Mark as errored/unknown
-        }
+        const relevantBooking = bookings.find(booking => {
+            if (booking.status === 'approved') {
+                if (!booking.operatorQuote) return false;
+                const quoteReg = getBusRegFromQuote(booking.operatorQuote.availableBus);
+                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
+            }
+            
+            if (booking.status === 'pending') {
+                return isDateInBooking(date, booking);
+            }
+            return false;
+        });
+         busSchedule[bus.id][day] = relevantBooking || 'available';
       });
     });
     return busSchedule;
