@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -91,7 +92,7 @@ export default function FleetPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {error && <p className="text-destructive text-center">{error}</p>}
+            {error && <p className="text-destructive text-center font-semibold p-4 bg-destructive/10 rounded-md">{error}</p>}
             <FleetDashboard buses={buses} bookings={requests} currentDate={currentDate} />
           </CardContent>
         </Card>

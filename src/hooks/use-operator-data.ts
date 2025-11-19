@@ -15,6 +15,8 @@ export const useOperatorData = (operatorId?: string) => {
 
   useEffect(() => {
     if (!operatorId) {
+      // Don't start loading if there's no operator ID yet.
+      // This can happen on initial render before auth state is resolved.
       setLoading(false);
       return;
     }

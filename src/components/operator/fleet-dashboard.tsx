@@ -18,19 +18,22 @@ interface FleetDashboardProps {
 
 const formatDate = (dateInput: any) => {
     if (!dateInput) return 'N/A';
+    // Handles both Firestore Timestamps and string dates
     const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
+    if (isNaN(date.getTime())) return 'Invalid Date';
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
-
 
 const isDateInBooking = (date: Date, booking: BookingRequest) => {
   const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-  const journeyDate = booking.journeyDate.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate as string);
-  const journeyDateStart = new Date(journeyDate.getFullYear(), journeyDate.getMonth(), journeyDate.getDate());
+  const journeyDateVal = booking.journeyDate?.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate as string);
+  const returnDateVal = booking.returnDate?.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate as string);
+  
+  if (isNaN(journeyDateVal.getTime()) || isNaN(returnDateVal.getTime())) return false;
 
-  const returnDate = booking.returnDate.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate as string);
-  const returnDateEnd = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
+  const journeyDateStart = new Date(journeyDateVal.getFullYear(), journeyDateVal.getMonth(), journeyDateVal.getDate());
+  const returnDateEnd = new Date(returnDateVal.getFullYear(), returnDateVal.getMonth(), returnDateVal.getDate());
 
   return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
@@ -111,18 +114,20 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         const date = new Date(year, month, day);
         
         const relevantBooking = bookings.find(booking => {
+            // Safely access operatorQuote with optional chaining
             const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
-            if (quoteReg && quoteReg !== bus.registrationNumber) {
-                return false;
+
+            // If a booking is approved, it MUST match the bus registration number
+            if (booking.status === 'approved') {
+                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
             }
-             // For pending requests, they might not have a bus assigned yet, so we show them on all buses
-            if (booking.status === 'pending' && !quoteReg) {
+            
+            // If a booking is pending, it could apply to any bus, so we check the date
+            if (booking.status === 'pending') {
                  return isDateInBooking(date, booking);
             }
-            // For approved, it must match the bus
-            if (booking.status === 'approved' && quoteReg === bus.registrationNumber) {
-                 return isDateInBooking(date, booking);
-            }
+
+            // Ignore rejected/cancelled bookings for schedule purposes
             return false;
         });
 
