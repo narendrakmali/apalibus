@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -18,7 +17,6 @@ interface FleetDashboardProps {
 
 const formatDate = (dateInput: any) => {
     if (!dateInput) return 'N/A';
-    // Handles both Firestore Timestamps and string dates
     const date = dateInput.toDate ? dateInput.toDate() : new Date(dateInput);
     if (isNaN(date.getTime())) return 'Invalid Date';
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -38,8 +36,6 @@ const isDateInBooking = (date: Date, booking: BookingRequest) => {
   return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
 
-
-// Helper to extract bus registration number from operatorQuote
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
     const match = quote.match(/\(([^)]+)\)/);
@@ -93,9 +89,11 @@ const FareEditor = ({ bus }: { bus: Bus }) => {
     )
 }
 
-
 export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardProps) {
+  console.log("FleetDashboard component is rendering.");
+  
   const { daysInMonth, month, year } = useMemo(() => {
+    console.log("FleetDashboard: Calculating memoized date values.");
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -104,8 +102,8 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
 
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  // Memoize the expensive computation of the schedule
   const schedule = useMemo(() => {
+    console.log("FleetDashboard: Starting schedule calculation inside useMemo.");
     const busSchedule: Record<string, Record<number, BookingRequest | 'available' | null>> = {};
 
     buses.forEach(bus => {
@@ -114,27 +112,22 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         const date = new Date(year, month, day);
         
         const relevantBooking = bookings.find(booking => {
-            // Safely access operatorQuote with optional chaining
             const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
 
-            // If a booking is approved, it MUST match the bus registration number
             if (booking.status === 'approved') {
                 return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
             }
             
-            // If a booking is pending, it could apply to any bus, so we check the date
             if (booking.status === 'pending') {
                  return isDateInBooking(date, booking);
             }
-
-            // Ignore rejected/cancelled bookings for schedule purposes
             return false;
         });
 
         busSchedule[bus.id][day] = relevantBooking || 'available';
       });
     });
-
+    console.log("FleetDashboard: Finished schedule calculation.");
     return busSchedule;
   }, [buses, bookings, daysArray, month, year]);
 
@@ -148,7 +141,8 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         </div>
     );
   }
-
+  
+  console.log("FleetDashboard: Rendering table.");
   return (
     <div className="border rounded-lg overflow-x-auto">
       <table className="w-full min-w-[1400px]">
@@ -181,7 +175,7 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
                 let cellContent;
                 if (status === 'available') {
                   cellContent = <div className="h-12 w-full bg-green-100" />;
-                } else if (status) { // It's a booking object
+                } else if (status) { 
                   const bgColor = status.status === 'approved' ? 'bg-red-400' : 'bg-yellow-300';
                   
                   cellContent = (
