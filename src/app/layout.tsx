@@ -1,10 +1,13 @@
 
-import type { Metadata } from "next";
+'use client';
+
 import { PT_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallback } from '@/components/error-fallback';
 
 const ptSans = PT_Sans({ 
   subsets: ["latin"], 
@@ -13,11 +16,6 @@ const ptSans = PT_Sans({
 });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
-export const metadata: Metadata = {
-  title: "Sakpal Travels",
-  description: "A comprehensive web-based bus booking platform.",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,9 +23,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn("min-h-screen font-sans antialiased", ptSans.variable, spaceGrotesk.variable)}>
+      <head>
+        <title>Sakpal Travels</title>
+        <meta name="description" content="A comprehensive web-based bus booking platform." />
+      </head>
+      <body className={cn("min-h-screen flex flex-col font-sans antialiased", ptSans.variable, spaceGrotesk.variable)}>
           <Header />
-          <main className="flex-grow">{children}</main>
+          <main className="flex-grow">
+            <ErrorBoundary
+                FallbackComponent={ErrorFallback}
+                onReset={() => {
+                    // This will force a hard reload of the page
+                    window.location.reload();
+                }}
+            >
+              {children}
+            </ErrorBoundary>
+          </main>
           <Footer />
       </body>
     </html>
