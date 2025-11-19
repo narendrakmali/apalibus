@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -36,11 +37,13 @@ const isDateInBooking = (date: Date, booking: BookingRequest) => {
   return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
 
+// Extracts the registration number from a string like "Some Bus Name (MH01AB1234)"
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
     const match = quote.match(/\(([^)]+)\)/);
     return match ? match[1] : null;
 };
+
 
 const FareEditor = ({ bus }: { bus: Bus }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -90,10 +93,7 @@ const FareEditor = ({ bus }: { bus: Bus }) => {
 }
 
 export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardProps) {
-  console.log("FleetDashboard component is rendering.");
-  
   const { daysInMonth, month, year } = useMemo(() => {
-    console.log("FleetDashboard: Calculating memoized date values.");
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -103,7 +103,6 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const schedule = useMemo(() => {
-    console.log("FleetDashboard: Starting schedule calculation inside useMemo.");
     const busSchedule: Record<string, Record<number, BookingRequest | 'available' | null>> = {};
 
     buses.forEach(bus => {
@@ -112,6 +111,7 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         const date = new Date(year, month, day);
         
         const relevantBooking = bookings.find(booking => {
+            // Safely check for operatorQuote and availableBus
             const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
 
             if (booking.status === 'approved') {
@@ -119,6 +119,8 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
             }
             
             if (booking.status === 'pending') {
+                 // For pending requests, we can consider it a potential booking for any bus
+                 // to show it on the calendar as a pending block.
                  return isDateInBooking(date, booking);
             }
             return false;
@@ -127,7 +129,6 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         busSchedule[bus.id][day] = relevantBooking || 'available';
       });
     });
-    console.log("FleetDashboard: Finished schedule calculation.");
     return busSchedule;
   }, [buses, bookings, daysArray, month, year]);
 
@@ -142,7 +143,6 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
     );
   }
   
-  console.log("FleetDashboard: Rendering table.");
   return (
     <div className="border rounded-lg overflow-x-auto">
       <table className="w-full min-w-[1400px]">

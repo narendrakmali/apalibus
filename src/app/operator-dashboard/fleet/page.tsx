@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,8 +13,6 @@ import { useOperatorData } from '@/hooks/use-operator-data';
 import Link from 'next/link';
 
 export default function FleetPage() {
-  console.log("FleetPage: Component rendering or re-rendering.");
-
   const [currentDate, setCurrentDate] = useState(new Date());
   const { auth } = initializeFirebase();
   const [user, authLoading] = useAuthState(auth);
@@ -23,22 +22,10 @@ export default function FleetPage() {
   const isLoading = authLoading || dataLoading;
 
   useEffect(() => {
-    if (authLoading) {
-      console.log("FleetPage Effect: Auth is loading...");
-      return;
-    };
-    if (!user) {
-      console.log("FleetPage Effect: No user found, redirecting to login.");
+    if (!authLoading && !user) {
       router.push('/operator-login');
-      return;
     }
-    console.log("FleetPage Effect: User is authenticated.", { uid: user.uid });
   }, [user, authLoading, router]);
-
-  console.log("FleetPage Status:", { isLoading, hasError: !!error, authLoading, dataLoading });
-  if (error) {
-    console.error("FleetPage Error:", error);
-  }
   
   const handlePrevMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -53,7 +40,6 @@ export default function FleetPage() {
   };
 
   if (isLoading) {
-    console.log("FleetPage Status: Rendering Skeleton Loader.");
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             <Skeleton className="h-8 w-64 mb-4" />
@@ -67,7 +53,6 @@ export default function FleetPage() {
   }
 
   if (error) {
-     console.log("FleetPage Status: Rendering error message.");
      return (
         <div className="container mx-auto py-8 px-4 md:px-6">
           <p className="text-destructive text-center font-semibold p-4 bg-destructive/10 rounded-md">
@@ -76,14 +61,6 @@ export default function FleetPage() {
         </div>
      )
   }
-
-  console.log("Status: Data loaded, attempting to render FleetDashboard.");
-  console.log("Data passed to FleetDashboard:", {
-      busCount: buses.length,
-      requestCount: requests.length,
-      currentDate,
-  });
-
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
