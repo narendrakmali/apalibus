@@ -93,7 +93,7 @@ export default function FleetPage() {
           </CardHeader>
           <CardContent>
             {error && <p className="text-destructive text-center font-semibold p-4 bg-destructive/10 rounded-md">{error}</p>}
-            <FleetDashboard buses={buses} bookings={requests} currentDate={currentDate} />
+            {!error && <FleetDashboard buses={buses} bookings={requests} currentDate={currentDate} />}
           </CardContent>
         </Card>
     </div>
