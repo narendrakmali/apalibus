@@ -24,20 +24,19 @@ const formatDate = (dateInput: any) => {
 };
 
 const isDateInBooking = (date: Date, booking: BookingRequest) => {
-  const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const checkDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 
   const journeyDateVal = booking.journeyDate?.toDate ? booking.journeyDate.toDate() : new Date(booking.journeyDate as string);
   const returnDateVal = booking.returnDate?.toDate ? booking.returnDate.toDate() : new Date(booking.returnDate as string);
   
   if (isNaN(journeyDateVal.getTime()) || isNaN(returnDateVal.getTime())) return false;
-
-  const journeyDateStart = new Date(journeyDateVal.getFullYear(), journeyDateVal.getMonth(), journeyDateVal.getDate());
-  const returnDateEnd = new Date(returnDateVal.getFullYear(), returnDateVal.getMonth(), returnDateVal.getDate());
+  
+  const journeyDateStart = new Date(Date.UTC(journeyDateVal.getUTCFullYear(), journeyDateVal.getUTCMonth(), journeyDateVal.getUTCDate()));
+  const returnDateEnd = new Date(Date.UTC(returnDateVal.getUTCFullYear(), returnDateVal.getUTCMonth(), returnDateVal.getUTCDate()));
 
   return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
 
-// Extracts the registration number from a string like "Some Bus Name (MH01AB1234)"
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
     const match = quote.match(/\(([^)]+)\)/);
@@ -108,25 +107,27 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
     buses.forEach(bus => {
       busSchedule[bus.id] = {};
       daysArray.forEach(day => {
-        const date = new Date(year, month, day);
-        
-        const relevantBooking = bookings.find(booking => {
-            // Safely check for operatorQuote and availableBus
-            const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
-
-            if (booking.status === 'approved') {
-                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
-            }
+        try {
+            const date = new Date(year, month, day);
             
-            if (booking.status === 'pending') {
-                 // For pending requests, we can consider it a potential booking for any bus
-                 // to show it on the calendar as a pending block.
-                 return isDateInBooking(date, booking);
-            }
-            return false;
-        });
+            const relevantBooking = bookings.find(booking => {
+                const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
 
-        busSchedule[bus.id][day] = relevantBooking || 'available';
+                if (booking.status === 'approved') {
+                    return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
+                }
+                
+                if (booking.status === 'pending') {
+                    return isDateInBooking(date, booking);
+                }
+                return false;
+            });
+
+            busSchedule[bus.id][day] = relevantBooking || 'available';
+        } catch (error) {
+            console.error(`Error processing day ${day} for bus ${bus.id}:`, error);
+            busSchedule[bus.id][day] = null; // Mark as error/unknown
+        }
       });
     });
     return busSchedule;
@@ -170,12 +171,12 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
               </td>
               {daysArray.map(day => {
                 const status = schedule[bus.id]?.[day];
-                if (!status) return <td key={day} className="border-l"></td>;
+                if (status === undefined || status === null) return <td key={day} className="border-l"><div className="h-12 w-full bg-destructive/20" /></td>;
 
                 let cellContent;
                 if (status === 'available') {
                   cellContent = <div className="h-12 w-full bg-green-100" />;
-                } else if (status) { 
+                } else { 
                   const bgColor = status.status === 'approved' ? 'bg-red-400' : 'bg-yellow-300';
                   
                   cellContent = (
@@ -202,8 +203,6 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
                     </Popover>
                   );
 
-                } else {
-                     cellContent = <div className="h-12 w-full bg-gray-50" />;
                 }
 
                 return (
