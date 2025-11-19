@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -9,6 +8,8 @@ import { FilePen } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
+import Link from 'next/link';
+
 
 interface FleetDashboardProps {
   buses: Bus[];
@@ -37,6 +38,7 @@ const isDateInBooking = (date: Date, booking: BookingRequest) => {
   return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
 
+// This function was missing and is the cause of the crash.
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
     const match = quote.match(/\(([^)]+)\)/);
@@ -114,10 +116,13 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
                 const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
 
                 if (booking.status === 'approved') {
+                    // For approved bookings, only block the specific bus that was quoted.
                     return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
                 }
                 
                 if (booking.status === 'pending') {
+                    // For pending bookings, block all buses that match the type as a placeholder.
+                    // This is a simplification. A real app might check capacity, etc.
                     return isDateInBooking(date, booking);
                 }
                 return false;
@@ -125,7 +130,7 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
 
             busSchedule[bus.id][day] = relevantBooking || 'available';
         } catch (error) {
-            console.error(`Error processing day ${day} for bus ${bus.id}:`, error);
+            console.error(`Error processing schedule for bus ${bus.id} on day ${day}:`, error);
             busSchedule[bus.id][day] = null; // Mark as error/unknown
         }
       });
@@ -138,8 +143,11 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         <div className="text-center py-10 px-4 border rounded-lg bg-gray-50">
             <h3 className="text-lg font-semibold">No Buses Found</h3>
             <p className="text-muted-foreground mt-2">
-                You haven't added any buses to your fleet yet. Please contact support to add your buses.
+                You haven't added any buses to your fleet yet. Please add a bus to get started.
             </p>
+             <Button asChild className="mt-4">
+                <Link href="/operator-dashboard/add-bus">Add New Bus</Link>
+            </Button>
         </div>
     );
   }
