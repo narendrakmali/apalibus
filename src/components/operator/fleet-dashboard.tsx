@@ -89,7 +89,6 @@ const FareEditor = ({ bus }: { bus: Bus }) => {
 
 export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardProps) {
   const { daysInMonth, month, year } = useMemo(() => {
-    console.log("FleetDashboard: Calculating memoized date values.");
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -99,7 +98,6 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const schedule = useMemo(() => {
-    console.log("FleetDashboard: Starting schedule calculation inside useMemo.");
     const busSchedule: Record<string, Record<number, BookingRequest | 'available' | null>> = {};
 
     buses.forEach(bus => {
@@ -109,17 +107,12 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         
         try {
             const relevantBooking = bookings.find(booking => {
-                // Runtime check for the imported function
-                console.log("Type of getBusRegFromQuote:", typeof getBusRegFromQuote);
-
                 const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
 
                 if (booking.status === 'approved') {
                     return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
                 }
                 
-                // For pending requests, we consider the bus unavailable for all operators' buses
-                // as a safety measure until a bus is assigned.
                 if (booking.status === 'pending') {
                     return isDateInBooking(date, booking);
                 }
@@ -132,7 +125,6 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         }
       });
     });
-     console.log("FleetDashboard: Finished schedule calculation.");
     return busSchedule;
   }, [buses, bookings, daysArray, month, year]);
 
