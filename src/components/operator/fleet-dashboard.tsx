@@ -107,9 +107,9 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         
         try {
             const relevantBooking = bookings.find(booking => {
-                const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
-
+              try {
                 if (booking.status === 'approved') {
+                    const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
                     return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
                 }
                 
@@ -117,6 +117,10 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
                     return isDateInBooking(date, booking);
                 }
                 return false;
+              } catch (e: any) {
+                  console.error(`Error inside bookings.find for booking ${booking.id}:`, e.message);
+                  return false; // Continue to the next item
+              }
             });
              busSchedule[bus.id][day] = relevantBooking || 'available';
         } catch (error: any) {
