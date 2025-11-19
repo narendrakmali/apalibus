@@ -11,6 +11,12 @@ import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import Link from 'next/link';
 
+interface FleetDashboardProps {
+    buses: Bus[];
+    bookings: BookingRequest[];
+    currentDate: Date;
+}
+
 // This function will be added to ensure it exists.
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
@@ -113,18 +119,14 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
         const date = new Date(year, month, day);
         
         const relevantBooking = bookings.find(booking => {
-            try {
-                if (booking.status === 'approved') {
-                    if (!booking.operatorQuote) return false;
-                    const quoteReg = getBusRegFromQuote(booking.operatorQuote.availableBus);
-                    return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
-                }
-                
-                if (booking.status === 'pending') {
-                    return isDateInBooking(date, booking);
-                }
-            } catch (e: any) {
-                console.error(`Error processing booking ${booking.id} for bus ${bus.id} on day ${day}: ${e.message}`);
+            if (booking.status === 'approved') {
+                if (!booking.operatorQuote) return false;
+                const quoteReg = getBusRegFromQuote(booking.operatorQuote.availableBus);
+                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
+            }
+            
+            if (booking.status === 'pending') {
+                return isDateInBooking(date, booking);
             }
             return false;
         });
@@ -222,5 +224,3 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
     </div>
   );
 }
-
-    
