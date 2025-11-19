@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -9,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import Link from 'next/link';
+import { getBusRegFromQuote } from '@/lib/booking-utils';
 
 
 interface FleetDashboardProps {
@@ -37,15 +39,6 @@ const isDateInBooking = (date: Date, booking: BookingRequest) => {
 
   return checkDate >= journeyDateStart && checkDate <= returnDateEnd;
 };
-
-// This function was missing and is the cause of the crash.
-const getBusRegFromQuote = (quote: string | undefined): string | null => {
-    if (!quote) return null;
-    // Assumes quote format like "Vehicle Type (REG-NUMBER)"
-    const match = quote.match(/\(([^)]+)\)/);
-    return match ? match[1] : null;
-};
-
 
 const FareEditor = ({ bus }: { bus: Bus }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -96,6 +89,7 @@ const FareEditor = ({ bus }: { bus: Bus }) => {
 
 export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardProps) {
   const { daysInMonth, month, year } = useMemo(() => {
+    console.log("FleetDashboard: Calculating memoized date values.");
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -105,6 +99,7 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const schedule = useMemo(() => {
+    console.log("FleetDashboard: Starting schedule calculation inside useMemo.");
     const busSchedule: Record<string, Record<number, BookingRequest | 'available' | null>> = {};
 
     buses.forEach(bus => {
@@ -112,22 +107,32 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
       daysArray.forEach(day => {
         const date = new Date(year, month, day);
         
-        const relevantBooking = bookings.find(booking => {
-            const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
+        try {
+            const relevantBooking = bookings.find(booking => {
+                // Runtime check for the imported function
+                console.log("Type of getBusRegFromQuote:", typeof getBusRegFromQuote);
 
-            if (booking.status === 'approved') {
-                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
-            }
-            
-            if (booking.status === 'pending') {
-                return isDateInBooking(date, booking);
-            }
-            return false;
-        });
+                const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
 
-        busSchedule[bus.id][day] = relevantBooking || 'available';
+                if (booking.status === 'approved') {
+                    return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
+                }
+                
+                // For pending requests, we consider the bus unavailable for all operators' buses
+                // as a safety measure until a bus is assigned.
+                if (booking.status === 'pending') {
+                    return isDateInBooking(date, booking);
+                }
+                return false;
+            });
+             busSchedule[bus.id][day] = relevantBooking || 'available';
+        } catch (error: any) {
+            console.error(`Error processing schedule for bus ${bus.id} on day ${day}: ${error.message}`);
+            busSchedule[bus.id][day] = null; // Mark as errored/unknown
+        }
       });
     });
+     console.log("FleetDashboard: Finished schedule calculation.");
     return busSchedule;
   }, [buses, bookings, daysArray, month, year]);
 
