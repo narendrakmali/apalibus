@@ -41,6 +41,7 @@ const isDateInBooking = (date: Date, booking: BookingRequest) => {
 // This function was missing and is the cause of the crash.
 const getBusRegFromQuote = (quote: string | undefined): string | null => {
     if (!quote) return null;
+    // Assumes quote format like "Vehicle Type (REG-NUMBER)"
     const match = quote.match(/\(([^)]+)\)/);
     return match ? match[1] : null;
 };
@@ -109,30 +110,22 @@ export function FleetDashboard({ buses, bookings, currentDate }: FleetDashboardP
     buses.forEach(bus => {
       busSchedule[bus.id] = {};
       daysArray.forEach(day => {
-        try {
-            const date = new Date(year, month, day);
+        const date = new Date(year, month, day);
+        
+        const relevantBooking = bookings.find(booking => {
+            const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
+
+            if (booking.status === 'approved') {
+                return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
+            }
             
-            const relevantBooking = bookings.find(booking => {
-                const quoteReg = getBusRegFromQuote(booking.operatorQuote?.availableBus);
+            if (booking.status === 'pending') {
+                return isDateInBooking(date, booking);
+            }
+            return false;
+        });
 
-                if (booking.status === 'approved') {
-                    // For approved bookings, only block the specific bus that was quoted.
-                    return quoteReg === bus.registrationNumber && isDateInBooking(date, booking);
-                }
-                
-                if (booking.status === 'pending') {
-                    // For pending bookings, block all buses that match the type as a placeholder.
-                    // This is a simplification. A real app might check capacity, etc.
-                    return isDateInBooking(date, booking);
-                }
-                return false;
-            });
-
-            busSchedule[bus.id][day] = relevantBooking || 'available';
-        } catch (error) {
-            console.error(`Error processing schedule for bus ${bus.id} on day ${day}:`, error);
-            busSchedule[bus.id][day] = null; // Mark as error/unknown
-        }
+        busSchedule[bus.id][day] = relevantBooking || 'available';
       });
     });
     return busSchedule;
