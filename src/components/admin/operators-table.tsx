@@ -22,19 +22,42 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
 import { useFirestore } from "@/firebase";
-import { doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc, updateDoc } from "firebase/firestore";
 
 export function OperatorsTable({ operators, onOperatorDeleted }: { operators: BusOperator[], onOperatorDeleted: () => void }) {
     const firestore = useFirestore();
-    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [selectedOperator, setSelectedOperator] = useState<BusOperator | null>(null);
+    const [editedOperator, setEditedOperator] = useState<Partial<BusOperator>>({});
 
     const openDeleteDialog = (op: BusOperator) => {
         setSelectedOperator(op);
-        setIsAlertOpen(true);
+        setIsDeleteAlertOpen(true);
     };
+    
+    const openEditDialog = (op: BusOperator) => {
+        setSelectedOperator(op);
+        setEditedOperator(op);
+        setIsEditDialogOpen(true);
+    };
+
+    const handleInputChange = (field: keyof BusOperator, value: string) => {
+        setEditedOperator(prev => ({...prev, [field]: value}));
+    }
 
     const handleDeleteOperator = async () => {
         if (!selectedOperator) return;
@@ -46,8 +69,25 @@ export function OperatorsTable({ operators, onOperatorDeleted }: { operators: Bu
             console.error("Error deleting operator:", error);
             alert(`Failed to delete operator: ${(error as Error).message}`);
         } finally {
-            setIsAlertOpen(false);
+            setIsDeleteAlertOpen(false);
             setSelectedOperator(null);
+        }
+    };
+    
+     const handleUpdateOperator = async () => {
+        if (!selectedOperator || !editedOperator) return;
+        try {
+            const operatorRef = doc(firestore, "busOperators", selectedOperator.id);
+            await updateDoc(operatorRef, editedOperator);
+            console.log(`Operator ${selectedOperator.id} updated successfully.`);
+            onOperatorDeleted(); // Re-fetch data
+        } catch (error) {
+            console.error("Error updating operator:", error);
+            alert(`Failed to update operator: ${(error as Error).message}`);
+        } finally {
+            setIsEditDialogOpen(false);
+            setSelectedOperator(null);
+            setEditedOperator({});
         }
     };
 
@@ -81,7 +121,7 @@ export function OperatorsTable({ operators, onOperatorDeleted }: { operators: Bu
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => console.log(`Editing ${op.id}`)}>
+                                        <DropdownMenuItem onClick={() => openEditDialog(op)}>
                                             <Edit className="mr-2 h-4 w-4" />
                                             Edit
                                         </DropdownMenuItem>
@@ -96,7 +136,41 @@ export function OperatorsTable({ operators, onOperatorDeleted }: { operators: Bu
                     ))}
                 </TableBody>
             </Table>
-            <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+
+            {/* Edit Dialog */}
+             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Operator</DialogTitle>
+                        <DialogDescription>
+                            Make changes to the operator's profile here. Click save when you're done.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">Name</Label>
+                            <Input id="name" value={editedOperator.name || ''} onChange={(e) => handleInputChange('name', e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="email" className="text-right">Email</Label>
+                            <Input id="email" type="email" value={editedOperator.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="contact" className="text-right">Contact</Label>
+                            <Input id="contact" value={editedOperator.contactNumber || ''} onChange={(e) => handleInputChange('contactNumber', e.target.value)} className="col-span-3" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                         <DialogClose asChild>
+                            <Button type="button" variant="secondary">Cancel</Button>
+                        </DialogClose>
+                        <Button type="button" onClick={handleUpdateOperator}>Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
