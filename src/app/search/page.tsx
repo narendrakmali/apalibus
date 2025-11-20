@@ -12,8 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 import { useCurrentLocation } from "@/hooks/use-current-location";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { initializeFirebase } from "@/firebase";
+import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from "firebase/auth";
 import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
 import placeholderImages from '@/lib/placeholder-images.json';
@@ -59,7 +58,8 @@ export default function SearchPage() {
   const [showRequestConfirm, setShowRequestConfirm] = useState(false);
 
   const router = useRouter();
-  const { auth, firestore } = initializeFirebase();
+  const auth = useAuth();
+  const firestore = useFirestore();
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 

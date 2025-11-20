@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { initializeFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import type { Bus, BookingRequest } from '@/lib/types';
 
@@ -11,7 +11,7 @@ export const useOperatorData = (operatorId?: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { firestore } = initializeFirebase();
+  const firestore = useFirestore();
 
   useEffect(() => {
     if (!operatorId) {

@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { initializeFirebase } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,7 +28,8 @@ export default function AddBusPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { auth, firestore } = initializeFirebase();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
 

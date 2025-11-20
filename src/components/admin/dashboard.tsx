@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Book, Users, Bus } from 'lucide-react';
-import { initializeFirebase } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboard() {
-  const { auth } = initializeFirebase();
+  const auth = useAuth();
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
 

@@ -4,14 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { initializeFirebase } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { useOperatorData } from '@/hooks/use-operator-data';
 import Link from 'next/link';
 import type { Bus, BookingRequest } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
 /**
  * A robust utility function to convert a Firestore Timestamp, a string, or a number into a valid Date object.
@@ -172,7 +171,7 @@ const FleetCalendar = ({ buses, bookingRequests }: { buses: Bus[], bookingReques
 
 
 export default function FleetPage() {
-  const { auth } = initializeFirebase();
+  const auth = useAuth();
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   

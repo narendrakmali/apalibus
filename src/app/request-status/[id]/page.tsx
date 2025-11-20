@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle, Clock, MapPin, Calendar, Users, Bus, ArrowRight } from "lucide-react";
-import { initializeFirebase } from "@/firebase";
+import { useFirestore } from '@/firebase';
 import { doc, getDoc } from "firebase/firestore";
 import type { BookingRequest } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +13,7 @@ export default function RequestStatusPage({ params }: { params: { id: string } }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { firestore } = initializeFirebase();
+  const firestore = useFirestore();
 
   useEffect(() => {
     if (!params.id) {

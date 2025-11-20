@@ -8,6 +8,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from '@/components/error-fallback';
+import { FirebaseClientProvider } from "@/firebase";
 
 const ptSans = PT_Sans({ 
   subsets: ["latin"], 
@@ -28,19 +29,21 @@ export default function RootLayout({
         <meta name="description" content="A comprehensive web-based bus booking platform." />
       </head>
       <body className={cn("min-h-screen flex flex-col font-sans antialiased", ptSans.variable, spaceGrotesk.variable)}>
-          <Header />
-          <main className="flex-grow">
-            <ErrorBoundary
-                FallbackComponent={ErrorFallback}
-                onReset={() => {
-                    // This will force a hard reload of the page
-                    window.location.reload();
-                }}
-            >
-              {children}
-            </ErrorBoundary>
-          </main>
-          <Footer />
+          <FirebaseClientProvider>
+            <Header />
+            <main className="flex-grow">
+              <ErrorBoundary
+                  FallbackComponent={ErrorFallback}
+                  onReset={() => {
+                      // This will force a hard reload of the page
+                      window.location.reload();
+                  }}
+              >
+                {children}
+              </ErrorBoundary>
+            </main>
+            <Footer />
+          </FirebaseClientProvider>
       </body>
     </html>
   );

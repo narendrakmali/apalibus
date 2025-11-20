@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { initializeFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
 import type { User, BusOperator } from '@/lib/types';
 
@@ -39,7 +39,7 @@ export const useAdminData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const { firestore } = initializeFirebase();
+  const firestore = useFirestore();
 
   useEffect(() => {
     const fetchAllData = async () => {

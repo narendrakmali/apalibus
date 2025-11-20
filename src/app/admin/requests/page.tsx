@@ -8,12 +8,12 @@ import { RequestsTable } from '@/components/admin/requests-table';
 import { ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { initializeFirebase } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function AdminRequestsPage() {
-  const { auth } = initializeFirebase();
+  const auth = useAuth();
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   

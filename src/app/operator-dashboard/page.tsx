@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { initializeFirebase } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
@@ -12,7 +12,8 @@ import Link from 'next/link';
 import { Bus, PlusCircle, Calendar, TrendingUp, Users } from 'lucide-react';
 
 export default function OperatorDashboardPage() {
-  const { auth, firestore } = initializeFirebase();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   const [operatorName, setOperatorName] = useState('');
