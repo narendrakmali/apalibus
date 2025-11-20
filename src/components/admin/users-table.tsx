@@ -3,11 +3,19 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { User } from '@/lib/types';
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useFirestore } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 async function makeUserOperator(firestore: any, user: User) {
     if (!firestore || !user) {
@@ -73,14 +81,26 @@ export function UsersTable({ users }: { users: User[] }) {
                             )}
                         </TableCell>
                         <TableCell className="text-right">
-                           <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => handleMakeOperator(user)}
-                                disabled={promoting === user.id}
-                            >
-                               {promoting === user.id ? "Promoting..." : "Make Operator"}
-                           </Button>
+                           <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem 
+                                        onClick={() => handleMakeOperator(user)}
+                                        disabled={promoting === user.id}
+                                    >
+                                        {promoting === user.id ? "Promoting..." : "Make Operator"}
+                                    </DropdownMenuItem>
+                                     <DropdownMenuItem className="text-destructive" onClick={() => console.log(`Deleting ${user.id}`)}>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </TableCell>
                     </TableRow>
                 ))}

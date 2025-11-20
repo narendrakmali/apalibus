@@ -3,7 +3,15 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { BusOperator } from '@/lib/types';
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function OperatorsTable({ operators }: { operators: BusOperator[] }) {
     if (operators.length === 0) {
@@ -27,9 +35,24 @@ export function OperatorsTable({ operators }: { operators: BusOperator[] }) {
                         <TableCell>{op.email}</TableCell>
                         <TableCell>{op.contactNumber}</TableCell>
                         <TableCell className="text-right">
-                           <Button variant="ghost" size="icon">
-                               <MoreHorizontal className="h-4 w-4" />
-                           </Button>
+                           <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => console.log(`Editing ${op.id}`)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive" onClick={() => console.log(`Deleting ${op.id}`)}>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </TableCell>
                     </TableRow>
                 ))}
