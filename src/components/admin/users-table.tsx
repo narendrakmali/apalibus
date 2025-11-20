@@ -26,6 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 
 export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDeleted: () => void }) {
@@ -47,23 +49,38 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
         setPromoting(selectedUser.id);
         setIsPromoteAlertOpen(false);
 
-        try {
-            const operatorRef = doc(firestore, "busOperators", selectedUser.id);
-            await setDoc(operatorRef, {
-                id: selectedUser.id,
-                name: selectedUser.name,
-                email: selectedUser.email,
-                contactNumber: selectedUser.mobileNumber || '',
-                busIds: [],
-            });
-            setFeedbackMessage(`${selectedUser.name} has been successfully promoted to an operator.`);
-        } catch (error) {
-            console.error("Error making user an operator:", error);
-            setFeedbackMessage(`Failed to make user an operator: ${(error as Error).message}`);
-        } finally {
-            setPromoting(null);
-            setSelectedUser(null);
-        }
+        const operatorData = {
+            id: selectedUser.id,
+            name: selectedUser.name,
+            email: selectedUser.email,
+            contactNumber: selectedUser.mobileNumber || '',
+            busIds: [],
+        };
+        const operatorRef = doc(firestore, "busOperators", selectedUser.id);
+        
+        // Use the .catch() pattern for error handling
+        setDoc(operatorRef, operatorData)
+          .then(() => {
+              setFeedbackMessage(`${selectedUser.name} has been successfully promoted to an operator.`);
+              setPromoting(null);
+              setSelectedUser(null);
+          })
+          .catch((serverError) => {
+              // Create the rich, contextual error
+              const permissionError = new FirestorePermissionError({
+                path: operatorRef.path,
+                operation: 'create',
+                requestResourceData: operatorData,
+              } satisfies SecurityRuleContext);
+              
+              // Emit the error to be caught by the global listener
+              errorEmitter.emit('permission-error', permissionError);
+
+              // Update UI state
+              setFeedbackMessage(`Failed to promote user: Insufficient permissions.`);
+              setPromoting(null);
+              setSelectedUser(null);
+          });
     }
     
     const openDeleteDialog = (user: User) => {
@@ -73,17 +90,23 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
 
     const handleDeleteUser = async () => {
         if (!selectedUser) return;
-        try {
-            await deleteDoc(doc(firestore, "users", selectedUser.id));
-            setFeedbackMessage(`User ${selectedUser.name} deleted successfully.`);
-            onUserDeleted(); // Callback to refresh the data on the parent page
-        } catch (error) {
-            console.error("Error deleting user:", error);
-            setFeedbackMessage(`Failed to delete user: ${(error as Error).message}`);
-        } finally {
-            setIsDeleteAlertOpen(false);
-            setSelectedUser(null);
-        }
+        const userRef = doc(firestore, "users", selectedUser.id);
+        deleteDoc(userRef)
+            .then(() => {
+                setFeedbackMessage(`User ${selectedUser.name} deleted successfully.`);
+                onUserDeleted(); // Callback to refresh the data on the parent page
+                setIsDeleteAlertOpen(false);
+                setSelectedUser(null);
+            })
+            .catch((serverError) => {
+                 const permissionError = new FirestorePermissionError({
+                    path: userRef.path,
+                    operation: 'delete',
+                 } satisfies SecurityRuleContext);
+                 errorEmitter.emit('permission-error', permissionError);
+                 setIsDeleteAlertOpen(false);
+                 setSelectedUser(null);
+            });
     };
 
 

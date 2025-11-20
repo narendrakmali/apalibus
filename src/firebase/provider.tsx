@@ -1,3 +1,4 @@
+
 'use client';
 import {
   createContext,
@@ -10,6 +11,7 @@ import {
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseContextValue {
   firebaseApp: FirebaseApp;
@@ -28,6 +30,7 @@ export function FirebaseProvider({
   const memoizedValue = useMemo(() => value, [value]);
   return (
     <FirebaseContext.Provider value={memoizedValue}>
+      <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
   );
