@@ -6,11 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BookingRequest } from '@/hooks/use-admin-data';
 import { ArrowRight, FileText } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import Link from "next/link";
 
 
 function formatFirebaseTimestamp(timestamp: any) {
@@ -81,30 +77,11 @@ export function RequestsTable({ requests }: { requests: BookingRequest[] }) {
                             <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                           <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <FileText className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80">
-                                <div className="grid gap-4">
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium leading-none">Estimated Cost</h4>
-                                    {req.estimate ? (
-                                        <p className="text-lg font-bold">
-                                           {req.estimate.totalCost.toLocaleString('en-IN')}
-                                        </p>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground">
-                                          No estimate calculated.
-                                        </p>
-                                    )}
-                                  </div>
-                                  <Button size="sm">Provide Quote</Button>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
+                           <Button asChild size="sm">
+                               <Link href={`/admin/requests/${req.id}`}>
+                                   Provide Quote
+                                </Link>
+                           </Button>
                         </TableCell>
                     </TableRow>
                 ))}
