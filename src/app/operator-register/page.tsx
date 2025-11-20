@@ -27,19 +27,21 @@ export default function OperatorRegisterPage() {
 
   const handleRegister = async () => {
     setError(null);
-    setIsLoading(true);
+    
 
     if (!name || !email || !password || !confirmPassword || !contactNumber) {
       setError("Please fill in all fields.");
-      setIsLoading(false);
+      
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
-      setIsLoading(false);
+      
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -61,7 +63,7 @@ export default function OperatorRegisterPage() {
       console.error("Operator Registration Error:", err);
       let errorMessage = "An unknown error occurred during registration.";
       if (err.code === 'auth/email-already-in-use') {
-        errorMessage = "This email address is already registered.";
+        errorMessage = "This email address is already registered. Please use a different email or log in.";
       } else if (err.code === 'auth/invalid-email') {
         errorMessage = "Please enter a valid email address.";
       } else if (err.code === 'auth/weak-password') {
