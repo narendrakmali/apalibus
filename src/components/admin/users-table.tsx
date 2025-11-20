@@ -4,7 +4,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { User } from '@/lib/types';
-import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useFirestore } from "@/firebase";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -28,58 +28,60 @@ import {
 } from "@/components/ui/alert-dialog";
 
 
-async function makeUserOperator(firestore: any, user: User) {
-    if (!firestore || !user) {
-        console.error("Firestore or User not provided");
-        return;
-    }
-    if (confirm(`Are you sure you want to make ${user.name} an operator?`)) {
-        try {
-            const operatorRef = doc(firestore, "busOperators", user.id);
-            await setDoc(operatorRef, {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                contactNumber: user.mobileNumber || '',
-                busIds: [],
-            });
-            alert(`${user.name} has been successfully promoted to an operator.`);
-        } catch (error) {
-            console.error("Error making user an operator:", error);
-            alert(`Failed to make user an operator: ${(error as Error).message}`);
-        }
-    }
-}
-
-
 export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDeleted: () => void }) {
     const firestore = useFirestore();
     const [promoting, setPromoting] = useState<string | null>(null);
-    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const [isPromoteAlertOpen, setIsPromoteAlertOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-    const handleMakeOperator = async (user: User) => {
-        setPromoting(user.id);
-        await makeUserOperator(firestore, user);
-        setPromoting(null);
+    const openPromoteDialog = (user: User) => {
+        setSelectedUser(user);
+        setIsPromoteAlertOpen(true);
+    };
+
+    const handleMakeOperator = async () => {
+        if (!selectedUser) return;
+        
+        setPromoting(selectedUser.id);
+        setIsPromoteAlertOpen(false);
+
+        try {
+            const operatorRef = doc(firestore, "busOperators", selectedUser.id);
+            await setDoc(operatorRef, {
+                id: selectedUser.id,
+                name: selectedUser.name,
+                email: selectedUser.email,
+                contactNumber: selectedUser.mobileNumber || '',
+                busIds: [],
+            });
+            setFeedbackMessage(`${selectedUser.name} has been successfully promoted to an operator.`);
+        } catch (error) {
+            console.error("Error making user an operator:", error);
+            setFeedbackMessage(`Failed to make user an operator: ${(error as Error).message}`);
+        } finally {
+            setPromoting(null);
+            setSelectedUser(null);
+        }
     }
     
     const openDeleteDialog = (user: User) => {
         setSelectedUser(user);
-        setIsAlertOpen(true);
+        setIsDeleteAlertOpen(true);
     };
 
     const handleDeleteUser = async () => {
         if (!selectedUser) return;
         try {
             await deleteDoc(doc(firestore, "users", selectedUser.id));
-            console.log(`User ${selectedUser.id} deleted successfully.`);
+            setFeedbackMessage(`User ${selectedUser.name} deleted successfully.`);
             onUserDeleted(); // Callback to refresh the data on the parent page
         } catch (error) {
             console.error("Error deleting user:", error);
-            alert(`Failed to delete user: ${(error as Error).message}`);
+            setFeedbackMessage(`Failed to delete user: ${(error as Error).message}`);
         } finally {
-            setIsAlertOpen(false);
+            setIsDeleteAlertOpen(false);
             setSelectedUser(null);
         }
     };
@@ -91,6 +93,12 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
 
     return (
         <>
+            {feedbackMessage && (
+                <div className="mb-4 rounded-md border p-4 text-sm">
+                    <p>{feedbackMessage}</p>
+                    <Button variant="ghost" size="sm" onClick={() => setFeedbackMessage(null)} className="mt-2">Dismiss</Button>
+                </div>
+            )}
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -124,7 +132,7 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuItem 
-                                            onClick={() => handleMakeOperator(user)}
+                                            onClick={() => openPromoteDialog(user)}
                                             disabled={promoting === user.id}
                                         >
                                             {promoting === user.id ? "Promoting..." : "Make Operator"}
@@ -140,7 +148,27 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
                     ))}
                 </TableBody>
             </Table>
-            <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+
+            {/* Promote Confirmation Dialog */}
+            <AlertDialog open={isPromoteAlertOpen} onOpenChange={setIsPromoteAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Promote to Operator?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           This action will grant operator privileges to <span className="font-semibold">{selectedUser?.name}</span>. They will be able to manage buses and bookings. Are you sure?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setSelectedUser(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleMakeOperator}>
+                            Confirm & Promote
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -149,7 +177,7 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel onClick={() => setSelectedUser(null)}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive hover:bg-destructive/90">
                             Delete
                         </AlertDialogAction>
