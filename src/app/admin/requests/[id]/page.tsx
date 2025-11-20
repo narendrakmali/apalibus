@@ -25,7 +25,7 @@ function formatFirebaseTimestamp(timestamp: any) {
 }
 
 
-export default function ProvideQuotePage({ params }: { params: { id: string } }) {
+export default function ProvideQuotePage({ params: { id } }: { params: { id: string } }) {
   const [request, setRequest] = useState<BookingRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,14 +46,14 @@ export default function ProvideQuotePage({ params }: { params: { id: string } })
   const { buses, loading: busesLoading } = useOperatorData(user?.uid);
 
   useEffect(() => {
-    if (!params.id) {
+    if (!id) {
       setError("No request ID provided.");
       setIsLoading(false);
       return;
     }
     const fetchRequest = async () => {
       try {
-        const docRef = doc(firestore, "bookingRequests", params.id);
+        const docRef = doc(firestore, "bookingRequests", id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = { id: docSnap.id, ...docSnap.data() } as BookingRequest;
@@ -72,7 +72,7 @@ export default function ProvideQuotePage({ params }: { params: { id: string } })
       }
     };
     fetchRequest();
-  }, [params.id, firestore]);
+  }, [id, firestore]);
 
   const handleSubmitQuote = async () => {
     if (!finalCost || !availableBus) {
@@ -86,7 +86,7 @@ export default function ProvideQuotePage({ params }: { params: { id: string } })
 
     setIsSubmitting(true);
     try {
-        const requestRef = doc(firestore, 'bookingRequests', params.id);
+        const requestRef = doc(firestore, 'bookingRequests', id);
         
         await updateDoc(requestRef, {
             status: 'approved',
