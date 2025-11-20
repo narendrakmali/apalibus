@@ -14,18 +14,18 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 /**
- * A robust utility function to convert a Firestore Timestamp or a string into a Date object.
+ * A robust utility function to convert a Firestore Timestamp, a string, or a number into a valid Date object.
  * Returns null if the input is invalid, null, or undefined.
  */
 const safeToDate = (dateInput: any): Date | null => {
   if (!dateInput) {
     return null;
   }
-  // Handle Firestore Timestamps
+  // Handle Firestore Timestamps (which have a toDate method)
   if (typeof dateInput.toDate === 'function') {
     return dateInput.toDate();
   }
-  // Handle string or number dates
+  // Handle ISO 8601 strings or millisecond numbers
   if (typeof dateInput === 'string' || typeof dateInput === 'number') {
     const d = new Date(dateInput);
     // Check if the created date is valid
@@ -33,7 +33,7 @@ const safeToDate = (dateInput: any): Date | null => {
       return d;
     }
   }
-  // Return null if input is not a recognizable date format
+  // Return null if the input is not a recognizable or valid date format
   return null;
 };
 
@@ -69,7 +69,7 @@ const FleetCalendar = ({ buses, bookingRequests }: { buses: Bus[], bookingReques
     
     const newSchedule: Record<string, Record<number, 'booked' | 'available'>> = {};
 
-    // Initialize schedule for all buses
+    // Initialize schedule for all buses to 'available'
     buses.forEach(bus => {
       newSchedule[bus.id] = {};
       for (let day = 1; day <= daysInMonth; day++) {
@@ -79,26 +79,26 @@ const FleetCalendar = ({ buses, bookingRequests }: { buses: Bus[], bookingReques
 
     // Populate schedule with bookings
     bookingRequests.forEach(booking => {
-      // Safely get the bus ID from the quote. If no quote or bus, skip.
+      // DEFENSIVE CHECK: Ensure the booking has an operator quote and an assigned bus.
       const busIdFromQuote = booking.operatorQuote?.availableBus;
       if (!busIdFromQuote || !newSchedule[busIdFromQuote]) {
-        return;
+        return; // Skip this booking if it's not assigned to a known bus.
       }
       
-      // Safely convert dates. If dates are invalid, skip.
+      // DEFENSIVE CHECK: Safely convert dates, skipping if they are invalid.
       const journeyDate = safeToDate(booking.journeyDate);
       const returnDate = safeToDate(booking.returnDate);
       if (!journeyDate || !returnDate) {
-        return;
+        return; // Skip this booking if dates are invalid.
       }
 
-      // Normalize dates to midnight to compare days correctly
+      // Normalize dates to midnight for accurate day-by-day comparison.
       const start = new Date(journeyDate.setHours(0, 0, 0, 0));
       const end = new Date(returnDate.setHours(0, 0, 0, 0));
       
-      // Iterate through the date range of the booking
+      // Iterate through the date range of the booking.
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        // Check if the day is within the currently displayed month
+        // Check if the current day in the loop falls within the displayed month.
         if (d.getFullYear() === year && d.getMonth() === month) {
           const dayOfMonth = d.getDate();
           newSchedule[busIdFromQuote][dayOfMonth] = 'booked';
@@ -176,12 +176,13 @@ export default function FleetPage() {
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   
-  // We only fetch data once the user object is available
+  // Fetch data only once the user object is available.
   const { buses, requests, loading: dataLoading, error } = useOperatorData(user?.uid);
 
   const isLoading = authLoading || dataLoading;
 
   useEffect(() => {
+    // Redirect unauthenticated users.
     if (!authLoading && !user) {
       router.push('/operator-login');
     }
@@ -191,7 +192,7 @@ export default function FleetPage() {
     if (isLoading) {
         return (
             <div className="space-y-4">
-                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-40 w-full" />
             </div>
         );
@@ -199,11 +200,11 @@ export default function FleetPage() {
     if (error) {
         return (
             <p className="text-destructive text-center font-semibold p-4 bg-destructive/10 rounded-md">
-              Error loading data: {error}
+              Error loading fleet data: {error}
             </p>
         );
     }
-    // Only render the calendar if we are not loading and there's no error
+    // Only render the calendar if we are not loading and there's no error.
     return <FleetCalendar buses={buses} bookingRequests={requests} />;
   }
 
