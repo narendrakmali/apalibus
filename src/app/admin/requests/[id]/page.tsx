@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth, useFirestore } from '@/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import type { BookingRequest } from '@/lib/types';
 import { ArrowLeft, Calendar, Users, Bus, MapPin, DollarSign, Edit } from 'lucide-react';
 import Link from 'next/link';
@@ -25,8 +25,9 @@ function formatFirebaseTimestamp(timestamp: any) {
 }
 
 
-export default function ProvideQuotePage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function ProvideQuotePage() {
+  const params = useParams();
+  const id = params.id as string;
   const [request, setRequest] = useState<BookingRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
