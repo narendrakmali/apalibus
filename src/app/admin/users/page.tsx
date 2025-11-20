@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +10,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export default function AdminUsersPage() {
   const auth = useAuth();
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
+  
+  // A simple state to trigger re-fetch in the hook
+  const [dataVersion, setDataVersion] = useState(0);
   
   useEffect(() => {
     if (!authLoading && !user) {
@@ -22,9 +26,13 @@ export default function AdminUsersPage() {
     }
   }, [user, authLoading, router]);
 
-  const { users, loading: dataLoading } = useAdminData();
+  const { users, loading: dataLoading } = useAdminData(dataVersion);
   
   const isLoading = authLoading || dataLoading;
+  
+  const handleDataChange = useCallback(() => {
+    setDataVersion(v => v + 1);
+  }, []);
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -59,7 +67,7 @@ export default function AdminUsersPage() {
                     <Skeleton className="h-10 w-full" />
                 </div>
             ) : (
-                <UsersTable users={users} />
+                <UsersTable users={users} onUserDeleted={handleDataChange} />
             )}
           </CardContent>
       </Card>

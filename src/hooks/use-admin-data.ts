@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { useFirestore } from '@/firebase';
@@ -32,7 +33,7 @@ export interface BookingRequest {
   createdAt: Timestamp;
 }
 
-export const useAdminData = () => {
+export const useAdminData = (dataVersion = 0) => {
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [operators, setOperators] = useState<BusOperator[]>([]);
@@ -83,7 +84,7 @@ export const useAdminData = () => {
     };
 
     fetchAllData();
-  }, [firestore]);
+  }, [firestore, dataVersion]);
 
   return { requests, users, operators, loading, error };
 };

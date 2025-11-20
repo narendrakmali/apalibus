@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +10,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export default function AdminOperatorsPage() {
   const auth = useAuth();
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
+  const [dataVersion, setDataVersion] = useState(0);
   
   useEffect(() => {
     if (!authLoading && !user) {
@@ -22,9 +24,13 @@ export default function AdminOperatorsPage() {
     }
   }, [user, authLoading, router]);
 
-  const { operators, loading: dataLoading } = useAdminData();
+  const { operators, loading: dataLoading } = useAdminData(dataVersion);
   
   const isLoading = authLoading || dataLoading;
+
+  const handleDataChange = useCallback(() => {
+    setDataVersion(v => v + 1);
+  }, []);
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -59,7 +65,7 @@ export default function AdminOperatorsPage() {
                     <Skeleton className="h-10 w-full" />
                 </div>
             ) : (
-                <OperatorsTable operators={operators} />
+                <OperatorsTable operators={operators} onOperatorDeleted={handleDataChange}/>
             )}
           </CardContent>
       </Card>
