@@ -25,7 +25,8 @@ function formatFirebaseTimestamp(timestamp: any) {
 }
 
 
-export default function ProvideQuotePage({ params: { id } }: { params: { id: string } }) {
+export default function ProvideQuotePage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [request, setRequest] = useState<BookingRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
