@@ -28,16 +28,13 @@ export default function OperatorRegisterPage() {
   const handleRegister = async () => {
     setError(null);
     
-
     if (!name || !email || !password || !confirmPassword || !contactNumber) {
       setError("Please fill in all fields.");
-      
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
-      
       return;
     }
 
@@ -60,7 +57,6 @@ export default function OperatorRegisterPage() {
       router.push('/operator-login'); // Redirect to login page after successful registration
 
     } catch (err: any) {
-      console.error("Operator Registration Error:", err);
       let errorMessage = "An unknown error occurred during registration.";
       if (err.code === 'auth/email-already-in-use') {
         errorMessage = "This email address is already registered. Please use a different email or log in.";
@@ -69,6 +65,7 @@ export default function OperatorRegisterPage() {
       } else if (err.code === 'auth/weak-password') {
         errorMessage = "The password is too weak. It must be at least 6 characters long.";
       }
+      console.error("Operator Registration Error:", err.message);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
