@@ -9,6 +9,21 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// Fare chart data extracted from the provided MSRTC image
+const fareChart: { [key: number]: number } = {
+    1: 11, 2: 21, 3: 31, 4: 41, 5: 51, 6: 61, 7: 71, 8: 81, 9: 91, 10: 102,
+    11: 112, 12: 122, 13: 132, 14: 142, 15: 152, 16: 162, 17: 172, 18: 182, 19: 192, 20: 202,
+    21: 212, 22: 222, 23: 232, 24: 242, 25: 252, 26: 262, 27: 272, 28: 282, 29: 292, 30: 303,
+    31: 313, 32: 323, 33: 333, 34: 343, 35: 353, 36: 363, 37: 373, 38: 383, 39: 393, 40: 403,
+    41: 413, 42: 423, 43: 433, 44: 443, 45: 453, 46: 463, 47: 473, 48: 483, 49: 493, 50: 504,
+    51: 514, 52: 524, 53: 534, 54: 544, 55: 554, 56: 564, 57: 574, 58: 584, 59: 594, 60: 604,
+    61: 614, 62: 624, 63: 634, 64: 644, 65: 654, 66: 664, 67: 674, 68: 684, 69: 694, 70: 705,
+    71: 715, 72: 725, 73: 735, 74: 745, 75: 755, 76: 765, 77: 775, 78: 785, 79: 795, 80: 805,
+    81: 815, 82: 825, 83: 835, 84: 845, 85: 855, 86: 865, 87: 875, 88: 885, 89: 895, 90: 906,
+    91: 916, 92: 926, 93: 936, 94: 946, 95: 956, 96: 966, 97: 976, 98: 986, 99: 996, 100: 1006,
+};
+
+
 export default function StageCalculator() {
   const [origin, setOrigin] = useState('');
   const [dest, setDest] = useState('');
@@ -33,21 +48,21 @@ export default function StageCalculator() {
     if (o && d) {
       const { stages, distance } = calculateStage(o, d);
       
-      let baseRatePerStage = 10;
+      let farePerFullTicket = fareChart[stages] || stages * 10; // Fallback to formula if stage not in chart
+
+      // Adjust for different bus types
       switch (busType) {
         case 'Express':
-          baseRatePerStage = 15;
+          farePerFullTicket *= 1.5; // Approx. 50% more than ordinary
           break;
         case 'Shivneri':
-          baseRatePerStage = 50;
+          farePerFullTicket *= 2.5; // Approx. 2.5x more than ordinary
           break;
         default: // Ordinary
-          baseRatePerStage = 10;
+          // No change needed for ordinary
       }
-
+      
       const reservationChargePerPerson = 5;
-
-      let farePerFullTicket = stages * baseRatePerStage;
 
       // Night service charges
       const isNight = new Date().getHours() >= 22 || new Date().getHours() < 5;
@@ -118,8 +133,7 @@ export default function StageCalculator() {
                     <Select onValueChange={setBusType} value={busType}>
                         <SelectTrigger id="bus-type"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Ordinary">Ordinary</SelectItem>
-                            <SelectItem value="Express">Express (Asiad/Hirkani)</SelectItem>
+                            <SelectItem value="Ordinary">Ordinary / Express</SelectItem>
                             <SelectItem value="Shivneri">Shivneri (AC)</SelectItem>
                         </SelectContent>
                     </Select>
