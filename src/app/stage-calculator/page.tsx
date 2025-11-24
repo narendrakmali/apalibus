@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 
 // Fare chart data extracted from the provided MSRTC image
 const fareChart: { [key: number]: number } = {
@@ -96,99 +97,131 @@ export default function StageCalculator() {
   };
   
   const depotOptions = depots.map(d => ({ value: d.name.toLowerCase(), label: d.name}));
+  
+  const fareChartImages = [
+      { id: 1, src: "https://picsum.photos/seed/fare1/400/600", alt: "MSRTC Fare Chart 1" },
+      { id: 2, src: "https://picsum.photos/seed/fare2/400/600", alt: "MSRTC Fare Chart 2" },
+      { id: 3, src: "https://picsum.photos/seed/fare3/400/600", alt: "MSRTC Fare Chart 3" },
+      { id: 4, src: "https://picsum.photos/seed/fare4/400/600", alt: "MSRTC Fare Chart 4" },
+      { id: 5, src: "https://picsum.photos/seed/fare5/400/600", alt: "MSRTC Fare Chart 5" },
+  ];
 
   return (
-    <div className="container mx-auto py-12 px-4 md:px-6 flex justify-center">
-      <Card className="w-full max-w-lg">
-          <CardHeader>
-              <CardTitle>MSRTC Stage & Fare Calculator</CardTitle>
-              <CardDescription>Select an origin and destination to calculate the approximate stages and fare.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-                 <div className="space-y-2">
-                    <Label>Origin Depot</Label>
-                    <Combobox
-                        options={depotOptions}
-                        value={origin}
-                        onChange={setOrigin}
-                        placeholder="Select origin..."
-                        searchPlaceholder="Search depot..."
-                        notFoundText="No depot found."
-                    />
-                </div>
-                 <div className="space-y-2">
-                    <Label>Destination Depot</Label>
-                     <Combobox
-                        options={depotOptions}
-                        value={dest}
-                        onChange={setDest}
-                        placeholder="Select destination..."
-                        searchPlaceholder="Search depot..."
-                        notFoundText="No depot found."
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="bus-type">Bus Type</Label>
-                    <Select onValueChange={setBusType} value={busType}>
-                        <SelectTrigger id="bus-type"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Ordinary">Ordinary / Express</SelectItem>
-                            <SelectItem value="Shivneri">Shivneri (AC)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="full-passengers">Passengers (Full Ticket)</Label>
-                        <Input id="full-passengers" type="number" min="0" value={numFullPassengers} onChange={(e) => setNumFullPassengers(Math.max(0, parseInt(e.target.value) || 0))} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="concession-passengers">Passengers (50% Concession)</Label>
-                        <Input id="concession-passengers" type="number" min="0" value={numConcessionPassengers} onChange={(e) => setNumConcessionPassengers(Math.max(0, parseInt(e.target.value) || 0))} />
-                    </div>
-                </div>
-                <Button onClick={handleCalc} className="w-full" disabled={loading || !origin || !dest}>
-                    {loading ? "Loading Depots..." : "Calculate Stage & Fare"}
-                </Button>
-                {result && (
-                    <div className="mt-4 p-4 bg-secondary/50 border rounded-lg space-y-3">
-                        <h3 className="font-semibold text-center text-lg mb-2">Fare Estimate for {result.busType} Bus</h3>
-                        
-                        <div className="flex justify-between font-mono text-sm">
-                            <span>Approx. Distance:</span>
-                            <span>~{result.distance} km</span>
+    <div className="container mx-auto py-12 px-4 md:px-6">
+        <div className="flex flex-col lg:flex-row gap-8 justify-center">
+            <Card className="w-full max-w-lg">
+                <CardHeader>
+                    <CardTitle>MSRTC Stage & Fare Calculator</CardTitle>
+                    <CardDescription>Select an origin and destination to calculate the approximate stages and fare.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Origin Depot</Label>
+                            <Combobox
+                                options={depotOptions}
+                                value={origin}
+                                onChange={setOrigin}
+                                placeholder="Select origin..."
+                                searchPlaceholder="Search depot..."
+                                notFoundText="No depot found."
+                            />
                         </div>
-                         <div className="flex justify-between font-mono text-sm">
-                            <span>Calculated Stages:</span>
-                            <span>{result.stages}</span>
+                        <div className="space-y-2">
+                            <Label>Destination Depot</Label>
+                            <Combobox
+                                options={depotOptions}
+                                value={dest}
+                                onChange={setDest}
+                                placeholder="Select destination..."
+                                searchPlaceholder="Search depot..."
+                                notFoundText="No depot found."
+                            />
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="bus-type">Bus Type</Label>
+                            <Select onValueChange={setBusType} value={busType}>
+                                <SelectTrigger id="bus-type"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Ordinary">Ordinary / Express</SelectItem>
+                                    <SelectItem value="Shivneri">Shivneri (AC)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="full-passengers">Passengers (Full Ticket)</Label>
+                                <Input id="full-passengers" type="number" min="0" value={numFullPassengers} onChange={(e) => setNumFullPassengers(Math.max(0, parseInt(e.target.value) || 0))} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="concession-passengers">Passengers (50% Concession)</Label>
+                                <Input id="concession-passengers" type="number" min="0" value={numConcessionPassengers} onChange={(e) => setNumConcessionPassengers(Math.max(0, parseInt(e.target.value) || 0))} />
+                            </div>
+                        </div>
+                        <Button onClick={handleCalc} className="w-full" disabled={loading || !origin || !dest}>
+                            {loading ? "Loading Depots..." : "Calculate Stage & Fare"}
+                        </Button>
+                        {result && (
+                            <div className="mt-4 p-4 bg-secondary/50 border rounded-lg space-y-3">
+                                <h3 className="font-semibold text-center text-lg mb-2">Fare Estimate for {result.busType} Bus</h3>
+                                
+                                <div className="flex justify-between font-mono text-sm">
+                                    <span>Approx. Distance:</span>
+                                    <span>~{result.distance} km</span>
+                                </div>
+                                <div className="flex justify-between font-mono text-sm">
+                                    <span>Calculated Stages:</span>
+                                    <span>{result.stages}</span>
+                                </div>
 
-                        <div className="border-t my-2 pt-2 space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">{numFullPassengers} x Full Ticket Fare</span>
-                                <span className="font-medium">₹{result.totalFullFare.toLocaleString()}</span>
-                            </div>
-                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{numConcessionPassengers} x Concession Fare (50%)</span>
-                                <span className="font-medium">₹{result.totalConcessionFare.toLocaleString()}</span>
-                            </div>
-                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Reservation Charges</span>
-                                <span className="font-medium">₹{result.totalReservationCharges.toLocaleString()}</span>
-                            </div>
-                        </div>
+                                <div className="border-t my-2 pt-2 space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">{numFullPassengers} x Full Ticket Fare</span>
+                                        <span className="font-medium">₹{result.totalFullFare.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">{numConcessionPassengers} x Concession Fare (50%)</span>
+                                        <span className="font-medium">₹{result.totalConcessionFare.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Reservation Charges</span>
+                                        <span className="font-medium">₹{result.totalReservationCharges.toLocaleString()}</span>
+                                    </div>
+                                </div>
 
-                        <div className="flex justify-between text-xl font-bold border-t pt-2 mt-2">
-                            <span>Total Estimated Fare:</span>
-                            <span>₹{result.totalFare.toLocaleString()}</span>
-                        </div>
-                     <p className="text-xs text-muted-foreground pt-2 text-center">Fare is an estimate and may include night charges if applicable. Final fare may vary.</p>
+                                <div className="flex justify-between text-xl font-bold border-t pt-2 mt-2">
+                                    <span>Total Estimated Fare:</span>
+                                    <span>₹{result.totalFare.toLocaleString()}</span>
+                                </div>
+                            <p className="text-xs text-muted-foreground pt-2 text-center">Fare is an estimate and may include night charges if applicable. Final fare may vary.</p>
+                            </div>
+                        )}
                     </div>
-                )}
+                </CardContent>
+            </Card>
+            
+            <div className="w-full lg:max-w-2xl">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Official MSRTC Fare Charts</CardTitle>
+                        <CardDescription>Reference images for fare calculation.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {fareChartImages.map(image => (
+                            <div key={image.id} className="relative aspect-[2/3] w-full overflow-hidden rounded-lg shadow-md">
+                                <Image 
+                                    src={image.src}
+                                    alt={image.alt}
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                />
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
             </div>
-          </CardContent>
-      </Card>
+        </div>
     </div>
   );
 }
