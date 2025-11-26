@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Source: Provided MSRTC Fare Chart Data
@@ -88,18 +87,10 @@ export default function StageCalculator() {
   
   const depotOptions = depots.map(d => ({ value: d.name.toLowerCase(), label: d.name}));
   
-  const fareChartImages = [
-      { id: 1, src: "https://picsum.photos/seed/fare1/400/600", alt: "MSRTC Fare Chart 1", hint: "fare chart" },
-      { id: 2, src: "https://picsum.photos/seed/fare2/400/600", alt: "MSRTC Fare Chart 2", hint: "fare chart" },
-      { id: 3, src: "https://picsum.photos/seed/fare3/400/600", alt: "MSRTC Fare Chart 3", hint: "fare chart" },
-      { id: 4, src: "https://picsum.photos/seed/fare4/400/600", alt: "MSRTC Fare Chart 4", hint: "fare chart" },
-      { id: 5, src: "https://picsum.photos/seed/fare5/400/600", alt: "MSRTC Fare Chart 5", hint: "fare chart" },
-  ];
-
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
         <div className="flex flex-col lg:flex-row gap-8 justify-center">
-            <Card className="w-full max-w-lg">
+            <Card className="w-full max-w-lg mx-auto">
                 <CardHeader>
                     <CardTitle>MSRTC Stage & Fare Calculator</CardTitle>
                     <CardDescription>Select trip details to calculate the approximate stages and fare based on official charts.</CardDescription>
@@ -202,29 +193,6 @@ export default function StageCalculator() {
                     </div>
                 </CardContent>
             </Card>
-            
-            <div className="w-full lg:max-w-2xl">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Official MSRTC Fare Charts</CardTitle>
-                        <CardDescription>Reference images for fare calculation.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {fareChartImages.map(image => (
-                            <div key={image.id} className="relative aspect-[2/3] w-full overflow-hidden rounded-lg shadow-md">
-                                <Image 
-                                    src={image.src}
-                                    alt={image.alt}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                    data-ai-hint={image.hint}
-                                />
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            </div>
         </div>
     </div>
   );
