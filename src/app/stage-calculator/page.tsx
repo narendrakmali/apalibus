@@ -167,25 +167,25 @@ export default function StageCalculator() {
                                 <div className="border-t my-2 pt-2 space-y-2">
                                     {numFullPassengers > 0 && <div className="flex justify-between">
                                         <span className="text-muted-foreground">{numFullPassengers} x Full Ticket</span>
-                                        <span className="font-medium">₹{result.totalFullFare.toLocaleString()}</span>
+                                        <span className="font-medium">{result.totalFullFare.toLocaleString()}</span>
                                     </div>}
                                     {numHalfPassengers > 0 && <div className="flex justify-between">
                                         <span className="text-muted-foreground">{numHalfPassengers} x Half Ticket</span>
-                                        <span className="font-medium">₹{result.totalHalfFare.toLocaleString()}</span>
+                                        <span className="font-medium">{result.totalHalfFare.toLocaleString()}</span>
                                     </div>}
                                     {numSeniorPassengers > 0 && <div className="flex justify-between">
                                         <span className="text-muted-foreground">{numSeniorPassengers} x Senior/Woman</span>
-                                        <span className="font-medium">₹{result.totalSeniorFare.toLocaleString()}</span>
+                                        <span className="font-medium">{result.totalSeniorFare.toLocaleString()}</span>
                                     </div>}
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Reservation Charges</span>
-                                        <span className="font-medium">₹{result.totalReservationCharges.toLocaleString()}</span>
+                                        <span className="font-medium">{result.totalReservationCharges.toLocaleString()}</span>
                                     </div>
                                 </div>
 
                                 <div className="flex justify-between text-xl font-bold border-t pt-2 mt-2">
                                     <span>Total Estimated Fare:</span>
-                                    <span>₹{result.totalFare.toLocaleString()}</span>
+                                    <span>{result.totalFare.toLocaleString()}</span>
                                 </div>
                             <p className="text-xs text-muted-foreground pt-2 text-center">Fare is an estimate. Final fare may vary.</p>
                             </div>
@@ -197,4 +197,5 @@ export default function StageCalculator() {
     </div>
   );
 }
+
 
