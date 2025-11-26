@@ -7,6 +7,8 @@ import { loadDepots, type Depot } from '@/lib/stageCalculator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import 'leaflet/dist/leaflet.css';
 
+export const dynamic = 'force-dynamic';
+
 // Dynamically import React-Leaflet components (SSR-safe)
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
