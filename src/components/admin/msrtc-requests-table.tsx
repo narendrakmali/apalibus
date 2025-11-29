@@ -1,17 +1,17 @@
-
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { MsrtcBooking } from '@/lib/types';
-import { MoreHorizontal, Check, X, Hourglass, Trash2 } from "lucide-react";
+import { MoreHorizontal, Check, X, Hourglass, Trash2, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useFirestore } from "@/firebase";
@@ -36,7 +36,7 @@ function getStatusVariant(status: string): "default" | "secondary" | "destructiv
     }
 }
 
-export function MsrtcRequestsTable({ requests, onStatusChange }: { requests: MsrtcBooking[], onStatusChange: () => void }) {
+export function MsrtcRequestsTable({ requests, onStatusChange, onViewDetails }: { requests: MsrtcBooking[], onStatusChange: () => void, onViewDetails?: (request: MsrtcBooking) => void }) {
     const firestore = useFirestore();
     const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -125,7 +125,14 @@ export function MsrtcRequestsTable({ requests, onStatusChange }: { requests: Msr
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    {onViewDetails && (
+                                        <DropdownMenuItem onClick={() => onViewDetails(req)}>
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            View Details
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, 'confirmed')}>
                                         <Check className="mr-2 h-4 w-4" />
                                         Confirm
