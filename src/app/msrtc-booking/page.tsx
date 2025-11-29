@@ -8,15 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, UserPlus, Upload, Download, FileDown, ChevronsUpDown, Check, Users, Ticket, Percent } from 'lucide-react';
+import { Trash2, UserPlus, Upload, Download } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useCurrentLocation } from '@/hooks/use-current-location';
 import { Combobox } from '@/components/ui/combobox';
@@ -25,6 +23,8 @@ import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
+
 
 interface Passenger {
   name: string;
@@ -72,6 +72,8 @@ export default function MsrtcBookingPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
 
   const auth = useAuth();
   const firestore = useFirestore();
@@ -208,7 +210,7 @@ export default function MsrtcBookingPage() {
         
         // TODO: In a real app, handle passengerFile upload to Firebase Storage if it exists.
         
-        router.push(`/track-status?mobile=${contactNumber}`);
+        setShowSuccessDialog(true);
 
     } catch (err: any) {
         console.error("Error creating MSRTC booking request:", err);
@@ -216,37 +218,6 @@ export default function MsrtcBookingPage() {
     } finally {
         setIsSubmitting(false);
     }
-  };
-
-  const handleDownloadPdf = () => {
-    const doc = new jsPDF();
-    doc.text("MSRTC Group Booking Request", 14, 16);
-    doc.setFontSize(12);
-    doc.text(`Organizer: ${organizerName}`, 14, 24);
-    doc.text(`Travel Date: ${travelDate ? format(travelDate, "PPP") : 'N/A'}`, 14, 30);
-    doc.text(`Route: ${origin} to ${destination}`, 14, 36);
-
-    const tableColumn = ["Name", "Age", "Gender"];
-    const tableRows: (string | number)[][] = [];
-
-    passengers.forEach(p => {
-        const passengerData = [
-            p.name,
-            p.age,
-            p.gender
-        ];
-        tableRows.push(passengerData);
-    });
-
-    (doc as any).autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 42,
-    });
-    
-    doc.text("Seat allocation details will be shown here.", 14, (doc as any).lastAutoTable.finalY + 10);
-
-    doc.save(`msrtc_booking_request.pdf`);
   };
 
   const handleDownloadTemplate = () => {
@@ -465,6 +436,25 @@ export default function MsrtcBookingPage() {
           </form>
         </CardContent>
       </Card>
+
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Request Submitted Successfully!</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Thanks for creating a request. Our backend team will update you about your request by call, or you can check your status online.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${contactNumber}`)}>
+                        Check Status
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
     </div>
   );
 }
+
+    

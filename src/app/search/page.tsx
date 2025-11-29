@@ -56,6 +56,7 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRequestConfirm, setShowRequestConfirm] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const router = useRouter();
   const auth = useAuth();
@@ -261,7 +262,7 @@ Sakpal Travels
       await setDoc(docRef, requestData);
 
       console.log("Booking request created with ID: ", requestId);
-      router.push(`/track-status?mobile=${mobileNumber}`);
+      setShowSuccessDialog(true);
 
     } catch (e: any) {
       console.error("Error creating booking request:", e);
@@ -464,6 +465,23 @@ Sakpal Travels
             </AlertDialogContent>
         </AlertDialog>
 
+        <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Request Submitted Successfully!</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Thanks for creating a request. Our backend team will update you about your request by call, or you can check your status online.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}`)}>
+                        Check Status
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
+
+    
