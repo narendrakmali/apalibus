@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,6 @@ const RequestDetailsModal = ({ request, isOpen, onClose }: { request: MsrtcBooki
                         <div><span className="font-semibold">Purpose:</span> {request.purpose || 'N/A'}</div>
                         <div><span className="font-semibold">Total Passengers:</span> {request.numPassengers}</div>
                         <div><span className="font-semibold">Concession Passengers:</span> {request.numConcession}</div>
-                        <div><span className="font-semibold">Estimated Fare:</span> {request.estimatedFare?.toLocaleString() ?? 'N/A'}</div>
                     </div>
 
                     {request.passengers && request.passengers.length > 0 && (
@@ -152,3 +152,5 @@ export default function MsrtcAdminDashboard() {
     </div>
   );
 }
+
+    
