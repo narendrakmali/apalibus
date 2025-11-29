@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -7,8 +8,11 @@ import { useFirestore } from '@/firebase';
 import { doc, getDoc } from "firebase/firestore";
 import type { BookingRequest } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useParams } from "next/navigation";
 
-export default function RequestStatusPage({ params }: { params: { id: string } }) {
+export default function RequestStatusPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [request, setRequest] = useState<BookingRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +20,7 @@ export default function RequestStatusPage({ params }: { params: { id: string } }
   const firestore = useFirestore();
 
   useEffect(() => {
-    if (!params.id) {
+    if (!id) {
       setError("No request ID provided.");
       setLoading(false);
       return;
@@ -24,7 +28,7 @@ export default function RequestStatusPage({ params }: { params: { id: string } }
 
     const fetchRequest = async () => {
       try {
-        const docRef = doc(firestore, "bookingRequests", params.id);
+        const docRef = doc(firestore, "bookingRequests", id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -41,7 +45,7 @@ export default function RequestStatusPage({ params }: { params: { id: string } }
     };
 
     fetchRequest();
-  }, [params.id, firestore]);
+  }, [id, firestore]);
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-secondary/50 py-12 px-4">
@@ -57,7 +61,7 @@ export default function RequestStatusPage({ params }: { params: { id: string } }
           
           <div>
             <p className="text-sm text-muted-foreground text-center mb-2">Your request ID is:</p>
-            <p className="font-mono text-sm bg-muted p-2 rounded-md text-center">{params.id}</p>
+            <p className="font-mono text-sm bg-muted p-2 rounded-md text-center">{id}</p>
           </div>
 
           <div className="border rounded-lg p-4 space-y-3 bg-background/50">
