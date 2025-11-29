@@ -208,7 +208,7 @@ export default function MsrtcBookingPage() {
         
         // TODO: In a real app, handle passengerFile upload to Firebase Storage if it exists.
         
-        router.push(`/request-status/${bookingId}?msrtc=true`);
+        router.push(`/track-status?mobile=${contactNumber}`);
 
     } catch (err: any) {
         console.error("Error creating MSRTC booking request:", err);
@@ -468,5 +468,3 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
-
-    

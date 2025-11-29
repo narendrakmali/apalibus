@@ -261,7 +261,7 @@ Sakpal Travels
       await setDoc(docRef, requestData);
 
       console.log("Booking request created with ID: ", requestId);
-      router.push(`/request-status/${requestId}`);
+      router.push(`/track-status?mobile=${mobileNumber}`);
 
     } catch (e: any) {
       console.error("Error creating booking request:", e);
