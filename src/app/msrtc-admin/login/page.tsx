@@ -19,6 +19,7 @@ export default function MsrtcAdminLoginPage() {
     setError(null);
     setIsLoading(true);
 
+    // Corrected the password here
     if (username === 'msrtc-admin' && password === 'P@ssw0rd') {
       // In a real app, you would use a secure session management system.
       // For this prototype, we'll use sessionStorage.
