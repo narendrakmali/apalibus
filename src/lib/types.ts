@@ -55,3 +55,23 @@ export interface BusOperator {
     email: string;
     contactNumber: string;
 }
+
+
+export interface MsrtcBooking {
+    id: string;
+    userId: string;
+    organizerName: string;
+    contactNumber: string;
+    email: string;
+    travelDate: Timestamp | string;
+    origin: string;
+    destination: string;
+    busType: string;
+    purpose: string;
+    numPassengers: number;
+    numConcession: number;
+    estimatedFare: number;
+    passengers: any[]; // Consider defining a Passenger type
+    status: 'pending' | 'confirmed' | 'rejected';
+    createdAt: Timestamp | string;
+}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useFirestore } from '@/firebase';
 import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
-import type { User, BusOperator } from '@/lib/types';
+import type { User, BusOperator, MsrtcBooking } from '@/lib/types';
 
 
 export interface BookingRequest {
@@ -37,6 +37,7 @@ export const useAdminData = (dataVersion = 0) => {
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [operators, setOperators] = useState<BusOperator[]>([]);
+  const [msrtcBookings, setMsrtcBookings] = useState<MsrtcBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -74,6 +75,17 @@ export const useAdminData = (dataVersion = 0) => {
           ...doc.data(),
         })) as BusOperator[];
         setOperators(operatorsData);
+        
+        // Fetch MSRTC Bookings
+        const msrtcCol = collection(firestore, 'msrtcBookings');
+        const msrtcQuery = query(msrtcCol, orderBy('createdAt', 'desc'));
+        const msrtcSnapshot = await getDocs(msrtcQuery);
+        const msrtcData = msrtcSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as MsrtcBooking[];
+        setMsrtcBookings(msrtcData);
+
 
       } catch (err: any) {
         console.error("Error fetching admin data:", err);
@@ -86,5 +98,5 @@ export const useAdminData = (dataVersion = 0) => {
     fetchAllData();
   }, [firestore, dataVersion]);
 
-  return { requests, users, operators, loading, error };
+  return { requests, users, operators, msrtcBookings, loading, error };
 };

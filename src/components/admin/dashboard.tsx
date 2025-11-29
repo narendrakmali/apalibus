@@ -1,8 +1,9 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Book, Users, Bus } from 'lucide-react';
+import { Book, Users, Bus, Ticket } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
@@ -30,6 +31,7 @@ export default function AdminDashboard() {
                 <Skeleton className="h-40 w-full" />
                 <Skeleton className="h-40 w-full" />
                 <Skeleton className="h-40 w-full" />
+                 <Skeleton className="h-40 w-full" />
             </div>
         </div>
     )
@@ -50,10 +52,10 @@ export default function AdminDashboard() {
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </header>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Booking Requests</CardTitle>
+            <CardTitle className="text-sm font-medium">Private Booking Requests</CardTitle>
             <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -86,6 +88,19 @@ export default function AdminDashboard() {
             <CardDescription>View and manage registered users.</CardDescription>
              <Button asChild className="mt-4">
                 <Link href="/admin/users">Manage Users</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">MSRTC Group Requests</CardTitle>
+            <Ticket className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Manage MSRTC group booking requests.</CardDescription>
+             <Button asChild className="mt-4">
+                <Link href="/admin/msrtc-requests">Manage MSRTC Requests</Link>
             </Button>
           </CardContent>
         </Card>
