@@ -15,6 +15,7 @@
  * - /users/{userId}/bookings/{bookingId}: Stores booking information, secured by user ownership.
  * - /payments/{paymentId}: Stores payment information, secured by lookup via booking.
  * - /bookingRequests/{requestId}: Stores user-submitted booking requests.
+ * - /msrtcBookings/{bookingId}: Stores user-submitted MSRTC group booking requests.
  *
  * Key Security Decisions:
  * - User data is private and only accessible to the user themselves.
@@ -182,6 +183,19 @@ service cloud.firestore {
       allow read, list: if isOperator() || isOwner(resource.data.userId) || isAdmin();
       allow update: if isOperator() || isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin(); // Requests should not be deleted, but marked as cancelled/rejected.
+    }
+
+    /**
+     * @description Rules for MSRTC group booking requests.
+     * @path /msrtcBookings/{bookingId}
+     * @allow (create) Any authenticated user can create a request for themselves.
+     * @allow (read, list) Admins can read/list all MSRTC booking requests.
+     * @principle Allows users to submit MSRTC requests and admins to view them.
+     */
+    match /msrtcBookings/{bookingId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read, list: if isAdmin() || isOwner(resource.data.userId);
+      allow update, delete: if isAdmin();
     }
   }
 }

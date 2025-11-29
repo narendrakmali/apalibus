@@ -21,6 +21,10 @@ import { useJsApiLoader } from '@react-google-maps/api';
 import { useCurrentLocation } from '@/hooks/use-current-location';
 import { Combobox } from '@/components/ui/combobox';
 import { loadDepots, calculateStage, type Depot } from '@/lib/stageCalculator';
+import { useAuth, useFirestore } from '@/firebase';
+import { signInAnonymously } from 'firebase/auth';
+import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 interface Passenger {
   name: string;
@@ -66,7 +70,13 @@ export default function MsrtcBookingPage() {
   const [uploadMode, setUploadMode] = useState<'manual' | 'file'>('manual');
   const [passengerFile, setPassengerFile] = useState<File | null>(null);
 
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const router = useRouter();
+
 
   // New state for passenger counts and fare
   const [numPassengers, setNumPassengers] = useState<number>(0);
@@ -162,24 +172,83 @@ export default function MsrtcBookingPage() {
     setPassengers(newPassengers);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const generateAlphanumericId = (length: number): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `MSRTC-${result}`;
+  }
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      organizerName,
-      contactNumber,
-      email,
-      travelDate,
-      origin,
-      destination,
-      busType,
-      purpose,
-      numPassengers,
-      numConcession,
-      estimatedFare,
-      passengers,
-      passengerFile
-    });
-    setIsSubmitted(true);
+    setError(null);
+
+    if (!origin || !destination || !busType || !travelDate || numPassengers <= 0) {
+        setError("Please fill out all required travel details.");
+        return;
+    }
+    if (!organizerName || !contactNumber || !email) {
+        setError("Please provide all organizer contact details.");
+        return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+        let user = auth.currentUser;
+        if (!user) {
+            const userCredential = await signInAnonymously(auth);
+            user = userCredential.user;
+        }
+        
+        if (!user) {
+            throw new Error("Could not create an anonymous user.");
+        }
+
+        const bookingId = generateAlphanumericId(8);
+        const docRef = doc(firestore, "msrtcBookings", bookingId);
+
+        // We need to remove the File object before saving to Firestore
+        const serializablePassengers = passengers.map(p => ({
+            name: p.name,
+            age: p.age,
+            gender: p.gender,
+        }));
+
+        const bookingData = {
+            id: bookingId,
+            userId: user.uid,
+            organizerName,
+            contactNumber,
+            email,
+            travelDate,
+            origin,
+            destination,
+            busType,
+            purpose,
+            numPassengers,
+            numConcession,
+            estimatedFare,
+            passengers: uploadMode === 'manual' ? serializablePassengers : [], // Store passenger list if entered manually
+            status: "pending",
+            createdAt: serverTimestamp(),
+        };
+
+        await setDoc(docRef, bookingData);
+        
+        // TODO: In a real app, handle passengerFile upload to Firebase Storage if it exists.
+        
+        router.push(`/request-status/${bookingId}?msrtc=true`);
+
+    } catch (err: any) {
+        console.error("Error creating MSRTC booking request:", err);
+        setError(`Failed to submit request: ${err.message}`);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const handleDownloadPdf = () => {
@@ -231,40 +300,6 @@ export default function MsrtcBookingPage() {
       value: depot.name.toLowerCase(),
       label: depot.name
   }));
-  
-  if (isSubmitted) {
-    return (
-        <div className="container mx-auto py-12 px-4 md:px-6">
-            <Card className="max-w-2xl mx-auto text-center">
-                <CardHeader>
-                    <CardTitle className="text-2xl font-display">Request Submitted Successfully!</CardTitle>
-                    <CardDescription>Your group booking request has been received. You will be contacted shortly with a confirmation and seat allocation details.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        <p className="font-semibold">Here is a summary of your request:</p>
-                        <ul className="text-sm text-muted-foreground list-disc list-inside text-left mx-auto max-w-sm">
-                            <li><strong>Organizer:</strong> {organizerName}</li>
-                            <li><strong>Route:</strong> {depotOptions.find(d => d.value === origin)?.label} to {depotOptions.find(d => d.value === destination)?.label}</li>
-                            <li><strong>Date:</strong> {travelDate ? format(travelDate, "PPP") : 'Not set'}</li>
-                            <li><strong>Passengers:</strong> {numPassengers} ({numConcession} with concession)</li>
-                            <li><strong>Estimated Fare:</strong> {estimatedFare ? `₹${estimatedFare.toLocaleString()}` : 'N/A'}</li>
-                        </ul>
-                        <div className="flex gap-4 justify-center pt-4">
-                            <Button onClick={handleDownloadPdf}>
-                                <FileDown className="mr-2 h-4 w-4" />
-                                Download Request Summary PDF
-                            </Button>
-                             <Button variant="outline" onClick={() => setIsSubmitted(false)}>
-                                Make a New Request
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
-  }
 
 
   return (
@@ -472,15 +507,19 @@ export default function MsrtcBookingPage() {
                         </div>
                         <div className="flex justify-between items-center text-xl font-bold pt-2 border-t mt-2">
                              <span className="flex items-center gap-2"><Ticket className="w-5 h-5"/>Estimated Total Fare</span>
-                             <span>₹{estimatedFare.toLocaleString()}</span>
+                             <span>{estimatedFare.toLocaleString()}</span>
                         </div>
                     </div>
                      <p className="text-xs text-muted-foreground pt-4 text-center">This is an estimate for an ordinary bus and may vary. Night charges may be applied separately.</p>
                 </div>
             )}
             
+            {error && <p className="text-center text-sm text-destructive py-2">{error}</p>}
+
             <div className="flex justify-end pt-4">
-                <Button type="submit" size="lg">Submit Request</Button>
+                <Button type="submit" size="lg" disabled={isSubmitting}>
+                    {isSubmitting ? "Submitting..." : "Submit Request"}
+                </Button>
             </div>
           </form>
         </CardContent>
@@ -488,3 +527,5 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
+
+    
