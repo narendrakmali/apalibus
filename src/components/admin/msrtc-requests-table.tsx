@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -43,8 +44,9 @@ export function MsrtcRequestsTable({ requests, onStatusChange, onViewDetails }: 
     const handleUpdateStatus = async (id: string, status: 'confirmed' | 'rejected') => {
         setUpdatingId(id);
         const requestRef = doc(firestore, 'msrtcBookings', id);
-        
-        updateDoc(requestRef, { status })
+        const updateData = { status };
+
+        updateDoc(requestRef, updateData)
             .then(() => {
                 onStatusChange();
             })
@@ -52,7 +54,7 @@ export function MsrtcRequestsTable({ requests, onStatusChange, onViewDetails }: 
                 const permissionError = new FirestorePermissionError({
                     path: requestRef.path,
                     operation: 'update',
-                    requestResourceData: { status },
+                    requestResourceData: updateData,
                 });
                 errorEmitter.emit('permission-error', permissionError);
             })

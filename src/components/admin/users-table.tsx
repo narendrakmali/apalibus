@@ -58,25 +58,21 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
         };
         const operatorRef = doc(firestore, "busOperators", selectedUser.id);
         
-        // Use the .catch() pattern for error handling
         setDoc(operatorRef, operatorData)
           .then(() => {
               setFeedbackMessage(`${selectedUser.name} has been successfully promoted to an operator.`);
               setPromoting(null);
               setSelectedUser(null);
+              // Optionally refresh data if needed
+              // onUserDeleted(); // This might be confusingly named, but it refetches
           })
           .catch((serverError) => {
-              // Create the rich, contextual error
               const permissionError = new FirestorePermissionError({
                 path: operatorRef.path,
                 operation: 'create',
                 requestResourceData: operatorData,
               } satisfies SecurityRuleContext);
-              
-              // Emit the error to be caught by the global listener
               errorEmitter.emit('permission-error', permissionError);
-
-              // Update UI state
               setFeedbackMessage(`Failed to promote user: Insufficient permissions.`);
               setPromoting(null);
               setSelectedUser(null);
@@ -94,7 +90,7 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
         deleteDoc(userRef)
             .then(() => {
                 setFeedbackMessage(`User ${selectedUser.name} deleted successfully.`);
-                onUserDeleted(); // Callback to refresh the data on the parent page
+                onUserDeleted();
                 setIsDeleteAlertOpen(false);
                 setSelectedUser(null);
             })
@@ -104,6 +100,7 @@ export function UsersTable({ users, onUserDeleted }: { users: User[], onUserDele
                     operation: 'delete',
                  } satisfies SecurityRuleContext);
                  errorEmitter.emit('permission-error', permissionError);
+                 setFeedbackMessage(`Failed to delete user: Insufficient permissions.`);
                  setIsDeleteAlertOpen(false);
                  setSelectedUser(null);
             });

@@ -36,6 +36,8 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { useFirestore } from "@/firebase";
 import { doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export function OperatorsTable({ operators, onOperatorDeleted }: { operators: BusOperator[], onOperatorDeleted: () => void }) {
     const firestore = useFirestore();
@@ -61,34 +63,47 @@ export function OperatorsTable({ operators, onOperatorDeleted }: { operators: Bu
 
     const handleDeleteOperator = async () => {
         if (!selectedOperator) return;
-        try {
-            await deleteDoc(doc(firestore, "busOperators", selectedOperator.id));
-            console.log(`Operator ${selectedOperator.id} deleted successfully.`);
-            onOperatorDeleted();
-        } catch (error) {
-            console.error("Error deleting operator:", error);
-            alert(`Failed to delete operator: ${(error as Error).message}`);
-        } finally {
-            setIsDeleteAlertOpen(false);
-            setSelectedOperator(null);
-        }
+        const operatorRef = doc(firestore, "busOperators", selectedOperator.id);
+        deleteDoc(operatorRef)
+            .then(() => {
+                console.log(`Operator ${selectedOperator.id} deleted successfully.`);
+                onOperatorDeleted();
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: operatorRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsDeleteAlertOpen(false);
+                setSelectedOperator(null);
+            });
     };
     
      const handleUpdateOperator = async () => {
         if (!selectedOperator || !editedOperator) return;
-        try {
-            const operatorRef = doc(firestore, "busOperators", selectedOperator.id);
-            await updateDoc(operatorRef, editedOperator);
-            console.log(`Operator ${selectedOperator.id} updated successfully.`);
-            onOperatorDeleted(); // Re-fetch data
-        } catch (error) {
-            console.error("Error updating operator:", error);
-            alert(`Failed to update operator: ${(error as Error).message}`);
-        } finally {
-            setIsEditDialogOpen(false);
-            setSelectedOperator(null);
-            setEditedOperator({});
-        }
+        const operatorRef = doc(firestore, "busOperators", selectedOperator.id);
+        const updateData = { ...editedOperator };
+        updateDoc(operatorRef, updateData)
+            .then(() => {
+                console.log(`Operator ${selectedOperator.id} updated successfully.`);
+                onOperatorDeleted(); // Re-fetch data
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: operatorRef.path,
+                    operation: 'update',
+                    requestResourceData: updateData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsEditDialogOpen(false);
+                setSelectedOperator(null);
+                setEditedOperator({});
+            });
     };
 
     if (operators.length === 0) {
