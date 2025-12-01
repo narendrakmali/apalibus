@@ -74,8 +74,7 @@ function TrackStatusContent() {
       // Query private booking requests
       const privateRequestsQuery = query(
         collection(firestore, "bookingRequests"), 
-        where("contact.mobile", "==", mobile),
-        orderBy("createdAt", "desc")
+        where("contact.mobile", "==", mobile)
       );
       const privateRequestsSnapshot = await getDocs(privateRequestsQuery);
       privateRequestsSnapshot.forEach(doc => {
@@ -85,19 +84,18 @@ function TrackStatusContent() {
       // Query MSRTC booking requests
       const msrtcRequestsQuery = query(
         collection(firestore, "msrtcBookings"), 
-        where("contactNumber", "==", mobile),
-        orderBy("createdAt", "desc")
+        where("contactNumber", "==", mobile)
       );
       const msrtcRequestsSnapshot = await getDocs(msrtcRequestsQuery);
       msrtcRequestsSnapshot.forEach(doc => {
         allRequests.push({ ...doc.data() as MsrtcBooking, type: 'MSRTC' });
       });
       
-      // Sort all requests by creation date
+      // Sort all requests by creation date on the client
       allRequests.sort((a, b) => {
-        const dateA = (a.createdAt as Timestamp)?.seconds || 0;
-        const dateB = (b.createdAt as Timestamp)?.seconds || 0;
-        return dateB - dateA;
+        const dateA = (a.createdAt as Timestamp)?.toDate ? (a.createdAt as Timestamp).toDate() : new Date(a.createdAt as string);
+        const dateB = (b.createdAt as Timestamp)?.toDate ? (b.createdAt as Timestamp).toDate() : new Date(b.createdAt as string);
+        return dateB.getTime() - dateA.getTime();
       });
 
       setRequests(allRequests);
