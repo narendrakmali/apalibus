@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useEffect, useState, Suspense, useMemo } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,9 @@ import type { BookingRequest, MsrtcBooking, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth, useFirestore } from "@/firebase";
+import { collection, query, where, getDocs, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 type CombinedRequest = (BookingRequest | MsrtcBooking) & { type: 'Private' | 'MSRTC' };
 
@@ -39,7 +43,6 @@ const StatusIndicator = ({ status }: { status: string }) => {
 
 function formatDate(date: any) {
     if (!date) return 'N/A';
-    // Handle both Firestore Timestamps and string dates
     const d = date.toDate ? date.toDate() : new Date(date);
     if (isNaN(d.getTime())) return 'Invalid Date';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -48,46 +51,96 @@ function formatDate(date: any) {
 
 function TrackStatusContent() {
   const searchParams = useSearchParams();
+  const firestore = useFirestore();
+  const auth = useAuth();
+  const [user, authLoading] = useAuthState(auth);
+
   const [mobileNumber, setMobileNumber] = useState('');
+  const [searchedMobile, setSearchedMobile] = useState('');
   
-  const [data, setData] = useState<{ foundUsers: User[], foundRequests: CombinedRequest[] } | null>(null);
+  const [foundUsers, setFoundUsers] = useState<User[]>([]);
+  const [foundRequests, setFoundRequests] = useState<CombinedRequest[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [queryError, setQueryError] = useState<string | null>(null);
 
-  const handleSearch = async (mobile: string) => {
+  const handleSearch = useCallback((mobile: string) => {
     if (!mobile) {
       alert("Please enter a mobile number.");
       return;
     }
     setDataLoading(true);
     setQueryError(null);
-    setData(null);
+    setFoundUsers([]);
+    setFoundRequests([]);
+    setSearchedMobile(mobile);
+  }, []);
 
-    try {
-        const response = await fetch(`/api/track-status?mobile=${mobile}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch status.');
-        }
-        const result = await response.json();
-        setData(result);
-    } catch (error: any) {
-        setQueryError(error.message);
-    } finally {
-        setDataLoading(false);
-    }
-  };
-  
   useEffect(() => {
     const mobileFromUrl = searchParams.get('mobile');
     if (mobileFromUrl) {
       setMobileNumber(mobileFromUrl);
-      handleSearch(mobileFromUrl);
+      setSearchedMobile(mobileFromUrl);
     }
   }, [searchParams]);
 
-  const { foundUsers = [], foundRequests = [] } = data || {};
-  const noResults = !dataLoading && data && foundUsers.length === 0 && foundRequests.length === 0;
+  useEffect(() => {
+    if (!searchedMobile || !user) return; // Wait for auth and a search term
+
+    setDataLoading(true);
+    const unsubscribes: Unsubscribe[] = [];
+
+    const queries = [
+        { col: 'users', field: 'mobileNumber', type: 'User' },
+        { col: 'bookingRequests', field: 'contact.mobile', type: 'Private' },
+        { col: 'msrtcBookings', field: 'contactNumber', type: 'MSRTC' }
+    ];
+
+    let activeQueries = queries.length;
+
+    const onQueryDone = () => {
+        activeQueries--;
+        if (activeQueries === 0) {
+            setDataLoading(false);
+        }
+    };
+
+    queries.forEach(({ col, field, type }) => {
+        const q = query(collection(firestore, col), where(field, "==", searchedMobile));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (type === 'User') {
+                const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
+                setFoundUsers(usersData);
+            } else {
+                const requestsData = snapshot.docs.map(doc => ({ ...doc.data(), type, id: doc.id })) as CombinedRequest[];
+                setFoundRequests(prev => {
+                    // Filter out old requests of the same type before adding new ones
+                    const otherRequests = prev.filter(r => r.type !== type);
+                    return [...otherRequests, ...requestsData].sort((a, b) => {
+                         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+                         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+                         return dateB.getTime() - dateA.getTime();
+                    });
+                });
+            }
+             if (!snapshot.metadata.fromCache) {
+                onQueryDone();
+            }
+        }, (error) => {
+            console.error(`Error fetching ${col}:`, error);
+            setQueryError(`Failed to fetch data from ${col}. Check permissions.`);
+            onQueryDone();
+        });
+        unsubscribes.push(unsubscribe);
+    });
+
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
+  }, [searchedMobile, firestore, user]);
+
+  const isLoading = authLoading || dataLoading;
+  const noResults = !isLoading && searchedMobile && foundUsers.length === 0 && foundRequests.length === 0;
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
@@ -109,21 +162,21 @@ function TrackStatusContent() {
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch(mobileNumber)}
                 />
             </div>
-            <Button onClick={() => handleSearch(mobileNumber)} disabled={dataLoading} className="self-end">
-                {dataLoading ? "Searching..." : "Track Request"}
+            <Button onClick={() => handleSearch(mobileNumber)} disabled={isLoading} className="self-end">
+                {isLoading ? "Searching..." : "Track Request"}
             </Button>
           </div>
           
           {queryError && <p className="text-destructive text-center mb-4">Error: {queryError}</p>}
           
           <div className="space-y-6">
-            {dataLoading && (
+            {isLoading && (
                  Array.from({ length: 2 }).map((_, i) => (
                     <Card key={i}><CardContent className="pt-6 space-y-3"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-3/4" /><Skeleton className="h-5 w-1/2" /></CardContent></Card>
                  ))
             )}
 
-            {!dataLoading && (foundUsers.length > 0 || foundRequests.length > 0) && (
+            {!isLoading && (foundUsers.length > 0 || foundRequests.length > 0) && (
                 <h3 className="text-lg font-semibold text-center">Found results for {mobileNumber}</h3>
             )}
             

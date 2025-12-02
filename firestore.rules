@@ -20,7 +20,7 @@
  * Key Security Decisions:
  * - User data is private and only accessible to the user themselves.
  * - Bus operator data is private and only accessible to the operator themselves.
- * - Listing of users is explicitly denied.
+ * - Listing of users is explicitly denied unless querying by mobile number.
  * - Payments can be accessed only by users with a booking associated with that payment.
  * - Data validation is relaxed in this prototype to allow for rapid iteration. Only authorization-critical
  *   data is validated (e.g., user IDs on create operations).
@@ -97,7 +97,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin(); // Listing users is permitted for admins.
+      allow list: if isAdmin() || (isSignedIn() && request.query.where.mobileNumber == request.auth.token.phone_number);
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if (isExistingOwner(userId) && request.resource.data.id == resource.data.id) || isAdmin(); // Enforce immutability of user ID.
       allow delete: if isExistingOwner(userId) || isAdmin();
@@ -151,7 +151,7 @@ service cloud.firestore {
     match /users/{userId}/bookings/{bookingId} {
       allow get, list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && request.resource.data.userId == userId && request.resource.data.id == bookingId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.userId == userId || isAdmin(); //Enforce immutability of userId
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.userId == userId || isAdmin(); //Enforce immability of userId
       allow delete: if isExistingOwner(userId) || isAdmin();
     }
 
@@ -180,7 +180,8 @@ service cloud.firestore {
      */
     match /bookingRequests/{requestId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow read, list: if isOperator() || isOwner(resource.data.userId) || isAdmin();
+      allow get: if isOperator() || isOwner(resource.data.userId) || isAdmin();
+      allow list: if isOperator() || isAdmin() || (isSignedIn() && request.query.where['contact.mobile'] == request.auth.token.phone_number);
       allow update: if isOperator() || isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin(); // Requests should not be deleted, but marked as cancelled/rejected.
     }
@@ -195,7 +196,7 @@ service cloud.firestore {
     match /msrtcBookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow get: if isAdmin() || isOwner(resource.data.userId);
-      allow list: if isAdmin() || (isSignedIn() && request.query.where.userId == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && request.query.where.contactNumber == request.auth.token.phone_number);
       allow update, delete: if isAdmin();
     }
   }
