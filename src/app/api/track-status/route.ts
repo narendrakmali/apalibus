@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import { initializeApp, getApps, App } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { credential } from 'firebase-admin';
 
 let adminApp: App;
 // Initialize Firebase Admin SDK
@@ -32,12 +31,12 @@ export async function GET(request: Request) {
         // --- Fetch Private Booking Requests ---
         const privateRequestsQuery = db.collection('bookingRequests').where('contact.mobile', '==', mobile);
         const privateRequestsSnapshot = await privateRequestsQuery.get();
-        const foundPrivateRequests = privateRequestsSnapshot.docs.map(doc => ({ ...doc.data(), type: 'Private' }));
+        const foundPrivateRequests = privateRequestsSnapshot.docs.map(doc => ({ ...doc.data(), type: 'Private', id: doc.id }));
 
         // --- Fetch MSRTC Booking Requests ---
         const msrtcRequestsQuery = db.collection('msrtcBookings').where('contactNumber', '==', mobile);
         const msrtcRequestsSnapshot = await msrtcRequestsQuery.get();
-        const foundMsrtcRequests = msrtcRequestsSnapshot.docs.map(doc => ({ ...doc.data(), type: 'MSRTC' }));
+        const foundMsrtcRequests = msrtcRequestsSnapshot.docs.map(doc => ({ ...doc.data(), type: 'MSRTC', id: doc.id }));
 
         const allRequests = [...foundPrivateRequests, ...foundMsrtcRequests];
         // Sort all requests by creation date, descending
