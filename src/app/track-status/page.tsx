@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, Timestamp, signInAnonymously } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { signInAnonymously } from "firebase/auth";
 import type { BookingRequest, MsrtcBooking } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -72,16 +73,13 @@ function TrackStatusContent() {
     setSearchedMobileNumber(mobile);
 
     try {
-        // Ensure user is authenticated (even anonymously)
-        let currentUser = auth.currentUser;
-        if (!currentUser) {
-            await signInAnonymously(auth);
-            // This might not give us the user immediately, but the query should be done as an authenticated user
-        }
+      let currentUser = auth.currentUser;
+      if (!currentUser) {
+        await signInAnonymously(auth);
+      }
 
       const allRequests: CombinedRequest[] = [];
       
-      // Query private booking requests
       const privateRequestsQuery = query(
         collection(firestore, "bookingRequests"), 
         where("contact.mobile", "==", mobile)
@@ -91,7 +89,6 @@ function TrackStatusContent() {
         allRequests.push({ ...doc.data() as BookingRequest, type: 'Private' });
       });
 
-      // Query MSRTC booking requests
       const msrtcRequestsQuery = query(
         collection(firestore, "msrtcBookings"), 
         where("contactNumber", "==", mobile)
@@ -101,11 +98,10 @@ function TrackStatusContent() {
         allRequests.push({ ...doc.data() as MsrtcBooking, type: 'MSRTC' });
       });
       
-      // Sort all requests by creation date on the client
       allRequests.sort((a, b) => {
-        const dateA = (a.createdAt as Timestamp)?.toDate ? (a.createdAt as Timestamp).toDate() : new Date(a.createdAt as string || 0);
-        const dateB = (b.createdAt as Timestamp)?.toDate ? (b.createdAt as Timestamp).toDate() : new Date(b.createdAt as string || 0);
-        return dateB.getTime() - dateA.getTime();
+        const dateAValue = (a.createdAt as Timestamp)?.toDate ? (a.createdAt as Timestamp).toMillis() : new Date(a.createdAt as string || 0).getTime();
+        const dateBValue = (b.createdAt as Timestamp)?.toDate ? (b.createdAt as Timestamp).toMillis() : new Date(b.createdAt as string || 0).getTime();
+        return dateBValue - dateAValue;
       });
 
       setRequests(allRequests);
@@ -122,11 +118,11 @@ function TrackStatusContent() {
     const mobileFromUrl = searchParams.get('mobile');
     if (mobileFromUrl) {
       setMobileNumber(mobileFromUrl);
-      if(user) { // Only search if we have a user object (even anonymous)
+      if(user) { 
         handleSearch(mobileFromUrl);
       }
     }
-  }, [searchParams, user]); // Re-run when user object becomes available
+  }, [searchParams, user]);
 
   const isLoadingState = loading || authLoading;
 
@@ -199,7 +195,7 @@ function TrackStatusContent() {
                                 </span>
                             </div>
                              <div className="flex items-center">
-                                <Users className="h-4 w-4 mr-3 text-muted-foreground" />
+                                <Users className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
                                 <span className="font-medium">Passengers:</span>
                                 <span className="ml-2 text-muted-foreground">{'seats' in request ? request.seats : request.numPassengers}</span>
                             </div>
