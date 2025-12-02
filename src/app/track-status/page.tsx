@@ -7,11 +7,11 @@ import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle } from "lucide-react";
+import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle, User as UserIcon } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
-import type { BookingRequest, MsrtcBooking } from "@/lib/types";
+import type { BookingRequest, MsrtcBooking, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,6 +56,7 @@ function TrackStatusContent() {
   const [searchedMobileNumber, setSearchedMobileNumber] = useState('');
   
   const [requests, setRequests] = useState<CombinedRequest[]>([]);
+  const [foundUsers, setFoundUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +72,7 @@ function TrackStatusContent() {
     setLoading(true);
     setError(null);
     setRequests([]);
+    setFoundUsers([]);
     setSearchedMobileNumber(mobile);
 
     try {
@@ -84,6 +86,16 @@ function TrackStatusContent() {
         throw new Error("Authentication failed. Please try again.");
       }
 
+      // 1. Fetch User profiles
+      const usersQuery = query(
+        collection(firestore, "users"),
+        where("mobileNumber", "==", mobile)
+      );
+      const usersSnapshot = await getDocs(usersQuery);
+      const usersData = usersSnapshot.docs.map(doc => doc.data() as User);
+      setFoundUsers(usersData);
+
+      // 2. Fetch Booking Requests
       const allRequests: CombinedRequest[] = [];
       
       const privateRequestsQuery = query(
@@ -131,6 +143,7 @@ function TrackStatusContent() {
   }, [searchParams, user]);
 
   const isLoadingState = loading || authLoading;
+  const noResults = !isLoadingState && searchedMobileNumber && requests.length === 0 && foundUsers.length === 0;
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
@@ -165,62 +178,76 @@ function TrackStatusContent() {
                  ))
             )}
 
-            {!isLoadingState && requests.length > 0 && (
-                <>
-                    <h3 className="text-lg font-semibold text-center">Found {requests.length} request(s) for {searchedMobileNumber}</h3>
-                    {requests.map(request => (
-                        <div key={request.id}>
-                            <Card className="bg-secondary/30">
-                                <CardHeader className="flex flex-row justify-between items-start">
-                                    <div>
-                                        <CardTitle className="text-lg">{request.type} Booking</CardTitle>
-                                        <CardDescription className="font-mono text-xs pt-1">{request.id}</CardDescription>
-                                    </div>
-                                    <StatusIndicator status={request.status} />
-                                </CardHeader>
-                                <CardContent className="space-y-3 text-sm">
-                                    <div className="flex items-center">
-                                        <MapPin className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-                                        <span className="font-medium">Route:</span>
-                                        <span className="ml-2 text-muted-foreground truncate">
-                                            {'fromLocation' in request ? request.fromLocation.address : request.origin}
-                                            <ArrowRight className="inline h-3 w-3 mx-1" />
-                                            {'toLocation' in request ? request.toLocation.address : request.destination}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Calendar className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-                                        <span className="font-medium">Date:</span>
-                                        <span className="ml-2 text-muted-foreground">
-                                            {formatDate('journeyDate' in request ? request.journeyDate : request.travelDate)}
-                                            {'returnDate' in request && request.returnDate &&
-                                            <>
-                                                <ArrowRight className="inline h-3 w-3 mx-1" />
-                                                {formatDate(request.returnDate)}
-                                            </>
-                                            }
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Users className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-                                        <span className="font-medium">Passengers:</span>
-                                        <span className="ml-2 text-muted-foreground">{'seats' in request ? request.seats : request.numPassengers}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Bus className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-                                        <span className="font-medium">Bus Type:</span>
-                                        <span className="ml-2 text-muted-foreground">{request.busType}</span>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    ))}
-                </>
+            {!isLoadingState && (foundUsers.length > 0 || requests.length > 0) && (
+                <h3 className="text-lg font-semibold text-center">Found results for {searchedMobileNumber}</h3>
             )}
 
-            {!isLoadingState && searchedMobileNumber && requests.length === 0 && (
+            {foundUsers.map(user => (
+                <Card key={user.id} className="bg-blue-50">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-blue-800">
+                            <UserIcon /> User Profile
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                        <div><span className="font-semibold">Name:</span> {user.name}</div>
+                        <div><span className="font-semibold">Email:</span> {user.email}</div>
+                        <div><span className="font-semibold">Mobile:</span> {user.mobileNumber}</div>
+                    </CardContent>
+                </Card>
+            ))}
+
+            {requests.map(request => (
+                <div key={request.id}>
+                    <Card className="bg-secondary/30">
+                        <CardHeader className="flex flex-row justify-between items-start">
+                            <div>
+                                <CardTitle className="text-lg">{request.type} Booking</CardTitle>
+                                <CardDescription className="font-mono text-xs pt-1">{request.id}</CardDescription>
+                            </div>
+                            <StatusIndicator status={request.status} />
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm">
+                            <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                <span className="font-medium">Route:</span>
+                                <span className="ml-2 text-muted-foreground truncate">
+                                    {'fromLocation' in request ? request.fromLocation.address : request.origin}
+                                    <ArrowRight className="inline h-3 w-3 mx-1" />
+                                    {'toLocation' in request ? request.toLocation.address : request.destination}
+                                </span>
+                            </div>
+                            <div className="flex items-center">
+                                <Calendar className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                <span className="font-medium">Date:</span>
+                                <span className="ml-2 text-muted-foreground">
+                                    {formatDate('journeyDate' in request ? request.journeyDate : request.travelDate)}
+                                    {'returnDate' in request && request.returnDate &&
+                                    <>
+                                        <ArrowRight className="inline h-3 w-3 mx-1" />
+                                        {formatDate(request.returnDate)}
+                                    </>
+                                    }
+                                </span>
+                            </div>
+                            <div className="flex items-center">
+                                <Users className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                <span className="font-medium">Passengers:</span>
+                                <span className="ml-2 text-muted-foreground">{'seats' in request ? request.seats : request.numPassengers}</span>
+                            </div>
+                            <div className="flex items-center">
+                                <Bus className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                <span className="font-medium">Bus Type:</span>
+                                <span className="ml-2 text-muted-foreground">{request.busType}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            ))}
+
+            {noResults && (
                 <p className="text-center text-muted-foreground py-8">
-                    No requests found for the mobile number: <span className="font-semibold">{searchedMobileNumber}</span>
+                    No users or requests found for the mobile number: <span className="font-semibold">{searchedMobileNumber}</span>
                 </p>
             )}
           </div>
