@@ -19,7 +19,6 @@ export default function Header() {
       { href: "/operator-register", label: "Operator Register"},
       { href: "/operator-login", label: "Operator Login"},
       { href: "/admin/login", label: "Admin Login"},
-      { href: "/msrtc-admin/login", label: "MSRTC Admin"},
   ]
 
   return (
