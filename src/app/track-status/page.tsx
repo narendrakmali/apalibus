@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle, User as UserIcon } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
-import { signInAnonymously } from "firebase/auth";
+import { useCollection } from 'react-firebase-hooks/firestore';
 import type { BookingRequest, MsrtcBooking, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -55,95 +54,61 @@ function TrackStatusContent() {
   const [mobileNumber, setMobileNumber] = useState('');
   const [searchedMobileNumber, setSearchedMobileNumber] = useState('');
   
-  const [requests, setRequests] = useState<CombinedRequest[]>([]);
-  const [foundUsers, setFoundUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const firestore = useFirestore();
-  const auth = useAuth();
-  const [user, authLoading] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(useAuth());
 
-  const handleSearch = async (mobile: string) => {
+  // Use react-firebase-hooks to get live data
+  const [privateRequestsCol, privateLoading, privateError] = useCollection(collection(firestore, 'bookingRequests'));
+  const [msrtcRequestsCol, msrtcLoading, msrtcError] = useCollection(collection(firestore, 'msrtcBookings'));
+  const [usersCol, usersLoading, usersError] = useCollection(collection(firestore, 'users'));
+  
+  const handleSearch = (mobile: string) => {
     if (!mobile) {
-      setError("Please enter a mobile number.");
+      alert("Please enter a mobile number.");
       return;
     }
-    setLoading(true);
-    setError(null);
-    setRequests([]);
-    setFoundUsers([]);
     setSearchedMobileNumber(mobile);
+  };
+  
+  useEffect(() => {
+    const mobileFromUrl = searchParams.get('mobile');
+    if (mobileFromUrl) {
+      setMobileNumber(mobileFromUrl);
+      setSearchedMobileNumber(mobileFromUrl);
+    }
+  }, [searchParams]);
 
-    try {
-      let currentUser = auth.currentUser;
-      if (!currentUser) {
-        await signInAnonymously(auth);
-        currentUser = auth.currentUser;
-      }
-      
-      if (!currentUser) {
-        throw new Error("Authentication failed. Please try again.");
-      }
+  const filteredData = useMemo(() => {
+    if (!searchedMobileNumber) return { foundUsers: [], foundRequests: [] };
 
-      // 1. Fetch User profiles
-      const usersQuery = query(
-        collection(firestore, "users"),
-        where("mobileNumber", "==", mobile)
-      );
-      const usersSnapshot = await getDocs(usersQuery);
-      const usersData = usersSnapshot.docs.map(doc => doc.data() as User);
-      setFoundUsers(usersData);
+    const usersData = usersCol?.docs
+      .map(doc => doc.data() as User)
+      .filter(u => u.mobileNumber === searchedMobileNumber) || [];
 
-      // 2. Fetch Booking Requests
-      const allRequests: CombinedRequest[] = [];
-      
-      const privateRequestsQuery = query(
-        collection(firestore, "bookingRequests"), 
-        where("contact.mobile", "==", mobile)
-      );
-      const privateRequestsSnapshot = await getDocs(privateRequestsQuery);
-      privateRequestsSnapshot.forEach(doc => {
-        allRequests.push({ ...doc.data() as BookingRequest, type: 'Private' });
-      });
+    const privateData = privateRequestsCol?.docs
+      .map(doc => ({ ...doc.data() as BookingRequest, type: 'Private' as const }))
+      .filter(req => req.contact?.mobile === searchedMobileNumber) || [];
 
-      const msrtcRequestsQuery = query(
-        collection(firestore, "msrtcBookings"), 
-        where("contactNumber", "==", mobile)
-      );
-      const msrtcRequestsSnapshot = await getDocs(msrtcRequestsQuery);
-      msrtcRequestsSnapshot.forEach(doc => {
-        allRequests.push({ ...doc.data() as MsrtcBooking, type: 'MSRTC' });
-      });
-      
-      allRequests.sort((a, b) => {
+    const msrtcData = msrtcRequestsCol?.docs
+      .map(doc => ({ ...doc.data() as MsrtcBooking, type: 'MSRTC' as const }))
+      .filter(req => req.contactNumber === searchedMobileNumber) || [];
+
+    const allRequests: CombinedRequest[] = [...privateData, ...msrtcData];
+
+    allRequests.sort((a, b) => {
         const dateAValue = (a.createdAt as Timestamp)?.toDate ? (a.createdAt as Timestamp).toMillis() : new Date(a.createdAt as string || 0).getTime();
         const dateBValue = (b.createdAt as Timestamp)?.toDate ? (b.createdAt as Timestamp).toMillis() : new Date(b.createdAt as string || 0).getTime();
         return dateBValue - dateAValue;
       });
 
-      setRequests(allRequests);
-      
-    } catch (err) {
-      console.error("Error fetching requests:", err);
-      setError("Failed to fetch request details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    return { foundUsers: usersData, foundRequests: allRequests };
 
-  useEffect(() => {
-    const mobileFromUrl = searchParams.get('mobile');
-    if (mobileFromUrl) {
-      setMobileNumber(mobileFromUrl);
-      if(user) { 
-        handleSearch(mobileFromUrl);
-      }
-    }
-  }, [searchParams, user]);
+  }, [searchedMobileNumber, usersCol, privateRequestsCol, msrtcRequestsCol]);
 
-  const isLoadingState = loading || authLoading;
-  const noResults = !isLoadingState && searchedMobileNumber && requests.length === 0 && foundUsers.length === 0;
+  const { foundUsers, foundRequests } = filteredData;
+  const dataLoading = authLoading || privateLoading || msrtcLoading || usersLoading;
+  const queryError = privateError || msrtcError || usersError;
+  const noResults = !dataLoading && searchedMobileNumber && foundUsers.length === 0 && foundRequests.length === 0;
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
@@ -162,42 +127,45 @@ function TrackStatusContent() {
                     placeholder="Enter the mobile number used for booking"
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(mobileNumber)}
                 />
             </div>
-            <Button onClick={() => handleSearch(mobileNumber)} disabled={isLoadingState} className="self-end">
-                {isLoadingState ? "Searching..." : "Track Request"}
+            <Button onClick={() => handleSearch(mobileNumber)} disabled={dataLoading} className="self-end">
+                {dataLoading ? "Searching..." : "Track Request"}
             </Button>
           </div>
           
-          {error && <p className="text-destructive text-center mb-4">{error}</p>}
+          {queryError && <p className="text-destructive text-center mb-4">Error: {queryError.message}</p>}
           
           <div className="space-y-6">
-            {isLoadingState && (
+            {dataLoading && searchedMobileNumber && (
                  Array.from({ length: 2 }).map((_, i) => (
                     <Card key={i}><CardContent className="pt-6 space-y-3"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-3/4" /><Skeleton className="h-5 w-1/2" /></CardContent></Card>
                  ))
             )}
 
-            {!isLoadingState && (foundUsers.length > 0 || requests.length > 0) && (
+            {!dataLoading && (foundUsers.length > 0 || foundRequests.length > 0) && (
                 <h3 className="text-lg font-semibold text-center">Found results for {searchedMobileNumber}</h3>
             )}
 
             {foundUsers.map(user => (
-                <Card key={user.id} className="bg-blue-50">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-blue-800">
-                            <UserIcon /> User Profile
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                        <div><span className="font-semibold">Name:</span> {user.name}</div>
-                        <div><span className="font-semibold">Email:</span> {user.email}</div>
-                        <div><span className="font-semibold">Mobile:</span> {user.mobileNumber}</div>
-                    </CardContent>
-                </Card>
+                <div key={user.id}>
+                    <Card className="bg-blue-50">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-blue-800">
+                                <UserIcon /> User Profile
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                            <div><span className="font-semibold">Name:</span> {user.name}</div>
+                            <div><span className="font-semibold">Email:</span> {user.email}</div>
+                            <div><span className="font-semibold">Mobile:</span> {user.mobileNumber}</div>
+                        </CardContent>
+                    </Card>
+                </div>
             ))}
 
-            {requests.map(request => (
+            {foundRequests.map(request => (
                 <div key={request.id}>
                     <Card className="bg-secondary/30">
                         <CardHeader className="flex flex-row justify-between items-start">
