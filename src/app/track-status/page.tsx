@@ -1,10 +1,12 @@
 
+
 'use client';
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
@@ -12,7 +14,6 @@ import { signInAnonymously } from "firebase/auth";
 import type { BookingRequest, MsrtcBooking } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuthState } from "react-firebase-hooks/auth";
 
@@ -76,6 +77,11 @@ function TrackStatusContent() {
       let currentUser = auth.currentUser;
       if (!currentUser) {
         await signInAnonymously(auth);
+        currentUser = auth.currentUser;
+      }
+      
+      if (!currentUser) {
+        throw new Error("Authentication failed. Please try again.");
       }
 
       const allRequests: CombinedRequest[] = [];
@@ -161,52 +167,54 @@ function TrackStatusContent() {
 
             {!isLoadingState && requests.length > 0 && (
                 <>
-                <h3 className="text-lg font-semibold text-center">Found {requests.length} request(s) for {searchedMobileNumber}</h3>
-                {requests.map(request => (
-                    <Card key={request.id} className="bg-secondary/30">
-                        <CardHeader className="flex flex-row justify-between items-start">
-                            <div>
-                                <CardTitle className="text-lg">{request.type} Booking</CardTitle>
-                                <CardDescription className="font-mono text-xs pt-1">{request.id}</CardDescription>
-                            </div>
-                            <StatusIndicator status={request.status} />
-                        </CardHeader>
-                        <CardContent className="space-y-3 text-sm">
-                            <div className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-                                <span className="font-medium">Route:</span>
-                                <span className="ml-2 text-muted-foreground truncate">
-                                    {'fromLocation' in request ? request.fromLocation.address : request.origin}
-                                    <ArrowRight className="inline h-3 w-3 mx-1" />
-                                    {'toLocation' in request ? request.toLocation.address : request.destination}
-                                </span>
-                            </div>
-                             <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-                                <span className="font-medium">Date:</span>
-                                <span className="ml-2 text-muted-foreground">
-                                    {formatDate('journeyDate' in request ? request.journeyDate : request.travelDate)}
-                                    {'returnDate' in request && request.returnDate &&
-                                      <>
-                                        <ArrowRight className="inline h-3 w-3 mx-1" />
-                                        {formatDate(request.returnDate)}
-                                      </>
-                                    }
-                                </span>
-                            </div>
-                             <div className="flex items-center">
-                                <Users className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-                                <span className="font-medium">Passengers:</span>
-                                <span className="ml-2 text-muted-foreground">{'seats' in request ? request.seats : request.numPassengers}</span>
-                            </div>
-                             <div className="flex items-center">
-                                <Bus className="h-4 w-4 mr-3 text-muted-foreground" />
-                                <span className="font-medium">Bus Type:</span>
-                                <span className="ml-2 text-muted-foreground">{request.busType}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                    <h3 className="text-lg font-semibold text-center">Found {requests.length} request(s) for {searchedMobileNumber}</h3>
+                    {requests.map(request => (
+                        <div key={request.id}>
+                            <Card className="bg-secondary/30">
+                                <CardHeader className="flex flex-row justify-between items-start">
+                                    <div>
+                                        <CardTitle className="text-lg">{request.type} Booking</CardTitle>
+                                        <CardDescription className="font-mono text-xs pt-1">{request.id}</CardDescription>
+                                    </div>
+                                    <StatusIndicator status={request.status} />
+                                </CardHeader>
+                                <CardContent className="space-y-3 text-sm">
+                                    <div className="flex items-center">
+                                        <MapPin className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                        <span className="font-medium">Route:</span>
+                                        <span className="ml-2 text-muted-foreground truncate">
+                                            {'fromLocation' in request ? request.fromLocation.address : request.origin}
+                                            <ArrowRight className="inline h-3 w-3 mx-1" />
+                                            {'toLocation' in request ? request.toLocation.address : request.destination}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Calendar className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                        <span className="font-medium">Date:</span>
+                                        <span className="ml-2 text-muted-foreground">
+                                            {formatDate('journeyDate' in request ? request.journeyDate : request.travelDate)}
+                                            {'returnDate' in request && request.returnDate &&
+                                            <>
+                                                <ArrowRight className="inline h-3 w-3 mx-1" />
+                                                {formatDate(request.returnDate)}
+                                            </>
+                                            }
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Users className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                        <span className="font-medium">Passengers:</span>
+                                        <span className="ml-2 text-muted-foreground">{'seats' in request ? request.seats : request.numPassengers}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Bus className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                        <span className="font-medium">Bus Type:</span>
+                                        <span className="ml-2 text-muted-foreground">{request.busType}</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    ))}
                 </>
             )}
 
