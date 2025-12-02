@@ -6,13 +6,14 @@ import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle } from "lucide-react";
-import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, orderBy, Timestamp } from "firebase/firestore";
+import { useAuth, useFirestore } from '@/firebase';
+import { collection, query, where, getDocs, Timestamp, signInAnonymously } from "firebase/firestore";
 import type { BookingRequest, MsrtcBooking } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 type CombinedRequest = (BookingRequest | MsrtcBooking) & { type: 'Private' | 'MSRTC' };
 
@@ -57,6 +58,8 @@ function TrackStatusContent() {
   const [error, setError] = useState<string | null>(null);
 
   const firestore = useFirestore();
+  const auth = useAuth();
+  const [user, authLoading] = useAuthState(auth);
 
   const handleSearch = async (mobile: string) => {
     if (!mobile) {
@@ -69,6 +72,13 @@ function TrackStatusContent() {
     setSearchedMobileNumber(mobile);
 
     try {
+        // Ensure user is authenticated (even anonymously)
+        let currentUser = auth.currentUser;
+        if (!currentUser) {
+            await signInAnonymously(auth);
+            // This might not give us the user immediately, but the query should be done as an authenticated user
+        }
+
       const allRequests: CombinedRequest[] = [];
       
       // Query private booking requests
@@ -93,8 +103,8 @@ function TrackStatusContent() {
       
       // Sort all requests by creation date on the client
       allRequests.sort((a, b) => {
-        const dateA = (a.createdAt as Timestamp)?.toDate ? (a.createdAt as Timestamp).toDate() : new Date(a.createdAt as string);
-        const dateB = (b.createdAt as Timestamp)?.toDate ? (b.createdAt as Timestamp).toDate() : new Date(b.createdAt as string);
+        const dateA = (a.createdAt as Timestamp)?.toDate ? (a.createdAt as Timestamp).toDate() : new Date(a.createdAt as string || 0);
+        const dateB = (b.createdAt as Timestamp)?.toDate ? (b.createdAt as Timestamp).toDate() : new Date(b.createdAt as string || 0);
         return dateB.getTime() - dateA.getTime();
       });
 
@@ -109,12 +119,16 @@ function TrackStatusContent() {
   };
 
   useEffect(() => {
-    const mobile = searchParams.get('mobile');
-    if (mobile) {
-      setMobileNumber(mobile);
-      handleSearch(mobile);
+    const mobileFromUrl = searchParams.get('mobile');
+    if (mobileFromUrl) {
+      setMobileNumber(mobileFromUrl);
+      if(user) { // Only search if we have a user object (even anonymous)
+        handleSearch(mobileFromUrl);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, user]); // Re-run when user object becomes available
+
+  const isLoadingState = loading || authLoading;
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
@@ -135,21 +149,21 @@ function TrackStatusContent() {
                     onChange={(e) => setMobileNumber(e.target.value)}
                 />
             </div>
-            <Button onClick={() => handleSearch(mobileNumber)} disabled={loading} className="self-end">
-                {loading ? "Searching..." : "Track Request"}
+            <Button onClick={() => handleSearch(mobileNumber)} disabled={isLoadingState} className="self-end">
+                {isLoadingState ? "Searching..." : "Track Request"}
             </Button>
           </div>
           
           {error && <p className="text-destructive text-center mb-4">{error}</p>}
           
           <div className="space-y-6">
-            {loading && (
+            {isLoadingState && (
                  Array.from({ length: 2 }).map((_, i) => (
                     <Card key={i}><CardContent className="pt-6 space-y-3"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-3/4" /><Skeleton className="h-5 w-1/2" /></CardContent></Card>
                  ))
             )}
 
-            {!loading && requests.length > 0 && (
+            {!isLoadingState && requests.length > 0 && (
                 <>
                 <h3 className="text-lg font-semibold text-center">Found {requests.length} request(s) for {searchedMobileNumber}</h3>
                 {requests.map(request => (
@@ -200,7 +214,7 @@ function TrackStatusContent() {
                 </>
             )}
 
-            {!loading && searchedMobileNumber && requests.length === 0 && (
+            {!isLoadingState && searchedMobileNumber && requests.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">
                     No requests found for the mobile number: <span className="font-semibold">{searchedMobileNumber}</span>
                 </p>
