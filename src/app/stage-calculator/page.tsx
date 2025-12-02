@@ -188,7 +188,7 @@ export default function StageCalculator() {
                                 <Input id="senior-passengers" type="number" min="0" value={numSeniorPassengers} onChange={(e) => setNumSeniorPassengers(Math.max(0, parseInt(e.target.value) || 0))} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="disabled-passengers">Disabled</Label>
+                                <Label htmlFor="disabled-passengers">Divyang</Label>
                                 <Input id="disabled-passengers" type="number" min="0" value={numDisabledPassengers} onChange={(e) => setNumDisabledPassengers(Math.max(0, parseInt(e.target.value) || 0))} />
                             </div>
                         </div>
@@ -222,7 +222,7 @@ export default function StageCalculator() {
                                         <span className="font-medium">{result.totalSeniorFare.toLocaleString()}</span>
                                     </div>}
                                     {numDisabledPassengers > 0 && <div className="flex justify-between">
-                                        <span className="text-muted-foreground">{numDisabledPassengers} x Disabled</span>
+                                        <span className="text-muted-foreground">{numDisabledPassengers} x Divyang</span>
                                         <span className="font-medium">{result.totalDisabledFare.toLocaleString()}</span>
                                     </div>}
                                     <div className="flex justify-between">
