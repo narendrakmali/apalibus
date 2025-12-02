@@ -15,6 +15,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { signInAnonymously } from "firebase/auth";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 type CombinedRequest = (BookingRequest | MsrtcBooking) & { type: 'Private' | 'MSRTC' };
 
@@ -75,8 +78,12 @@ function TrackStatusContent() {
             }
             const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             console.log("Successfully fetched all MSRTC Bookings:", bookings);
-        } catch (error) {
-            console.error("Error fetching all records from msrtcBookings:", error);
+        } catch (serverError) {
+            const permissionError = new FirestorePermissionError({
+              path: 'msrtcBookings',
+              operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
         }
     };
     fetchMsrtcBookings();
@@ -106,11 +113,11 @@ function TrackStatusContent() {
       .filter(u => u.mobileNumber === searchedMobileNumber) || [];
 
     const privateData = privateRequestsCol?.docs
-      .map(doc => ({ ...doc.data() as BookingRequest, type: 'Private' as const }))
+      .map(doc => ({ ...doc.data() as BookingRequest, id: doc.id, type: 'Private' as const }))
       .filter(req => req.contact?.mobile === searchedMobileNumber) || [];
 
     const msrtcData = msrtcRequestsCol?.docs
-      .map(doc => ({ ...doc.data() as MsrtcBooking, type: 'MSRTC' as const }))
+      .map(doc => ({ ...doc.data() as MsrtcBooking, id: doc.id, type: 'MSRTC' as const }))
       .filter(req => req.contactNumber === searchedMobileNumber) || [];
 
     const allRequests: CombinedRequest[] = [...privateData, ...msrtcData];
@@ -253,5 +260,3 @@ export default function TrackStatusPage() {
         </Suspense>
     )
 }
-
-    
