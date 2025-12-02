@@ -97,7 +97,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin() || (isSignedIn() && request.query.where.mobileNumber == request.auth.token.phone_number);
+      allow list: if isAdmin() || (isSignedIn() && request.query.keys.hasAny(['mobileNumber']));
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if (isExistingOwner(userId) && request.resource.data.id == resource.data.id) || isAdmin(); // Enforce immutability of user ID.
       allow delete: if isExistingOwner(userId) || isAdmin();
@@ -181,7 +181,7 @@ service cloud.firestore {
     match /bookingRequests/{requestId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow get: if isOperator() || isOwner(resource.data.userId) || isAdmin();
-      allow list: if isOperator() || isAdmin() || (isSignedIn() && request.query.where['contact.mobile'] == request.auth.token.phone_number);
+      allow list: if isOperator() || isAdmin() || (isSignedIn() && request.query.keys.hasAny(['contact.mobile']));
       allow update: if isOperator() || isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin(); // Requests should not be deleted, but marked as cancelled/rejected.
     }
@@ -196,7 +196,7 @@ service cloud.firestore {
     match /msrtcBookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow get: if isAdmin() || isOwner(resource.data.userId);
-      allow list: if isAdmin() || (isSignedIn() && request.query.where.contactNumber == request.auth.token.phone_number);
+      allow list: if isAdmin() || (isSignedIn() && request.query.keys.hasAny(['contactNumber']));
       allow update, delete: if isAdmin();
     }
   }
