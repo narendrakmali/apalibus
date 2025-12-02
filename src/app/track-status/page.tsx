@@ -15,6 +15,8 @@ import { useAuth, useFirestore } from "@/firebase";
 import { collection, query, where, onSnapshot, Unsubscribe } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { signInAnonymously } from "firebase/auth";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 type CombinedRequest = (BookingRequest | MsrtcBooking) & { type: 'Private' | 'MSRTC' };
 
@@ -87,84 +89,85 @@ function TrackStatusContent() {
   useEffect(() => {
     const mobileToSearch = searchParams.get('mobile');
 
-    // Only run if there's a mobile number in the URL and auth state is determined
-    if (!mobileToSearch || authLoading) {
+    if (!mobileToSearch) {
       setDataLoading(false);
+      setFoundUsers([]);
+      setFoundRequests([]);
+      setQueryError(null);
       return;
     }
+
+    if (authLoading) {
+      setDataLoading(true);
+      return;
+    }
+
+    if (!currentUser) {
+        signInAnonymously(auth).catch(err => {
+            console.error("Anonymous sign-in failed:", err);
+            setQueryError("Could not authenticate to perform search.");
+            setDataLoading(false);
+        });
+        return; // The effect will re-run once the user is authenticated.
+    }
+
 
     setDataLoading(true);
     setQueryError(null);
     setFoundUsers([]);
     setFoundRequests([]);
 
-    const performQuery = () => {
-        const unsubscribes: Unsubscribe[] = [];
+    const unsubscribes: Unsubscribe[] = [];
 
-        const queries = [
-            { col: 'users', field: 'mobileNumber', type: 'User' },
-            { col: 'bookingRequests', field: 'contact.mobile', type: 'Private' },
-            { col: 'msrtcBookings', field: 'contactNumber', type: 'MSRTC' }
-        ];
+    const queries = [
+        { col: 'users', field: 'mobileNumber', type: 'User' },
+        { col: 'bookingRequests', field: 'contact.mobile', type: 'Private' },
+        { col: 'msrtcBookings', field: 'contactNumber', type: 'MSRTC' }
+    ];
 
-        let activeQueries = queries.length;
-        const onQueryDone = () => {
-            activeQueries--;
-            if (activeQueries === 0) {
-                setDataLoading(false);
-            }
-        };
+    let activeQueries = queries.length;
+    const onQueryDone = () => {
+        activeQueries--;
+        if (activeQueries === 0) {
+            setDataLoading(false);
+        }
+    };
 
-        queries.forEach(({ col, field, type }) => {
-            const q = query(collection(firestore, col), where(field, "==", mobileToSearch));
-            
-            const unsubscribe = onSnapshot(q, (snapshot) => {
-                if (type === 'User') {
-                    const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
-                    setFoundUsers(usersData);
-                } else {
-                    const requestsData = snapshot.docs.map(doc => ({ ...doc.data(), type, id: doc.id })) as CombinedRequest[];
-                    setFoundRequests(prev => {
-                        const otherRequests = prev.filter(r => r.type !== type);
-                        return [...otherRequests, ...requestsData].sort((a, b) => {
-                             const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-                             const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
-                             return dateB.getTime() - dateA.getTime();
-                        });
+    queries.forEach(({ col, field, type }) => {
+        const q = query(collection(firestore, col), where(field, "==", mobileToSearch));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (type === 'User') {
+                const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
+                setFoundUsers(usersData);
+            } else {
+                const requestsData = snapshot.docs.map(doc => ({ ...doc.data(), type, id: doc.id })) as CombinedRequest[];
+                setFoundRequests(prev => {
+                    const otherRequests = prev.filter(r => r.type !== type);
+                    return [...otherRequests, ...requestsData].sort((a, b) => {
+                         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+                         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+                         return dateB.getTime() - dateA.getTime();
                     });
-                }
-                 if (!snapshot.metadata.fromCache) {
-                    onQueryDone();
-                }
-            }, (error) => {
-                console.error(`Error fetching ${col}:`, error);
-                setQueryError(`Failed to fetch data. Ensure you are connected to the internet.`);
+                });
+            }
+             if (!snapshot.metadata.fromCache) {
                 onQueryDone();
+            }
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: col,
+                operation: 'list',
             });
-            unsubscribes.push(unsubscribe);
+            errorEmitter.emit('permission-error', permissionError);
+            onQueryDone();
         });
+        unsubscribes.push(unsubscribe);
+    });
 
-        return () => {
-          unsubscribes.forEach(unsub => unsub());
-        };
-    }
-
-    if (!currentUser) {
-      signInAnonymously(auth)
-        .then(() => {
-          // Anonymous sign-in successful, the hook will re-run with a currentUser
-          // so the query will be performed in the next render cycle.
-        })
-        .catch(err => {
-          console.error("Anonymous sign-in failed:", err);
-          setQueryError("Could not authenticate to perform search.");
-          setDataLoading(false);
-        });
-    } else {
-        // If user is already available, perform the query
-        const cleanup = performQuery();
-        return cleanup;
-    }
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
 
   }, [searchParams, currentUser, authLoading, firestore, auth]);
   
@@ -294,3 +297,5 @@ export default function TrackStatusPage() {
         </Suspense>
     )
 }
+
+    
