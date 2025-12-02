@@ -62,6 +62,26 @@ function TrackStatusContent() {
   const [msrtcRequestsCol, msrtcLoading, msrtcError] = useCollection(collection(firestore, 'msrtcBookings'));
   const [usersCol, usersLoading, usersError] = useCollection(collection(firestore, 'users'));
   
+  useEffect(() => {
+    const fetchMsrtcBookings = async () => {
+        if (!firestore) return;
+        try {
+            console.log("Attempting to fetch all records from msrtcBookings...");
+            const msrtcCollectionRef = collection(firestore, 'msrtcBookings');
+            const snapshot = await getDocs(msrtcCollectionRef);
+            if (snapshot.empty) {
+                console.log("No documents found in msrtcBookings collection.");
+                return;
+            }
+            const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log("Successfully fetched all MSRTC Bookings:", bookings);
+        } catch (error) {
+            console.error("Error fetching all records from msrtcBookings:", error);
+        }
+    };
+    fetchMsrtcBookings();
+  }, [firestore]);
+
   const handleSearch = (mobile: string) => {
     if (!mobile) {
       alert("Please enter a mobile number.");
@@ -233,3 +253,5 @@ export default function TrackStatusPage() {
         </Suspense>
     )
 }
+
+    
