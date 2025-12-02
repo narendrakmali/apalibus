@@ -4,20 +4,11 @@ import { initializeApp, getApps, App } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { credential } from 'firebase-admin';
 
-// IMPORTANT: In a real production environment, you would use environment variables
-// to securely manage your service account credentials.
-// For this prototype, we are embedding them, but this is NOT recommended for production.
-const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
-
 let adminApp: App;
+// Initialize Firebase Admin SDK
+// The SDK will automatically find credentials in a secure environment.
 if (!getApps().length) {
-    adminApp = initializeApp({
-        credential: credential.cert(serviceAccount)
-    });
+    adminApp = initializeApp();
 } else {
     adminApp = getApps()[0];
 }
@@ -36,7 +27,7 @@ export async function GET(request: Request) {
         // --- Fetch Users ---
         const usersQuery = db.collection('users').where('mobileNumber', '==', mobile);
         const usersSnapshot = await usersQuery.get();
-        const foundUsers = usersSnapshot.docs.map(doc => doc.data());
+        const foundUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // --- Fetch Private Booking Requests ---
         const privateRequestsQuery = db.collection('bookingRequests').where('contact.mobile', '==', mobile);
