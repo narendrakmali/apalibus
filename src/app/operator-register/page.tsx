@@ -11,6 +11,8 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function OperatorRegisterPage() {
   const [name, setName] = useState('');
@@ -44,17 +46,28 @@ export default function OperatorRegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Save operator details to the 'busOperators' collection
-      await setDoc(doc(firestore, "busOperators", user.uid), {
+      const operatorData = {
         id: user.uid,
         name: name,
         email: user.email,
         contactNumber: contactNumber,
         busIds: [],
-      });
+      };
 
-      console.log("Operator registered successfully!");
-      router.push('/operator-login'); // Redirect to login page after successful registration
+      // Save operator details to the 'busOperators' collection
+      const operatorRef = doc(firestore, "busOperators", user.uid);
+      setDoc(operatorRef, operatorData)
+        .then(() => {
+          router.push('/operator-login'); // Redirect to login page after successful registration
+        })
+        .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: operatorRef.path,
+            operation: 'create',
+            requestResourceData: operatorData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        });
 
     } catch (err: any) {
       let errorMessage = "An unknown error occurred during registration.";
@@ -65,7 +78,6 @@ export default function OperatorRegisterPage() {
       } else if (err.code === 'auth/weak-password') {
         errorMessage = "The password is too weak. It must be at least 6 characters long.";
       }
-      console.error("Operator Registration Error:", err.message);
       setError(errorMessage);
     } finally {
       setIsLoading(false);

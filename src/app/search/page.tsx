@@ -16,6 +16,8 @@ import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from "firebase/auth";
 import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
 import placeholderImages from '@/lib/placeholder-images.json';
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 
 const libraries: ("places")[] = ["places"];
@@ -259,13 +261,20 @@ Sakpal Travels
         createdAt: serverTimestamp(),
       };
       
-      await setDoc(docRef, requestData);
-
-      console.log("Booking request created with ID: ", requestId);
-      setShowSuccessDialog(true);
+      setDoc(docRef, requestData)
+        .then(() => {
+          setShowSuccessDialog(true);
+        })
+        .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'create',
+            requestResourceData: requestData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        });
 
     } catch (e: any) {
-      console.error("Error creating booking request:", e);
       setError(`Failed to create booking request: ${e.message}`);
       setIsAlertOpen(true);
     } finally {
@@ -483,5 +492,3 @@ Sakpal Travels
     </div>
   );
 }
-
-    

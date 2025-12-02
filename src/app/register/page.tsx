@@ -10,6 +10,9 @@ import { RecaptchaVerifier, signInWithPhoneNumber, createUserWithEmailAndPasswor
 import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import OtpInput from 'react-otp-input';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 declare global {
   interface Window {
@@ -80,7 +83,6 @@ export default function RegisterPage() {
       setStep(2); // Move to OTP step
       
     } catch (err: any) {
-      console.error("OTP Send Error:", err);
       let errorMessage = "Failed to send OTP. Please try again.";
       if (err.code === 'auth/invalid-phone-number') {
         errorMessage = "The phone number is not valid.";
@@ -115,8 +117,7 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Save user details to Firestore
-      await setDoc(doc(firestore, "users", user.uid), {
+      const userData = {
         id: user.uid,
         name: name,
         email: user.email,
@@ -124,14 +125,25 @@ export default function RegisterPage() {
         address: "",
         pincode: "",
         isAdmin: false,
-      });
+      };
 
-      console.log("User registered and phone verified successfully!");
-      alert("Registration successful! You will now be redirected to the login page.");
-      router.push('/login');
+      // Save user details to Firestore
+      const userRef = doc(firestore, "users", user.uid);
+      setDoc(userRef, userData)
+        .then(() => {
+          alert("Registration successful! You will now be redirected to the login page.");
+          router.push('/login');
+        })
+        .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'create',
+            requestResourceData: userData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        });
 
     } catch (err: any) {
-      console.error("Registration Error:", err);
       let errorMessage = "An unknown error occurred during registration.";
        if (err.code === 'auth/invalid-verification-code') {
         errorMessage = "The OTP you entered is incorrect. Please try again.";

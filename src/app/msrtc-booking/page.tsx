@@ -24,6 +24,8 @@ import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 interface Passenger {
@@ -206,14 +208,22 @@ export default function MsrtcBookingPage() {
             createdAt: serverTimestamp(),
         };
 
-        await setDoc(docRef, bookingData);
+        setDoc(docRef, bookingData)
+          .then(() => {
+            setShowSuccessDialog(true);
+          })
+          .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+              path: docRef.path,
+              operation: 'create',
+              requestResourceData: bookingData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          });
         
         // TODO: In a real app, handle passengerFile upload to Firebase Storage if it exists.
-        
-        setShowSuccessDialog(true);
 
     } catch (err: any) {
-        console.error("Error creating MSRTC booking request:", err);
         setError(`Failed to submit request: ${err.message}`);
     } finally {
         setIsSubmitting(false);
@@ -456,5 +466,3 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
-
-    

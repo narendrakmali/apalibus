@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function AddBusPage() {
   const [registrationNumber, setRegistrationNumber] = useState('');
@@ -54,37 +56,42 @@ export default function AddBusPage() {
     
     setIsLoading(true);
 
-    try {
-      const busesCollectionRef = collection(firestore, `busOperators/${user.uid}/buses`);
-      const newBusRef = doc(busesCollectionRef);
+    const busesCollectionRef = collection(firestore, `busOperators/${user.uid}/buses`);
+    const newBusRef = doc(busesCollectionRef);
+    const busData = {
+      id: newBusRef.id,
+      operatorId: user.uid,
+      registrationNumber: registrationNumber,
+      seatingCapacity: parseInt(seatingCapacity, 10),
+      busType: busType,
+      seatType: seatType,
+      driver: {
+        name: driverName,
+        languages: driverLanguages,
+        contactNumber: driverContact,
+        idNumber: driverId,
+      },
+      availableDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], // Default to all days
+      interiorImageUrl: '',
+      exteriorImageUrl: '',
+    };
 
-      await setDoc(newBusRef, {
-        id: newBusRef.id,
-        operatorId: user.uid,
-        registrationNumber: registrationNumber,
-        seatingCapacity: parseInt(seatingCapacity, 10),
-        busType: busType,
-        seatType: seatType,
-        driver: {
-          name: driverName,
-          languages: driverLanguages,
-          contactNumber: driverContact,
-          idNumber: driverId,
-        },
-        availableDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], // Default to all days
-        interiorImageUrl: '',
-        exteriorImageUrl: '',
+    setDoc(newBusRef, busData)
+      .then(() => {
+        setSuccess(`Bus ${registrationNumber} added successfully! You will be redirected shortly.`);
+        setTimeout(() => router.push('/operator-dashboard/fleet'), 2000);
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: newBusRef.path,
+          operation: 'create',
+          requestResourceData: busData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-
-      setSuccess(`Bus ${registrationNumber} added successfully! You will be redirected shortly.`);
-      setTimeout(() => router.push('/operator-dashboard/fleet'), 2000);
-
-    } catch (err: any) {
-      console.error('Error adding bus:', err);
-      setError(`Failed to add bus: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
 

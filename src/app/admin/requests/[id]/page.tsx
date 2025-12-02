@@ -17,6 +17,8 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOperatorData } from '@/hooks/use-operator-data';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 function formatFirebaseTimestamp(timestamp: any) {
     if (!timestamp) return 'N/A';
@@ -87,28 +89,34 @@ export default function ProvideQuotePage() {
     }
 
     setIsSubmitting(true);
-    try {
-        const requestRef = doc(firestore, 'bookingRequests', id);
-        
-        await updateDoc(requestRef, {
-            status: 'approved',
-            operatorQuote: {
-                finalCost: parseFloat(finalCost),
-                availableBus: availableBus,
-                notes: notes,
-                operatorId: user.uid, 
-                operatorName: user.displayName || user.email,
-                quotedAt: new Date(),
-            }
-        });
+    const requestRef = doc(firestore, 'bookingRequests', id);
+    const quoteData = {
+        status: 'approved',
+        operatorQuote: {
+            finalCost: parseFloat(finalCost),
+            availableBus: availableBus,
+            notes: notes,
+            operatorId: user.uid, 
+            operatorName: user.displayName || user.email,
+            quotedAt: new Date(),
+        }
+    };
 
-        router.push('/admin/requests');
-    } catch(err: any) {
-        console.error("Error submitting quote:", err);
-        alert(`Failed to submit quote: ${err.message}`);
-    } finally {
-        setIsSubmitting(false);
-    }
+    updateDoc(requestRef, quoteData)
+        .then(() => {
+            router.push('/admin/requests');
+        })
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: requestRef.path,
+                operation: 'update',
+                requestResourceData: quoteData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        })
+        .finally(() => {
+            setIsSubmitting(false);
+        });
   }
 
   if (isLoading || authLoading) {
