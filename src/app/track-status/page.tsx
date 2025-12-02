@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, Suspense, useMemo } from "react";
@@ -7,22 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle, User as UserIcon } from "lucide-react";
-import { useAuth, useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
-import { useCollection } from 'react-firebase-hooks/firestore';
 import type { BookingRequest, MsrtcBooking, User } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
 
 type CombinedRequest = (BookingRequest | MsrtcBooking) & { type: 'Private' | 'MSRTC' };
 
 const StatusIndicator = ({ status }: { status: string }) => {
     const getStatusInfo = () => {
-        switch (status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'pending':
                 return { icon: <Hourglass className="h-5 w-5 text-yellow-500" />, text: "Pending", variant: "secondary" as const };
             case 'approved':
@@ -32,7 +25,7 @@ const StatusIndicator = ({ status }: { status: string }) => {
             case 'quote_rejected':
                  return { icon: <XCircle className="h-5 w-5 text-destructive" />, text: "Rejected", variant: "destructive" as const };
             default:
-                return { icon: <Clock className="h-5 w-5 text-muted-foreground" />, text: "Submitted", variant: "outline" as const };
+                return { icon: <Clock className="h-5 w-5 text-muted-foreground" />, text: status || "Submitted", variant: "outline" as const };
         }
     }
     const { icon, text, variant } = getStatusInfo();
@@ -44,9 +37,11 @@ const StatusIndicator = ({ status }: { status: string }) => {
     );
 }
 
-function formatDate(date: Timestamp | string | undefined) {
+function formatDate(date: any) {
     if (!date) return 'N/A';
-    const d = (date as Timestamp).toDate ? (date as Timestamp).toDate() : new Date(date as string);
+    // Handle both Firestore Timestamps and string dates
+    const d = date.toDate ? date.toDate() : new Date(date);
+    if (isNaN(d.getTime())) return 'Invalid Date';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
@@ -54,63 +49,45 @@ function formatDate(date: Timestamp | string | undefined) {
 function TrackStatusContent() {
   const searchParams = useSearchParams();
   const [mobileNumber, setMobileNumber] = useState('');
-  const [searchedMobileNumber, setSearchedMobileNumber] = useState('');
   
-  const firestore = useFirestore();
-  const [user, authLoading] = useAuthState(useAuth());
+  const [data, setData] = useState<{ foundUsers: User[], foundRequests: CombinedRequest[] } | null>(null);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [queryError, setQueryError] = useState<string | null>(null);
 
-  // Use react-firebase-hooks to get live data
-  const [privateRequestsCol, privateLoading, privateError] = useCollection(collection(firestore, 'bookingRequests'));
-  const [msrtcRequestsCol, msrtcLoading, msrtcError] = useCollection(collection(firestore, 'msrtcBookings'));
-  const [usersCol, usersLoading, usersError] = useCollection(collection(firestore, 'users'));
-  
-  const handleSearch = (mobile: string) => {
+  const handleSearch = async (mobile: string) => {
     if (!mobile) {
       alert("Please enter a mobile number.");
       return;
     }
-    setSearchedMobileNumber(mobile);
+    setDataLoading(true);
+    setQueryError(null);
+    setData(null);
+
+    try {
+        const response = await fetch(`/api/track-status?mobile=${mobile}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch status.');
+        }
+        const result = await response.json();
+        setData(result);
+    } catch (error: any) {
+        setQueryError(error.message);
+    } finally {
+        setDataLoading(false);
+    }
   };
   
   useEffect(() => {
     const mobileFromUrl = searchParams.get('mobile');
     if (mobileFromUrl) {
       setMobileNumber(mobileFromUrl);
-      setSearchedMobileNumber(mobileFromUrl);
+      handleSearch(mobileFromUrl);
     }
   }, [searchParams]);
 
-  const filteredData = useMemo(() => {
-    if (!searchedMobileNumber) return { foundUsers: [], foundRequests: [] };
-
-    const usersData = usersCol?.docs
-      .map(doc => doc.data() as User)
-      .filter(u => u.mobileNumber === searchedMobileNumber) || [];
-
-    const privateData = privateRequestsCol?.docs
-      .map(doc => ({ ...doc.data() as BookingRequest, id: doc.id, type: 'Private' as const }))
-      .filter(req => req.contact?.mobile === searchedMobileNumber) || [];
-
-    const msrtcData = msrtcRequestsCol?.docs
-      .map(doc => ({ ...doc.data() as MsrtcBooking, id: doc.id, type: 'MSRTC' as const }))
-      .filter(req => req.contactNumber === searchedMobileNumber) || [];
-
-    const allRequests: CombinedRequest[] = [...privateData, ...msrtcData];
-
-    allRequests.sort((a, b) => {
-        const dateAValue = (a.createdAt as Timestamp)?.toDate ? (a.createdAt as Timestamp).toMillis() : new Date(a.createdAt as string || 0).getTime();
-        const dateBValue = (b.createdAt as Timestamp)?.toDate ? (b.createdAt as Timestamp).toMillis() : new Date(b.createdAt as string || 0).getTime();
-        return dateBValue - dateAValue;
-      });
-
-    return { foundUsers: usersData, foundRequests: allRequests };
-
-  }, [searchedMobileNumber, usersCol, privateRequestsCol, msrtcRequestsCol]);
-
-  const { foundUsers, foundRequests } = filteredData;
-  const dataLoading = authLoading || privateLoading || msrtcLoading || usersLoading;
-  const queryError = privateError || msrtcError || usersError;
-  const noResults = !dataLoading && searchedMobileNumber && foundUsers.length === 0 && foundRequests.length === 0;
+  const { foundUsers = [], foundRequests = [] } = data || {};
+  const noResults = !dataLoading && data && foundUsers.length === 0 && foundRequests.length === 0;
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
@@ -137,22 +114,22 @@ function TrackStatusContent() {
             </Button>
           </div>
           
-          {queryError && <p className="text-destructive text-center mb-4">Error: {queryError.message}</p>}
+          {queryError && <p className="text-destructive text-center mb-4">Error: {queryError}</p>}
           
           <div className="space-y-6">
-            {dataLoading && searchedMobileNumber && (
+            {dataLoading && (
                  Array.from({ length: 2 }).map((_, i) => (
                     <Card key={i}><CardContent className="pt-6 space-y-3"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-3/4" /><Skeleton className="h-5 w-1/2" /></CardContent></Card>
                  ))
             )}
 
             {!dataLoading && (foundUsers.length > 0 || foundRequests.length > 0) && (
-                <h3 className="text-lg font-semibold text-center">Found results for {searchedMobileNumber}</h3>
+                <h3 className="text-lg font-semibold text-center">Found results for {mobileNumber}</h3>
             )}
-
+            
             {foundUsers.map(user => (
                 <div key={user.id}>
-                    <Card className="bg-blue-50">
+                     <Card className="bg-blue-50">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-blue-800">
                                 <UserIcon /> User Profile
@@ -217,7 +194,7 @@ function TrackStatusContent() {
 
             {noResults && (
                 <p className="text-center text-muted-foreground py-8">
-                    No users or requests found for the mobile number: <span className="font-semibold">{searchedMobileNumber}</span>
+                    No users or requests found for the mobile number: <span className="font-semibold">{mobileNumber}</span>
                 </p>
             )}
           </div>
