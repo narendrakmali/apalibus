@@ -10,6 +10,8 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { Skeleton } from './ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function Header() {
   const auth = useAuth();
@@ -23,24 +25,35 @@ export default function Header() {
     const checkUserRole = async () => {
       if (user) {
         setLoadingRoles(true);
-        // Check for admin
-        const userDocRef = doc(firestore, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists() && userDoc.data().isAdmin) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
+        try {
+          // Check for admin
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists() && userDoc.data().isAdmin) {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
 
-        // Check for operator
-        const operatorDocRef = doc(firestore, 'busOperators', user.uid);
-        const operatorDoc = await getDoc(operatorDocRef);
-        if (operatorDoc.exists()) {
-          setIsOperator(true);
-        } else {
-          setIsOperator(false);
+          // Check for operator
+          const operatorDocRef = doc(firestore, 'busOperators', user.uid);
+          const operatorDoc = await getDoc(operatorDocRef);
+          if (operatorDoc.exists()) {
+            setIsOperator(true);
+          } else {
+            setIsOperator(false);
+          }
+        } catch (serverError) {
+            // Check which path might have failed if possible, though a single catch is often fine here.
+            // For simplicity, we'll create a generic error for the header role check.
+            const permissionError = new FirestorePermissionError({
+              path: `/users/${user.uid} or /busOperators/${user.uid}`,
+              operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } finally {
+            setLoadingRoles(false);
         }
-        setLoadingRoles(false);
       } else {
         setIsAdmin(false);
         setIsOperator(false);
