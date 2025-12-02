@@ -189,15 +189,14 @@ service cloud.firestore {
      * @description Rules for MSRTC group booking requests.
      * @path /msrtcBookings/{bookingId}
      * @allow (create) Any authenticated user can create a request for themselves.
-     * @allow (read, list) Admins can read/list all MSRTC booking requests.
+     * @allow (read, list) Admins can read/list all MSRTC booking requests. Users can read/list their own requests if querying by userId.
      * @principle Allows users to submit MSRTC requests and admins to view them.
      */
     match /msrtcBookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow read, list: if isAdmin() || isOwner(resource.data.userId);
+      allow get: if isAdmin() || isOwner(resource.data.userId);
+      allow list: if isAdmin() || (isSignedIn() && request.query.where.userId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
   }
 }
-
-    

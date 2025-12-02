@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { signInAnonymously } from "firebase/auth";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
@@ -65,30 +64,6 @@ function TrackStatusContent() {
   const [msrtcRequestsCol, msrtcLoading, msrtcError] = useCollection(collection(firestore, 'msrtcBookings'));
   const [usersCol, usersLoading, usersError] = useCollection(collection(firestore, 'users'));
   
-  useEffect(() => {
-    const fetchMsrtcBookings = async () => {
-        if (!firestore) return;
-        try {
-            console.log("Attempting to fetch all records from msrtcBookings...");
-            const msrtcCollectionRef = collection(firestore, 'msrtcBookings');
-            const snapshot = await getDocs(msrtcCollectionRef);
-            if (snapshot.empty) {
-                console.log("No documents found in msrtcBookings collection.");
-                return;
-            }
-            const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log("Successfully fetched all MSRTC Bookings:", bookings);
-        } catch (serverError) {
-            const permissionError = new FirestorePermissionError({
-              path: 'msrtcBookings',
-              operation: 'list',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        }
-    };
-    fetchMsrtcBookings();
-  }, [firestore]);
-
   const handleSearch = (mobile: string) => {
     if (!mobile) {
       alert("Please enter a mobile number.");
