@@ -188,7 +188,7 @@ export default function Header() {
             </nav>
 
             <div className="ml-auto flex gap-2 sm:gap-4 items-center">
-                 <Button asChild className="hidden sm:inline-flex bg-accent hover:bg-accent/90 animate-pulse">
+                 <Button asChild className="bg-accent hover:bg-accent/90 animate-pulse">
                     <Link
                         href="/special-offer"
                         className="flex items-center gap-1 text-sm font-bold"
