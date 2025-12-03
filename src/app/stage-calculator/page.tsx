@@ -192,6 +192,11 @@ export default function StageCalculator() {
                                 <Input id="disabled-passengers" type="number" min="0" value={numDisabledPassengers} onChange={(e) => setNumDisabledPassengers(Math.max(0, parseInt(e.target.value) || 0))} />
                             </div>
                         </div>
+                         <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+                            <p className="text-xs text-yellow-800 font-semibold">
+                                For concessional fare, Aadhaar card is mandatory for Females &amp; Sr. Citizens, and a valid certificate is required for Divyang passengers.
+                            </p>
+                        </div>
                         <Button onClick={handleCalc} className="w-full" disabled={loading || !origin || !dest}>
                             {loading ? "Loading Depots..." : "Calculate Stage & Fare"}
                         </Button>
