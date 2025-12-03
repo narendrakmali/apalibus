@@ -50,13 +50,20 @@ export default function OperatorLoginPage() {
       }
 
     } catch (err: any) {
-      let errorMessage = "An unknown error occurred.";
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        errorMessage = "Invalid email or password.";
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = "Please enter a valid email address.";
+      let errorMessage = "An unknown error occurred during login.";
+      switch (err.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+          break;
+        case 'auth/invalid-email':
+          errorMessage = "Please enter a valid email address.";
+          break;
+        default:
+          console.error("Operator Login Error:", err);
+          break;
       }
-      console.error("Operator Login Error:", err);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
