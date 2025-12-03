@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -77,6 +78,7 @@ export default function Header() {
       { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
       { href: "/search", label: "Group Booking" },
+      { href: "/explore-routes", label: "Explore Routes" },
       { href: "/msrtc-booking", label: "MSRTC Booking" },
       { href: "/stage-calculator", label: "Stage Calculator" },
       { href: "/track-status", label: "Track Request" },
