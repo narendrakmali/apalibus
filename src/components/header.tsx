@@ -69,7 +69,6 @@ export default function Header() {
 
   const guestLinks = [
     { href: "/operator-login", label: "Operator Login" },
-    { href: "/operator-register", label: "Operator Register" },
     { href: "/admin/login", label: "Admin Login" },
   ];
 

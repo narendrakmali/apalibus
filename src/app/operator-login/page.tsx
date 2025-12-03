@@ -98,12 +98,6 @@ export default function OperatorLoginPage() {
             <Button onClick={handleLogin} disabled={isLoading} className="w-full">
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
-             <div className="text-center text-sm text-muted-foreground">
-              Don't have an operator account?{' '}
-              <Link href="/operator-register" className="underline hover:text-primary">
-                Register here
-              </Link>
-            </div>
           </div>
         </CardContent>
       </Card>
