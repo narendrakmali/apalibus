@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ import placeholderImages from '@/lib/placeholder-images.json';
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Textarea } from "@/components/ui/textarea";
+import { MapPin, Calendar, Users, Bus, Car } from "lucide-react";
 
 
 const libraries: ("places")[] = ["places"];
@@ -200,52 +202,63 @@ export default function SpecialOfferPage() {
         className="absolute inset-0 w-full h-full object-cover z-0"
         data-ai-hint="religious gathering"
       />
-      <div className="absolute inset-0 bg-black/60 z-10"></div>
+      <div className="absolute inset-0 bg-gray-900/70 z-10"></div>
       
-      <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border">
-         <h2 className="text-3xl font-bold text-center mb-2 font-display text-primary-foreground">Special Offer: Nirankari Samagam, Sangli</h2>
-         <p className="text-muted-foreground text-center mb-8">Book buses at special discounted rates for the event. Fill the form to raise a request.</p>
+      <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl">
+         <div className="text-center mb-8">
+            <span className="inline-block bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              Special Offer
+            </span>
+            <h2 className="text-4xl font-bold text-center mt-3 font-display text-primary">Nirankari Samagam, Sangli</h2>
+            <p className="text-muted-foreground mt-2">Book buses at special <span className="text-yellow-500 font-bold">discounted rates</span> for the event. Fill the form to get a quote.</p>
+         </div>
         
         {isLoaded ? (
             <form onSubmit={(e) => { e.preventDefault(); validateAndSubmit(); }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mb-6">
                 
-                <div className="grid gap-2 md:col-span-2">
-                    <h3 className="text-lg font-semibold text-primary-foreground border-b pb-2 mb-2">Trip Details</h3>
+                <div className="md:col-span-2">
+                    <h3 className="text-lg font-semibold text-foreground border-b pb-2">Trip Details</h3>
                 </div>
 
-                <div className="grid gap-2">
+                <div className="relative">
                   <Label htmlFor="from">From</Label>
+                  <MapPin className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
                   <PlacesAutocomplete 
                     onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
                     initialValue={fromLocation.address}
                   />
                 </div>
 
-                <div className="grid gap-2">
+                <div className="relative">
                   <Label htmlFor="to">To (Destination)</Label>
-                  <Input id="to" value={toLocation.address} disabled />
+                  <MapPin className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                  <Input id="to" value={toLocation.address} disabled className="pl-10"/>
                 </div>
                 
-                <div className="grid gap-2">
+                <div className="relative">
                   <Label htmlFor="start-date">Journey Date</Label>
-                  <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
+                  <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                  <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required className="pl-10" />
                 </div>
                 
-                <div className="grid gap-2">
+                <div className="relative">
                   <Label htmlFor="return-date">Return Date</Label>
-                  <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
+                  <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                  <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required className="pl-10" />
                 </div>
 
-                 <div className="grid gap-2">
+                 <div className="relative">
                   <Label htmlFor="passengers">Number of Passengers</Label>
-                  <Input id="passengers" type="number" placeholder="e.g., 25" value={passengers} onChange={e => setPassengers(e.target.value)} required />
+                  <Users className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                  <Input id="passengers" type="number" placeholder="e.g., 25" value={passengers} onChange={e => setPassengers(e.target.value)} required className="pl-10" />
                 </div>
                 
-                <div className="grid gap-2">
+                <div className="relative">
                     <Label htmlFor="vehicle-type">Vehicle Type</Label>
+                    <Car className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
                     <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
-                        <SelectTrigger id="vehicle-type">
+                        <SelectTrigger id="vehicle-type" className="pl-10">
                             <SelectValue placeholder="Select vehicle type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -258,23 +271,8 @@ export default function SpecialOfferPage() {
                     </Select>
                 </div>
                 
-                <div className="grid gap-2 md:col-span-2">
-                  <Label htmlFor="seat-type">Seat Type (Optional)</Label>
-                   <Select onValueChange={setSeatType} value={seatType}>
-                    <SelectTrigger id="seat-type">
-                      <SelectValue placeholder="Select seat type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="General">General (Seater)</SelectItem>
-                      <SelectItem value="Pushback">Pushback (Seater)</SelectItem>
-                      <SelectItem value="Semi Sleeper">Seater cum Sleeper</SelectItem>
-                      <SelectItem value="Sleeper">Sleeper</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2 md:col-span-2">
-                    <h3 className="text-lg font-semibold text-primary-foreground border-b pb-2 mb-2 mt-4">Your Contact Information</h3>
+                <div className="md:col-span-2">
+                    <h3 className="text-lg font-semibold text-foreground border-b pb-2 mt-4">Your Contact Information</h3>
                 </div>
 
                 <div className="grid gap-2">
@@ -300,8 +298,8 @@ export default function SpecialOfferPage() {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
-                 <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSubmitting}>
-                    {isSubmitting ? 'Submitting...' : 'Raise Request'}
+                 <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white text-base py-6" size="lg" disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : 'Request a Quote'}
                   </Button>
               </div>
 
@@ -360,3 +358,5 @@ export default function SpecialOfferPage() {
     </div>
   );
 }
+
+    

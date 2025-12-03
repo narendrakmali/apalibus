@@ -3,13 +3,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Autocomplete } from '@react-google-maps/api';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 interface PlacesAutocompleteProps {
     onLocationSelect: (address: string, lat?: number, lng?: number) => void;
     initialValue?: string;
+    className?: string;
 }
 
-const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocompleteProps) => {
+const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: PlacesAutocompleteProps) => {
     const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
     const [inputValue, setInputValue] = useState(initialValue || '');
 
@@ -54,7 +56,7 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue }: PlacesAutocomple
             <Input
                 type="text"
                 placeholder="Enter a location"
-                className="w-full"
+                className={cn("w-full", className)}
                 onChange={handleInputChange}
                 value={inputValue}
             />
