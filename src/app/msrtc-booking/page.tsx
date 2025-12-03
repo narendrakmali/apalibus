@@ -353,6 +353,11 @@ export default function MsrtcBookingPage() {
                     <Label htmlFor="numConcession">Passengers with Concession</Label>
                     <Input id="numConcession" type="number" min="0" max={numPassengers} value={numConcession} onChange={(e) => setNumConcession(Number(e.target.value))} placeholder="e.g., 5" required />
                  </div>
+                 <div className="md:col-span-2 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+                    <p className="text-xs text-yellow-800 font-semibold">
+                        For concessional fare, Aadhaar card is mandatory for Females &amp; Sr. Citizens, and a valid certificate is required for Divyang passengers.
+                    </p>
+                </div>
                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="purpose">Purpose of Travel</Label>
                     <Textarea id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g., Pilgrimage, School Trip, etc."/>
