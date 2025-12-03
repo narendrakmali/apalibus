@@ -19,9 +19,6 @@ export default function HomePage() {
               <Link href="/search" className="btn btn-primary-cyan">
                 Get an Estimate
               </Link>
-              <Link href="/explore-routes" className="btn btn-outline-glass">
-                Explore Routes
-              </Link>
             </div>
           </div>
 
@@ -79,5 +76,3 @@ export default function HomePage() {
     </>
   );
 }
-
-    
