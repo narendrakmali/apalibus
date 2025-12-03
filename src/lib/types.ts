@@ -63,7 +63,7 @@ export interface MsrtcBooking {
     organizerName: string;
     contactNumber: string;
     email: string;
-    travelDate: Timestamp | string;
+    travelDate: Timestamp | any;
     origin: string;
     destination: string;
     busType: string;
@@ -72,6 +72,6 @@ export interface MsrtcBooking {
     numConcession: number;
     estimatedFare: number;
     passengers: any[]; // Consider defining a Passenger type
-    status: 'pending' | 'confirmed' | 'rejected';
+    status: 'pending' | 'confirmed' | 'rejected' | 'fulfilled';
     createdAt: Timestamp | string;
 }

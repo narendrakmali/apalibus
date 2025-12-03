@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { MsrtcBooking } from '@/lib/types';
-import { MoreHorizontal, Check, X, Hourglass, Trash2, FileText } from "lucide-react";
+import { MoreHorizontal, Check, X, Hourglass, Trash2, FileText, CheckCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,10 +32,22 @@ function getStatusVariant(status: string): "default" | "secondary" | "destructiv
     switch (status) {
         case 'pending': return 'secondary';
         case 'confirmed': return 'default';
+        case 'fulfilled': return 'default';
         case 'rejected': return 'destructive';
         default: return 'outline';
     }
 }
+
+function getStatusIcon(status: string) {
+    switch(status) {
+        case 'pending': return <Hourglass className="h-3 w-3 -translate-x-1" />;
+        case 'confirmed': return <Check className="h-3 w-3 -translate-x-1" />;
+        case 'fulfilled': return <CheckCircle className="h-3 w-3 -translate-x-1" />;
+        case 'rejected': return <X className="h-3 w-3 -translate-x-1" />;
+        default: return null;
+    }
+}
+
 
 export function MsrtcRequestsTable({ requests, onStatusChange, onViewDetails }: { requests: MsrtcBooking[], onStatusChange: () => void, onViewDetails?: (request: MsrtcBooking) => void }) {
     const firestore = useFirestore();
@@ -117,7 +129,10 @@ export function MsrtcRequestsTable({ requests, onStatusChange, onViewDetails }: 
                         </TableCell>
                         <TableCell>{req.busType}</TableCell>
                         <TableCell>
-                            <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
+                            <Badge variant={getStatusVariant(req.status)} className="capitalize">
+                                {getStatusIcon(req.status)}
+                                {req.status}
+                            </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                            <DropdownMenu>
@@ -135,11 +150,11 @@ export function MsrtcRequestsTable({ requests, onStatusChange, onViewDetails }: 
                                         </DropdownMenuItem>
                                     )}
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, 'confirmed')}>
+                                    <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, 'confirmed')} disabled={req.status === 'confirmed' || req.status === 'fulfilled'}>
                                         <Check className="mr-2 h-4 w-4" />
                                         Confirm
                                     </DropdownMenuItem>
-                                     <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, 'rejected')}>
+                                     <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, 'rejected')} disabled={req.status === 'rejected'}>
                                         <X className="mr-2 h-4 w-4" />
                                         Reject
                                     </DropdownMenuItem>

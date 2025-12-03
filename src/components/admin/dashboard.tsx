@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Book, Users, Bus, Ticket } from 'lucide-react';
+import { Book, Users, Bus, Ticket, Send } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
@@ -98,9 +98,22 @@ export default function AdminDashboard() {
             <Ticket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <CardDescription>Manage MSRTC group booking requests.</CardDescription>
+            <CardDescription>Review and confirm MSRTC booking requests.</CardDescription>
              <Button asChild className="mt-4">
                 <Link href="/admin/msrtc-requests">Manage MSRTC Requests</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+         <Card className="hover:shadow-lg transition-shadow bg-blue-50 border-blue-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-blue-800">Ticket Dispatch Center</CardTitle>
+            <Send className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Consolidate groups and dispatch final tickets for MSRTC bookings.</CardDescription>
+             <Button asChild className="mt-4" variant="secondary">
+                <Link href="/admin/ticket-dispatch">Dispatch Tickets</Link>
             </Button>
           </CardContent>
         </Card>
