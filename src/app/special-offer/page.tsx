@@ -54,12 +54,12 @@ export default function SpecialOfferPage() {
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: googleMapsApiKey!,
-        libraries,
-        language: 'en',
-    });
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script-special',
+    googleMapsApiKey: googleMapsApiKey!,
+    libraries,
+    language: 'en',
+  });
 
   const { locationName, coords } = useCurrentLocation(isLoaded);
 
@@ -213,25 +213,21 @@ export default function SpecialOfferPage() {
                             <Label>📍 To (Destination)</Label>
                             <Input value={toLocation.address} className="input-field" disabled />
                         </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div className="input-group">
-                                <Label>📅 Journey Date</Label>
-                                <Input type="date" className="input-field" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
-                            </div>
-                             <div className="input-group">
-                                <Label>🕖 Start Time</Label>
-                                <Input type="time" className="input-field" value={journeyTime} onChange={e => setJourneyTime(e.target.value)} required />
-                            </div>
+                         <div className="input-group">
+                            <Label>📅 Journey Date</Label>
+                            <Input type="date" className="input-field" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="input-group">
-                                <Label>📅 Return Date</Label>
-                                <Input type="date" className="input-field" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
-                            </div>
-                             <div className="input-group">
-                                <Label>🕖 Return Time</Label>
-                                <Input type="time" className="input-field" value={returnTime} onChange={e => setReturnTime(e.target.value)} required />
-                            </div>
+                         <div className="input-group">
+                            <Label>🕖 Start Time</Label>
+                            <Input type="time" className="input-field" value={journeyTime} onChange={e => setJourneyTime(e.target.value)} required />
+                        </div>
+                        <div className="input-group">
+                            <Label>📅 Return Date</Label>
+                            <Input type="date" className="input-field" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
+                        </div>
+                         <div className="input-group">
+                            <Label>🕖 Return Time</Label>
+                            <Input type="time" className="input-field" value={returnTime} onChange={e => setReturnTime(e.target.value)} required />
                         </div>
                     </div>
 
@@ -330,7 +326,7 @@ export default function SpecialOfferPage() {
                     <AlertDialogTitle>Request Submitted Successfully!</AlertDialogTitle>
                     <AlertDialogDescription>
                         Thanks for creating a request for the special offer. Our team will contact you shortly with a discounted quote. You can also track your request online.
-                    </dAlertDialogDescription>
+                    </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}`)}>
