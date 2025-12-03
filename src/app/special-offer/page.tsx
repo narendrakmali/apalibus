@@ -19,7 +19,7 @@ import placeholderImages from '@/lib/placeholder-images.json';
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Calendar, Users, Bus, Car } from "lucide-react";
+import { MapPin, Calendar, Users, Car, Clock } from "lucide-react";
 
 
 const libraries: ("places")[] = ["places"];
@@ -36,6 +36,8 @@ export default function SpecialOfferPage() {
   const [toLocation, setToLocation] = useState<Location>({ address: "Sangli, Maharashtra, India" });
   const [journeyDate, setJourneyDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [journeyTime, setJourneyTime] = useState("");
+  const [returnTime, setReturnTime] = useState("");
   const [passengers, setPassengers] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [seatType, setSeatType] = useState("");
@@ -95,8 +97,8 @@ export default function SpecialOfferPage() {
       return;
     }
     
-    if (!selectedVehicle || !journeyDate || !returnDate || !passengers) {
-      setError("Please fill all trip details: Vehicle Type, Passengers, Journey Date, and Return Date.");
+    if (!selectedVehicle || !journeyDate || !returnDate || !passengers || !journeyTime || !returnTime) {
+      setError("Please fill all trip details including vehicle, passengers, dates, and times.");
       setIsAlertOpen(true);
       return;
     }
@@ -158,6 +160,8 @@ export default function SpecialOfferPage() {
         toLocation,
         journeyDate,
         returnDate,
+        journeyTime,
+        returnTime,
         seats: passengers,
         busType: `${rateInfo?.vehicleType} (${rateInfo?.seatingCapacity} Seater, ${rateInfo?.busType})`,
         seatType,
@@ -204,13 +208,13 @@ export default function SpecialOfferPage() {
       />
       <div className="absolute inset-0 bg-gray-900/70 z-10"></div>
       
-      <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card rounded-2xl shadow-2xl">
+      <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 dark:bg-card/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20">
          <div className="text-center mb-8">
             <span className="inline-block bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
               Special Offer
             </span>
-            <h2 className="text-4xl font-bold text-center mt-3 font-display text-primary">Nirankari Samagam, Sangli</h2>
-            <p className="text-muted-foreground mt-2">Book buses at special <span className="text-yellow-500 font-bold">discounted rates</span> for the event. Fill the form to get a quote.</p>
+            <h2 className="text-4xl font-bold text-center mt-3 font-display text-foreground">Nirankari Samagam, Sangli</h2>
+            <p className="text-muted-foreground mt-2">Book buses at special <span className="text-yellow-400 font-bold">discounted rates</span> for the event. Fill the form to get a quote.</p>
          </div>
         
         {isLoaded ? (
@@ -227,6 +231,7 @@ export default function SpecialOfferPage() {
                   <PlacesAutocomplete 
                     onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
                     initialValue={fromLocation.address}
+                    className="pl-10"
                   />
                 </div>
 
@@ -236,16 +241,30 @@ export default function SpecialOfferPage() {
                   <Input id="to" value={toLocation.address} disabled className="pl-10"/>
                 </div>
                 
-                <div className="relative">
-                  <Label htmlFor="start-date">Journey Date</Label>
-                  <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                  <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required className="pl-10" />
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                        <Label htmlFor="start-date">Journey Date</Label>
+                        <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                        <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required className="pl-10" />
+                    </div>
+                     <div className="relative">
+                        <Label htmlFor="start-time">Start Time</Label>
+                        <Clock className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                        <Input id="start-time" type="time" value={journeyTime} onChange={e => setJourneyTime(e.target.value)} required className="pl-10" />
+                    </div>
                 </div>
                 
-                <div className="relative">
-                  <Label htmlFor="return-date">Return Date</Label>
-                  <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                  <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required className="pl-10" />
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                        <Label htmlFor="return-date">Return Date</Label>
+                        <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                        <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required className="pl-10" />
+                    </div>
+                     <div className="relative">
+                        <Label htmlFor="return-time">Return Time</Label>
+                        <Clock className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+                        <Input id="return-time" type="time" value={returnTime} onChange={e => setReturnTime(e.target.value)} required className="pl-10" />
+                    </div>
                 </div>
 
                  <div className="relative">
@@ -358,5 +377,3 @@ export default function SpecialOfferPage() {
     </div>
   );
 }
-
-    
