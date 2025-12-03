@@ -68,8 +68,6 @@ export default function Header() {
   };
 
   const guestLinks = [
-    { href: "/login", label: "User Login" },
-    { href: "/register", label: "User Signup" },
     { href: "/operator-login", label: "Operator Login" },
     { href: "/operator-register", label: "Operator Register" },
     { href: "/admin/login", label: "Admin Login" },
@@ -107,12 +105,7 @@ export default function Header() {
   
   const guestNav = (
      <div className="flex items-center gap-2">
-        <Button asChild size="sm">
-            <Link href="/login">Login</Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-            <Link href="/register">Sign Up</Link>
-        </Button>
+        {/* No login/signup for general users */}
     </div>
   );
 
@@ -148,7 +141,7 @@ export default function Header() {
                 ))}
 
                 <div className="border-t pt-4 mt-2 space-y-4">
-                 {(authLoading || loadingRoles) ? <Skeleton className="h-8 w-24" /> : user ? (
+                 {(authLoading || loadingRoles) ? <Skeleton className="h-8 w-24" /> : user && (user.isAnonymous === false) ? (
                     <>
                         {isAdmin && <SheetClose asChild><Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Shield className="h-5 w-5" /> Admin</Link></SheetClose>}
                         {isOperator && <SheetClose asChild><Link href="/operator-dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Building className="h-5 w-5" /> Operator</Link></SheetClose>}
@@ -195,7 +188,7 @@ export default function Header() {
 
       <div className="ml-auto flex gap-2 sm:gap-4 items-center">
         <div className="hidden sm:flex">
-         {(authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user ? userNav : guestNav}
+         {(authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
         </div>
         <MobileNav />
       </div>
