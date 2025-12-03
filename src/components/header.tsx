@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from "./ui/button";
-import { BusFront, Menu, LogOut, UserCircle, Shield, Building, Star } from "lucide-react";
+import { BusFront, Menu, LogOut, UserCircle, Shield, Building, Star, Phone, Mail } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -44,8 +44,6 @@ export default function Header() {
             setIsOperator(false);
           }
         } catch (serverError) {
-            // Check which path might have failed if possible, though a single catch is often fine here.
-            // For simplicity, we'll create a generic error for the header role check.
             const permissionError = new FirestorePermissionError({
               path: `/users/${user.uid} or /busOperators/${user.uid}`,
               operation: 'get',
@@ -104,7 +102,6 @@ export default function Header() {
   
   const guestNav = (
      <div className="flex items-center gap-2">
-        {/* No login/signup for general users */}
     </div>
   );
 
@@ -172,37 +169,56 @@ export default function Header() {
   );
 
   return (
-    <header className="px-4 lg:px-6 h-16 flex items-center bg-card shadow-sm border-b sticky top-0 z-50">
-      <Link href="/" className="flex items-center justify-center mr-6">
-        <BusFront className="h-6 w-6 text-primary" />
-        <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
-      </Link>
-      
-      <nav className="hidden lg:flex gap-4 sm:gap-6 items-center">
-         <Link
-            href="/special-offer"
-            className="flex items-center gap-1 text-sm font-bold text-yellow-500 hover:text-yellow-400 transition-colors animate-pulse"
-          >
-            <Star className="h-4 w-4" />
-            Special Offer
-          </Link>
-        {baseLinks.map(link => (
-             <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-              >
-                {link.label}
-              </Link>
-        ))}
-      </nav>
-
-      <div className="ml-auto flex gap-2 sm:gap-4 items-center">
-        <div className="hidden sm:flex">
-         {(authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
+    <header className="bg-card shadow-sm border-b sticky top-0 z-50">
+        <div className="bg-secondary/30 text-secondary-foreground text-xs py-1">
+            <div className="container mx-auto flex justify-between items-center px-4 lg:px-6">
+                <span>Dive Fams Aliarterfor Free. Sakpal Travels</span>
+                <div className="flex items-center gap-4">
+                    <a href="tel:+91691106343" className="flex items-center gap-1 hover:text-primary">
+                        <Phone className="h-3 w-3" />
+                        +91 69 110 6343
+                    </a>
+                     <a href="/contact" className="flex items-center gap-1 hover:text-primary">
+                        <Mail className="h-3 w-3" />
+                        Contact Us
+                    </a>
+                </div>
+            </div>
         </div>
-        <MobileNav />
-      </div>
+        <div className="px-4 lg:px-6 h-16 flex items-center">
+            <Link href="/" className="flex items-center justify-center mr-6">
+                <BusFront className="h-6 w-6 text-primary" />
+                <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
+            </Link>
+            
+            <nav className="hidden lg:flex gap-4 sm:gap-6 items-center">
+                {baseLinks.map(link => (
+                    <Link
+                        key={link.href}
+                        href={link.href}
+                        className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                        {link.label}
+                    </Link>
+                ))}
+            </nav>
+
+            <div className="ml-auto flex gap-2 sm:gap-4 items-center">
+                 <Button asChild className="hidden sm:inline-flex bg-accent hover:bg-accent/90 animate-pulse">
+                    <Link
+                        href="/special-offer"
+                        className="flex items-center gap-1 text-sm font-bold"
+                    >
+                        <Star className="h-4 w-4" />
+                        Special Offer
+                    </Link>
+                 </Button>
+                <div className="hidden sm:flex">
+                {(authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
+                </div>
+                <MobileNav />
+            </div>
+        </div>
     </header>
   );
 }

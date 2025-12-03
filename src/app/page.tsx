@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, Search, Book, Star } from 'lucide-react';
+import { CheckCircle, Search, Book, Star, ShieldCheck, Armchair } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import placeholderImages from '@/lib/placeholder-images.json';
@@ -10,9 +10,9 @@ import placeholderImages from '@/lib/placeholder-images.json';
 export default function HomePage() {
 
   const features = [
-    { text: "Advanced Seat Selection", icon: <CheckCircle className="w-5 h-5 text-green-500" /> },
-    { text: "Verified Bus Operators", icon: <CheckCircle className="w-5 h-5 text-green-500" /> },
-    { text: "Senior-Citizen Friendly", icon: <CheckCircle className="w-5 h-5 text-green-500" /> },
+    { text: "Reliable", description:"Reliable instillocates in usurie and comfortable ueilk being.", icon: <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bus-front"><path d="M5 17h14"/><path d="M6 17H4.5a1.5 1.5 0 0 1 0-3H6"/><path d="M18 17h1.5a1.5 1.5 0 0 0 0-3H18"/><path d="M7 17V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12"/><path d="M9 5h6"/><path d="M10 11h4"/><path d="m8 17 2 4"/><path d="m16 17-2 4"/></svg>},
+    { text: "Comfortable", description: "Comfortable can be edewn to your nouired experience.", icon: <Armchair className="w-8 h-8 text-primary" /> },
+    { text: "Verified Operators", description: "Verified operators collcxderant or prewntrat all available.", icon: <ShieldCheck className="w-8 h-8 text-primary" /> },
   ];
 
   const howItWorks = [
@@ -55,36 +55,27 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col bg-background">
       {/* Hero Section */}
-      <section className="w-full py-20 md:py-32 lg:py-40 bg-background">
-        <div className="container mx-auto px-4 md:px-6 grid md:grid-cols-2 gap-8 items-center">
+      <section className="w-full bg-gradient-to-br from-blue-700 via-blue-500 to-cyan-400 relative">
+        <div className="container mx-auto px-4 md:px-6 grid md:grid-cols-2 gap-8 items-center py-20 md:py-32 lg:py-40">
           <div className="max-w-xl text-center md:text-left">
-            <h1 className="text-4xl font-bold tracking-tight font-display sm:text-5xl lg:text-6xl text-primary">
+            <h1 className="text-4xl font-bold tracking-tight font-display sm:text-5xl lg:text-6xl text-white">
               Book Buses with Ease
             </h1>
-            <p className="mt-6 text-lg leading-8 text-muted-foreground">
-              Reliable, Comfortable, and Verified Operators for all your travel needs. Get instant estimates and book your journey in minutes.
+            <p className="mt-6 text-lg leading-8 text-blue-100">
+              Get the posolution to ohsite and tredly werting busentibouds services.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
-               <Button asChild size="lg" className="w-full sm:w-auto">
+               <Button asChild size="lg" className="w-full sm:w-auto bg-cyan-400 hover:bg-cyan-500 text-blue-900 shadow-lg transform hover:scale-105 transition-transform">
                 <Link href="/search">Get an Estimate</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
+              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto bg-white/20 text-white border-white/50 hover:bg-white/30">
                 <Link href="/explore-routes">Explore Routes</Link>
               </Button>
             </div>
-            {/* Feature Highlights */}
-            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 justify-center md:justify-start">
-              {features.map(feature => (
-                <div key={feature.text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {feature.icon}
-                  <span>{feature.text}</span>
-                </div>
-              ))}
-            </div>
           </div>
-          <div className="flex justify-center">
+          <div className="hidden md:flex justify-center">
             <Image 
                 src={placeholderImages.busExterior.src}
                 alt={placeholderImages.busExterior.alt}
@@ -93,6 +84,23 @@ export default function HomePage() {
                 className="rounded-lg shadow-xl"
                 data-ai-hint={placeholderImages.busExterior.hint}
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="w-full py-16 md:py-20 bg-background">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <div key={feature.text} className="text-center">
+                  <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mx-auto mb-4">
+                      {feature.icon}
+                  </div>
+                  <h3 className="text-lg font-semibold font-display text-primary">{feature.text}</h3>
+                  <p className="mt-1 text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
