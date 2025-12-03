@@ -6,8 +6,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle, User as UserIcon } from "lucide-react";
-import type { BookingRequest, MsrtcBooking, User } from "@/lib/types";
+import { Clock, XCircle, MapPin, Calendar, Users, Bus, ArrowRight, Hourglass, CheckCircle } from "lucide-react";
+import type { BookingRequest, MsrtcBooking } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +61,6 @@ function TrackStatusContent() {
 
   const [mobileNumber, setMobileNumber] = useState('');
   
-  const [foundUsers, setFoundUsers] = useState<User[]>([]);
   const [foundRequests, setFoundRequests] = useState<CombinedRequest[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [queryError, setQueryError] = useState<string | null>(null);
@@ -71,7 +70,6 @@ function TrackStatusContent() {
         alert("Please enter a mobile number to search.");
         return;
     }
-    // Update URL to trigger the data fetching effect
     router.push(`/track-status?mobile=${mobileNumber}`);
   };
 
@@ -80,8 +78,6 @@ function TrackStatusContent() {
     if (mobileFromUrl) {
         setMobileNumber(mobileFromUrl);
     } else {
-        // Clear results if there's no mobile number in the URL
-        setFoundUsers([]);
         setFoundRequests([]);
     }
   }, [searchParams]);
@@ -91,7 +87,6 @@ function TrackStatusContent() {
 
     if (!mobileToSearch) {
       setDataLoading(false);
-      setFoundUsers([]);
       setFoundRequests([]);
       setQueryError(null);
       return;
@@ -108,51 +103,48 @@ function TrackStatusContent() {
             setQueryError("Could not authenticate to perform search.");
             setDataLoading(false);
         });
-        return; // The effect will re-run once the user is authenticated.
+        return; 
     }
 
 
     setDataLoading(true);
     setQueryError(null);
-    setFoundUsers([]);
     setFoundRequests([]);
 
     const unsubscribes: Unsubscribe[] = [];
 
     const queries = [
-        { col: 'users', field: 'mobileNumber', type: 'User' },
-        { col: 'bookingRequests', field: 'contact.mobile', type: 'Private' },
-        { col: 'msrtcBookings', field: 'contactNumber', type: 'MSRTC' }
+        { col: 'bookingRequests', field: 'contact.mobile', type: 'Private' as const },
+        { col: 'msrtcBookings', field: 'contactNumber', type: 'MSRTC' as const }
     ];
 
     let activeQueries = queries.length;
+    let allRequests: CombinedRequest[] = [];
+
     const onQueryDone = () => {
         activeQueries--;
         if (activeQueries === 0) {
+            setFoundRequests(allRequests.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+                return dateB.getTime() - dateA.getTime();
+            }));
             setDataLoading(false);
         }
     };
-
+    
     queries.forEach(({ col, field, type }) => {
         const q = query(collection(firestore, col), where(field, "==", mobileToSearch));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (type === 'User') {
-                const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
-                setFoundUsers(usersData);
-            } else {
-                const requestsData = snapshot.docs.map(doc => ({ ...doc.data(), type, id: doc.id })) as CombinedRequest[];
-                setFoundRequests(prev => {
-                    const otherRequests = prev.filter(r => r.type !== type);
-                    return [...otherRequests, ...requestsData].sort((a, b) => {
-                         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-                         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
-                         return dateB.getTime() - dateA.getTime();
-                    });
-                });
-            }
-             if (!snapshot.metadata.fromCache) {
-                onQueryDone();
+            const requestsData = snapshot.docs.map(doc => ({ ...doc.data(), type, id: doc.id })) as CombinedRequest[];
+            
+            // Update the central list of all requests
+            const otherRequests = allRequests.filter(r => r.type !== type);
+            allRequests = [...otherRequests, ...requestsData];
+
+            if (!snapshot.metadata.fromCache) {
+               onQueryDone();
             }
         }, (serverError) => {
             const permissionError = new FirestorePermissionError({
@@ -160,6 +152,7 @@ function TrackStatusContent() {
                 operation: 'list',
             });
             errorEmitter.emit('permission-error', permissionError);
+            setQueryError(`Permission denied while searching for ${type} requests.`);
             onQueryDone();
         });
         unsubscribes.push(unsubscribe);
@@ -172,7 +165,7 @@ function TrackStatusContent() {
   }, [searchParams, currentUser, authLoading, firestore, auth]);
   
   const mobileToDisplay = searchParams.get('mobile');
-  const noResults = !dataLoading && mobileToDisplay && foundUsers.length === 0 && foundRequests.length === 0;
+  const noResults = !dataLoading && mobileToDisplay && foundRequests.length === 0;
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6">
@@ -199,7 +192,7 @@ function TrackStatusContent() {
             </Button>
           </div>
           
-          {queryError && <p className="text-destructive text-center mb-4">Error: {queryError}</p>}
+          {queryError && <p className="text-destructive text-center mb-4">{queryError}</p>}
           
           <div className="space-y-6">
             {dataLoading && (
@@ -208,27 +201,10 @@ function TrackStatusContent() {
                  ))
             )}
 
-            {!dataLoading && mobileToDisplay && (foundUsers.length > 0 || foundRequests.length > 0) && (
-                <h3 className="text-lg font-semibold text-center">Found results for {mobileToDisplay}</h3>
+            {!dataLoading && mobileToDisplay && foundRequests.length > 0 && (
+                <h3 className="text-lg font-semibold text-center">Found {foundRequests.length} results for {mobileToDisplay}</h3>
             )}
             
-            {foundUsers.map(user => (
-                <div key={user.id}>
-                     <Card className="bg-blue-50">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-blue-800">
-                                <UserIcon /> User Profile
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                            <div><span className="font-semibold">Name:</span> {user.name}</div>
-                            <div><span className="font-semibold">Email:</span> {user.email}</div>
-                            <div><span className="font-semibold">Mobile:</span> {user.mobileNumber}</div>
-                        </CardContent>
-                    </Card>
-                </div>
-            ))}
-
             {foundRequests.map(request => (
                 <div key={request.id}>
                     <Card className="bg-secondary/30">
@@ -279,7 +255,7 @@ function TrackStatusContent() {
 
             {noResults && (
                 <p className="text-center text-muted-foreground py-8">
-                    No users or requests found for the mobile number: <span className="font-semibold">{mobileToDisplay}</span>
+                    No requests found for the mobile number: <span className="font-semibold">{mobileToDisplay}</span>
                 </p>
             )}
           </div>
@@ -297,5 +273,3 @@ export default function TrackStatusPage() {
         </Suspense>
     )
 }
-
-    

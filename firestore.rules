@@ -92,12 +92,11 @@ service cloud.firestore {
      * @allow (get) User with ID 'user_abc' reads their profile: request.auth.uid == 'user_abc'.
      * @allow (update) User with ID 'user_abc' updates their profile: request.auth.uid == 'user_abc'.
      * @allow (delete) User with ID 'user_abc' deletes their profile: request.auth.uid == 'user_abc'.
-     * @deny (create) User with ID 'user_xyz' attempts to create a profile for 'user_abc': request.auth.uid != 'user_abc'.
      * @principle Enforces document ownership for user profiles.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin() || (isSignedIn() && request.query.where.mobileNumber == request.auth.token.phone_number);
+      allow list: if false; // Disallow listing all users. Specific queries must be enabled below.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if (isExistingOwner(userId) && request.resource.data.id == resource.data.id) || isAdmin(); // Enforce immutability of user ID.
       allow delete: if isExistingOwner(userId) || isAdmin();
