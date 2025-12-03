@@ -108,6 +108,12 @@ export default function Header() {
   
   const guestNav = (
      <div className="flex items-center gap-2">
+       <Button asChild variant="ghost" size="sm">
+            <Link href="/operator-login">Operator Login</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+            <Link href="/admin/login">Admin Login</Link>
+        </Button>
     </div>
   );
 
@@ -148,7 +154,7 @@ export default function Header() {
                 ))}
 
                 <div className="border-t pt-4 mt-2 space-y-4">
-                 {(authLoading || loadingRoles || !isMounted) ? <Skeleton className="h-8 w-24" /> : user && (user.isAnonymous === false) ? (
+                 {(!isMounted || authLoading || loadingRoles) ? <Skeleton className="h-8 w-24" /> : user && (user.isAnonymous === false) ? (
                     <>
                         {isAdmin && <SheetClose asChild><Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Shield className="h-5 w-5" /> Admin</Link></SheetClose>}
                         {isOperator && <SheetClose asChild><Link href="/operator-dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Building className="h-5 w-5" /> Operator</Link></SheetClose>}
@@ -205,7 +211,7 @@ export default function Header() {
                     </Link>
                  </Button>
                 <div className="hidden sm:flex">
-                {(authLoading || loadingRoles || !isMounted) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
+                {(!isMounted || authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
                 </div>
                 <MobileNav />
             </div>
