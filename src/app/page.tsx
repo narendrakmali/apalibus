@@ -26,7 +26,7 @@ export default function HomePage() {
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script-homepage',
+    id: 'google-map-script',
     googleMapsApiKey: googleMapsApiKey!,
     libraries,
     language: 'en',
