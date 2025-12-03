@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from "./ui/button";
-import { BusFront, Menu, LogOut, UserCircle, Shield, Building, Star, Phone, Mail } from "lucide-react";
+import { BusFront, Menu, LogOut, Shield, Building, Star } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
