@@ -170,21 +170,6 @@ export default function Header() {
 
   return (
     <header className="bg-card shadow-sm border-b sticky top-0 z-50">
-        <div className="bg-secondary/30 text-secondary-foreground text-xs py-1">
-            <div className="container mx-auto flex justify-between items-center px-4 lg:px-6">
-                <span>Dive Fams Aliarterfor Free. Sakpal Travels</span>
-                <div className="flex items-center gap-4">
-                    <a href="tel:+91691106343" className="flex items-center gap-1 hover:text-primary">
-                        <Phone className="h-3 w-3" />
-                        +91 69 110 6343
-                    </a>
-                     <a href="/contact" className="flex items-center gap-1 hover:text-primary">
-                        <Mail className="h-3 w-3" />
-                        Contact Us
-                    </a>
-                </div>
-            </div>
-        </div>
         <div className="px-4 lg:px-6 h-16 flex items-center">
             <Link href="/" className="flex items-center justify-center mr-6">
                 <BusFront className="h-6 w-6 text-primary" />
