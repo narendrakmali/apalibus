@@ -20,6 +20,11 @@ export default function Header() {
   const [isOperator, setIsOperator] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -58,8 +63,10 @@ export default function Header() {
         setLoadingRoles(false);
       }
     };
-    checkUserRole();
-  }, [user, firestore]);
+    if (isMounted) {
+      checkUserRole();
+    }
+  }, [user, firestore, isMounted]);
 
   const handleLogout = () => {
     auth.signOut();
@@ -141,7 +148,7 @@ export default function Header() {
                 ))}
 
                 <div className="border-t pt-4 mt-2 space-y-4">
-                 {(authLoading || loadingRoles) ? <Skeleton className="h-8 w-24" /> : user && (user.isAnonymous === false) ? (
+                 {(authLoading || loadingRoles || !isMounted) ? <Skeleton className="h-8 w-24" /> : user && (user.isAnonymous === false) ? (
                     <>
                         {isAdmin && <SheetClose asChild><Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Shield className="h-5 w-5" /> Admin</Link></SheetClose>}
                         {isOperator && <SheetClose asChild><Link href="/operator-dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Building className="h-5 w-5" /> Operator</Link></SheetClose>}
@@ -198,7 +205,7 @@ export default function Header() {
                     </Link>
                  </Button>
                 <div className="hidden sm:flex">
-                {(authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
+                {(authLoading || loadingRoles || !isMounted) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
                 </div>
                 <MobileNav />
             </div>
