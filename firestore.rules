@@ -179,9 +179,9 @@ service cloud.firestore {
      * @principle Allows users to submit requests and operators to manage them.
      */
     match /bookingRequests/{requestId} {
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
       allow get: if isOperator() || isOwner(resource.data.userId) || isAdmin();
-      allow list: if isAdmin() || isOperator() || (isSignedIn() && request.query.where['contact.mobile'] != null);
+      allow list: if isAdmin() || isOperator() || isSignedIn();
       allow update: if isOperator() || isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin(); // Requests should not be deleted, but marked as cancelled/rejected.
     }
@@ -194,9 +194,9 @@ service cloud.firestore {
      * @principle Allows users to submit MSRTC requests and admins to view them.
      */
     match /msrtcBookings/{bookingId} {
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
       allow get: if isAdmin() || isOwner(resource.data.userId);
-      allow list: if isAdmin() || isOperator() || (isSignedIn() && request.query.where.contactNumber != null);
+      allow list: if isAdmin() || isOperator() || isSignedIn();
       allow update, delete: if isAdmin();
     }
   }
