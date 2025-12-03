@@ -11,27 +11,23 @@
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 206 58% 30%; /* Deep Blue: #294B63 */
+    --primary: 215 78% 41%; /* #1e3a8a */
     --primary-foreground: 0 0% 100%;
-    --secondary: 206 33% 90%; /* Light grayish-blue: #D4E0E9 */
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 28 100% 45%; /* Warm Orange: #E67700 */
-    --accent-foreground: 0 0% 100%;
+    --accent: 38 92% 56%; /* #f59e0b */
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 206 58% 30%;
+    --ring: 215 78% 41%;
     --radius: 0.5rem;
-
-    /* New styles from user */
-    --primary-color: #0056b3;  /* Trusted Blue */
-    --accent-color: #ff6b00;   /* Call-to-Action Orange */
-    --text-dark: #1a1a1a;
-    --text-light: #ffffff;
-    --input-bg: #f5f7fa;
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   }
 
   .dark {
@@ -41,19 +37,19 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
-    --primary: 206 58% 40%;
+    --primary: 215 78% 51%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 28 100% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 38 92% 66%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 206 58% 40%;
+    --ring: 215 78% 51%;
   }
 }
 
@@ -64,129 +60,81 @@
   body {
     @apply bg-background text-foreground;
   }
-  .dark .text-primary-foreground {
-    color: hsl(var(--primary-foreground));
-  }
   body {
     font-family: var(--font-poppins), sans-serif;
   }
 }
 
-/* New styles from user */
-.hero {
-    position: relative;
-    min-height: 90vh; /* Takes up most of the screen */
-    background: linear-gradient(135deg, rgba(0, 30, 80, 0.85), rgba(0, 86, 179, 0.7)),
-                var(--hero-bg-image); 
+.booking-page-wrapper {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=2071&auto=format&fit=crop');
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
+    min-height: calc(100vh - 4rem);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     padding: 20px;
 }
 
-.hero-container {
-    display: flex;
-    flex-wrap: wrap;
-    max-width: 1200px;
+.booking-card-container {
     width: 100%;
-    align-items: center;
-    justify-content: space-between;
-    gap: 40px;
+    max-width: 900px;
 }
 
-.hero-text {
-    flex: 1;
-    min-width: 300px;
-    color: var(--text-light);
+.booking-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.badge {
-    display: inline-block;
-    background-color: var(--accent-color);
+.form-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.form-header .badge {
+    background-color: hsl(var(--accent));
     color: white;
-    padding: 6px 12px;
+    padding: 5px 15px;
     border-radius: 50px;
     font-size: 0.85rem;
     font-weight: 600;
-    margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
+    display: inline-block;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
 }
 
-.hero-text h1 {
-    font-size: 3.5rem;
-    line-height: 1.1;
+.form-header h1 {
+    color: hsl(var(--primary));
+    font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
-.hero-text p {
+.form-header p {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+}
+
+.form-section-title {
     font-size: 1.1rem;
-    opacity: 0.9;
-    margin-bottom: 30px;
-    line-height: 1.6;
-}
-
-.cta-buttons {
-    display: flex;
-    gap: 15px;
-}
-
-.btn-outline {
-    padding: 12px 30px;
-    border: 2px solid white;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
     font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-outline:hover {
-    background: white;
-    color: var(--primary-color);
-}
-
-
-.booking-card {
-    flex: 1;
-    min-width: 350px;
-    max-width: 500px;
-    background: rgba(255, 255, 255, 1);
-    padding: 35px;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    position: relative;
-    overflow: hidden;
-}
-
-.booking-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 6px;
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-}
-
-.booking-card h2 {
-    font-size: 1.5rem;
     color: var(--text-dark);
-    margin-bottom: 5px;
-}
-
-.booking-card .sub-text {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 25px;
-    display: block;
+    margin: 25px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e5e7eb;
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 20px;
 }
 
 .full-width {
@@ -194,58 +142,74 @@
 }
 
 .input-group {
-    margin-bottom: 5px;
+    display: flex;
+    flex-direction: column;
 }
 
 .input-group label {
-    display: block;
-    font-size: 0.85rem;
-    color: #555;
-    margin-bottom: 6px;
+    font-size: 0.9rem;
     font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 6px;
 }
 
 .input-field {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e0e0e0;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
     border-radius: 10px;
-    background: var(--input-bg);
     font-size: 0.95rem;
+    background-color: #fff;
     transition: all 0.3s ease;
+}
+
+.input-field:focus-visible {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); /* Blue glow */
     outline: none;
 }
 
-.input-field:focus {
-    border-color: var(--primary-color);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+.action-area {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
 }
 
-.btn-search {
-    background: linear-gradient(90deg, var(--primary-color), #004494);
-    color: white;
-    border: none;
-    padding: 15px;
+.btn {
+    padding: 12px 24px;
     border-radius: 10px;
-    font-size: 1.1rem;
     font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
-    margin-top: 10px;
-    transition: transform 0.2s;
-    width: 100%;
-    box-shadow: 0 5px 15px rgba(0, 86, 179, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
 }
 
-.btn-search:hover {
+.btn-secondary {
+    background-color: #e5e7eb;
+    color: var(--text-dark);
+}
+
+.btn-secondary:hover {
+    background-color: #d1d5db;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), #3b82f6);
+    color: white;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 86, 179, 0.4);
+    box-shadow: 0 8px 15px rgba(37, 99, 235, 0.4);
 }
 
 @media (max-width: 768px) {
-    .hero-text h1 { font-size: 2.2rem; }
-    .hero-container { flex-direction: column; }
-    .booking-card { padding: 25px; }
-    .form-grid { grid-template-columns: 1fr; } /* Stack inputs on mobile */
+    .form-grid { grid-template-columns: 1fr; }
     .full-width { grid-column: span 1; }
+    .action-area { flex-direction: column-reverse; }
+    .btn { width: 100%; }
 }

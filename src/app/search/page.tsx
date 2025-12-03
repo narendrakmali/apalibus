@@ -11,14 +11,12 @@ import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from "firebase/auth";
 import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
-import placeholderImages from '@/lib/placeholder-images.json';
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
-
+import { Textarea } from "@/components/ui/textarea";
 
 const libraries: ("places")[] = ["places"];
 
@@ -82,9 +80,8 @@ export default function SearchPage() {
     }
   }, [locationName, coords]);
 
-
-  const calculateDistanceAndEstimate = () => {
-    if (!fromLocation.lat || !fromLocation.lng || !toLocation.lat || !toLocation.lng) {
+  const handleSubmit = () => {
+     if (!fromLocation.lat || !fromLocation.lng || !toLocation.lat || !toLocation.lng) {
       setError("Please select valid 'From' and 'To' locations from the suggestions.");
       setIsAlertOpen(true);
       return;
@@ -163,8 +160,8 @@ export default function SearchPage() {
         setIsAlertOpen(true);
       }
     );
-  };
-  
+  }
+
   const handleShare = () => {
     if (!estimate) {
         alert("Please calculate an estimate first before sharing.");
@@ -282,131 +279,110 @@ Sakpal Travels
     }
   };
 
+  const handleBookNow = () => {
+    if (!estimate) {
+        handleSubmit();
+    } else {
+        setShowRequestConfirm(true);
+    }
+  }
+
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4">
-      <Image 
-        src={placeholderImages.busTerminal.src}
-        alt={placeholderImages.busTerminal.alt}
-        fill
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        data-ai-hint={placeholderImages.busTerminal.hint}
-      />
-      <div className="absolute inset-0 bg-black/50 z-10"></div>
-      
-      <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border">
-         <h2 className="text-3xl font-bold text-center mb-2 font-display text-primary-foreground">Rent a Bus</h2>
-         <p className="text-muted-foreground text-center mb-8">Fill in the details below to get an instant estimate for your group trip.</p>
-        
-        {isLoaded ? (
-            <form onSubmit={(e) => { e.preventDefault(); calculateDistanceAndEstimate(); }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                
-                <div className="grid gap-2 md:col-span-2">
-                    <h3 className="text-lg font-semibold text-primary-foreground border-b pb-2 mb-2">Trip Details</h3>
+    <div className="booking-page-wrapper">
+        <div className="booking-card-container">
+            <div className="booking-card">
+                <div className="form-header">
+                    <span className="badge">Group & Private</span>
+                    <h1>Rent a Bus</h1>
+                    <p>Reliable group travel packages for any occasion. Get an instant estimate.</p>
                 </div>
+                {isLoaded ? (
+                <form onSubmit={(e) => { e.preventDefault(); handleBookNow(); }}>
+                    <div className="form-section-title">Trip Details</div>
+                    <div className="form-grid">
+                        <div className="input-group">
+                            <Label>📍 From</Label>
+                            <PlacesAutocomplete 
+                                onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
+                                initialValue={fromLocation.address}
+                                className="input-field"
+                            />
+                        </div>
+                        <div className="input-group">
+                            <Label>📍 To (Destination)</Label>
+                            <PlacesAutocomplete 
+                                onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })}
+                                initialValue={toLocation.address}
+                                className="input-field"
+                            />
+                        </div>
+                        <div className="input-group">
+                            <Label>📅 Journey Date</Label>
+                            <Input type="date" className="input-field" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
+                        </div>
+                        <div className="input-group">
+                            <Label>📅 Return Date</Label>
+                            <Input type="date" className="input-field" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
+                        </div>
+                    </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="from">From</Label>
-                  <PlacesAutocomplete 
-                    onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
-                    initialValue={fromLocation.address}
-                  />
-                </div>
+                    <div className="form-section-title">Vehicle & Passengers</div>
+                    <div className="form-grid">
+                        <div className="input-group">
+                            <Label>👥 Number of Passengers</Label>
+                            <Input type="number" className="input-field" placeholder="e.g. 25" value={passengers} onChange={e => setPassengers(e.target.value)} required/>
+                        </div>
+                        <div className="input-group">
+                            <Label>🚌 Vehicle Type</Label>
+                            <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
+                                <SelectTrigger className="input-field">
+                                    <SelectValue placeholder="Select vehicle type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {rateCard.map((vehicle, index) => (
+                                        <SelectItem key={index} value={index.toString()}>
+                                            {vehicle.vehicleType} ({vehicle.seatingCapacity} Seater, {vehicle.busType})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="to">To</Label>
-                  <PlacesAutocomplete 
-                    onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })} 
-                    initialValue={toLocation.address}
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="start-date">Journey Date</Label>
-                  <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="return-date">Return Date</Label>
-                  <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
-                </div>
+                    <div className="form-section-title">Your Contact Information</div>
+                    <div className="form-grid">
+                         <div className="input-group">
+                            <Label>👤 Full Name</Label>
+                            <Input type="text" className="input-field" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
+                        </div>
 
-                 <div className="grid gap-2">
-                  <Label htmlFor="passengers">Number of Passengers</Label>
-                  <Input id="passengers" type="number" placeholder="e.g., 25" value={passengers} onChange={e => setPassengers(e.target.value)} required />
-                </div>
-                
-                <div className="grid gap-2">
-                    <Label htmlFor="vehicle-type">Vehicle Type</Label>
-                    <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
-                        <SelectTrigger id="vehicle-type">
-                            <SelectValue placeholder="Select vehicle type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {rateCard.map((vehicle, index) => (
-                                <SelectItem key={index} value={index.toString()}>
-                                    {vehicle.vehicleType} ({vehicle.seatingCapacity} Seater, {vehicle.busType})
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="seat-type">Seat Type (Optional)</Label>
-                   <Select onValueChange={setSeatType} value={seatType}>
-                    <SelectTrigger id="seat-type">
-                      <SelectValue placeholder="Select seat type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="General">General (Seater)</SelectItem>
-                      <SelectItem value="Pushback">Pushback (Seater)</SelectItem>
-                      <SelectItem value="Semi Sleeper">Seater cum Sleeper</SelectItem>
-                      <SelectItem value="Sleeper">Sleeper</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                        <div className="input-group">
+                            <Label>📞 Mobile Number</Label>
+                            <Input type="tel" className="input-field" placeholder="Enter mobile number" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
+                        </div>
 
-                <div className="grid gap-2 md:col-span-2">
-                    <h3 className="text-lg font-semibold text-primary-foreground border-b pb-2 mb-2 mt-4">Your Contact Information</h3>
-                </div>
+                        <div className="input-group full-width">
+                            <Label>✉️ Email Address</Label>
+                            <Input type="email" className="input-field" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required />
+                        </div>
+                    </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor="full-name">Full Name</Label>
-                    <Input id="full-name" type="text" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
-                </div>
+                    <div className="action-area">
+                        <button type="button" onClick={handleShare} className="btn btn-secondary">Share Estimate</button>
+                        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                           {isSubmitting ? 'Submitting...' : 'Get Estimate & Book ➔'}
+                        </button>
+                    </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor="mobile">Mobile Number</Label>
-                    <Input id="mobile" type="tel" placeholder="Enter your mobile number" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
-                </div>
-
-                <div className="grid gap-2 md:col-span-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required />
-                </div>
-
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
-                 <Button type="submit" className="w-full sm:w-auto">Estimate Cost</Button>
-                 <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleShare}>Share Estimate</Button>
-                 <Button type="button" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setShowRequestConfirm(true)} disabled={isSubmitting}>
-                    {isSubmitting ? 'Submitting...' : 'Raise Request'}
-                  </Button>
-              </div>
-
-          </form>
-        ) : (
-           <div className="text-center p-8 text-muted-foreground">
-            <h3 className="font-semibold text-lg text-foreground mb-2">Google Maps Not Configured</h3>
-            <p>Please add your Google Maps API key to the <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> file to enable location search.</p>
-            <p>Create a file named <code className="bg-muted text-foreground p-1 rounded-sm text-xs">.env</code> and add: <code className="bg-muted text-foreground p-1 rounded-sm text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_API_KEY</code></p>
-           </div>
-        )}
-      </div>
-      
-       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                </form>
+                ) : (
+                    <div className="text-center p-8 text-gray-500">
+                        Loading map services...
+                    </div>
+                )}
+            </div>
+        </div>
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{error ? 'Error' : 'Estimated Fare Breakdown'}</AlertDialogTitle>
@@ -454,7 +430,7 @@ Sakpal Travels
               )}
             </div>
             <AlertDialogFooter>
-              <AlertDialogAction onClick={() => { setIsAlertOpen(false); setError(null); }}>OK</AlertDialogAction>
+              <AlertDialogAction onClick={() => { setIsAlertOpen(false); setError(null); if (estimate) { setShowRequestConfirm(true); } }}>OK</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

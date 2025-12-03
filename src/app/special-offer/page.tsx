@@ -11,16 +11,12 @@ import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import placeholderImages from '@/lib/placeholder-images.json';
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Calendar, Users, Car, Clock } from "lucide-react";
-
 
 const libraries: ("places")[] = ["places"];
 
@@ -40,13 +36,11 @@ export default function SpecialOfferPage() {
   const [returnTime, setReturnTime] = useState("");
   const [passengers, setPassengers] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
-  const [seatType, setSeatType] = useState("");
-
+  
   const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("Regarding Nirankari Samagam Special Offer");
-
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,13 +54,12 @@ export default function SpecialOfferPage() {
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: googleMapsApiKey!,
-    libraries,
-    language: 'en',
-    skip: !googleMapsApiKey,
-  });
+    const { isLoaded } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: googleMapsApiKey!,
+        libraries,
+        language: 'en',
+    });
 
   const { locationName, coords } = useCurrentLocation(isLoaded);
 
@@ -77,7 +70,6 @@ export default function SpecialOfferPage() {
   }, [locationName, coords]);
   
   useEffect(() => {
-    // Pre-fill To location with Sangli coordinates for distance calculation
     if (isLoaded) {
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ address: 'Sangli, Maharashtra' }, (results, status) => {
@@ -88,7 +80,6 @@ export default function SpecialOfferPage() {
       });
     }
   }, [isLoaded]);
-
 
   const validateAndSubmit = () => {
     if (!fromLocation.address || !toLocation.address) {
@@ -164,7 +155,7 @@ export default function SpecialOfferPage() {
         returnTime,
         seats: passengers,
         busType: `${rateInfo?.vehicleType} (${rateInfo?.seatingCapacity} Seater, ${rateInfo?.busType})`,
-        seatType,
+        seatType: '', // Not specified in this form
         estimate: null, // No estimate needed for special offer
         notes,
         contact: {
@@ -198,139 +189,113 @@ export default function SpecialOfferPage() {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-12 px-4">
-      <Image 
-        src={placeholderImages.busTerminal.src}
-        alt={placeholderImages.busTerminal.alt}
-        fill
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        data-ai-hint="religious gathering"
-      />
-      <div className="absolute inset-0 bg-gray-900/70 z-10"></div>
-      
-      <div className="relative z-20 w-full max-w-4xl p-6 md:p-8 mx-auto bg-card/90 dark:bg-card/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20">
-         <div className="text-center mb-8">
-            <span className="inline-block bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-              Special Offer
-            </span>
-            <h2 className="text-4xl font-bold text-center mt-3 font-display text-foreground">Nirankari Samagam, Sangli</h2>
-            <p className="text-muted-foreground mt-2">Book buses at special <span className="text-yellow-400 font-bold">discounted rates</span> for the event. Fill the form to get a quote.</p>
-         </div>
-        
-        {isLoaded ? (
-            <form onSubmit={(e) => { e.preventDefault(); validateAndSubmit(); }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mb-6">
-                
-                <div className="md:col-span-2">
-                    <h3 className="text-lg font-semibold text-foreground border-b pb-2">Trip Details</h3>
+    <div className="booking-page-wrapper">
+        <div className="booking-card-container">
+            <div className="booking-card">
+                <div className="form-header">
+                    <span className="badge">⭐ Special Discount</span>
+                    <h1>Nirankari Samagam, Sangli</h1>
+                    <p>Reliable group travel packages from Mumbai/Navi Mumbai. Get a special quote.</p>
                 </div>
-
-                <div className="relative">
-                  <Label htmlFor="from">From</Label>
-                  <MapPin className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                  <PlacesAutocomplete 
-                    onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
-                    initialValue={fromLocation.address}
-                    className="pl-10"
-                  />
-                </div>
-
-                <div className="relative">
-                  <Label htmlFor="to">To (Destination)</Label>
-                  <MapPin className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                  <Input id="to" value={toLocation.address} disabled className="pl-10"/>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                        <Label htmlFor="start-date">Journey Date</Label>
-                        <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                        <Input id="start-date" type="date" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required className="pl-10" />
+                {isLoaded ? (
+                <form onSubmit={(e) => { e.preventDefault(); validateAndSubmit(); }}>
+                    <div className="form-section-title">Trip Details</div>
+                    <div className="form-grid">
+                        <div className="input-group">
+                            <Label>📍 From</Label>
+                            <PlacesAutocomplete 
+                                onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
+                                initialValue={fromLocation.address}
+                                className="input-field"
+                            />
+                        </div>
+                        <div className="input-group">
+                            <Label>📍 To (Destination)</Label>
+                            <Input value={toLocation.address} className="input-field" disabled />
+                        </div>
+                         <div className="grid grid-cols-2 gap-4">
+                            <div className="input-group">
+                                <Label>📅 Journey Date</Label>
+                                <Input type="date" className="input-field" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
+                            </div>
+                             <div className="input-group">
+                                <Label>🕖 Start Time</Label>
+                                <Input type="time" className="input-field" value={journeyTime} onChange={e => setJourneyTime(e.target.value)} required />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="input-group">
+                                <Label>📅 Return Date</Label>
+                                <Input type="date" className="input-field" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
+                            </div>
+                             <div className="input-group">
+                                <Label>🕖 Return Time</Label>
+                                <Input type="time" className="input-field" value={returnTime} onChange={e => setReturnTime(e.target.value)} required />
+                            </div>
+                        </div>
                     </div>
-                     <div className="relative">
-                        <Label htmlFor="start-time">Start Time</Label>
-                        <Clock className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                        <Input id="start-time" type="time" value={journeyTime} onChange={e => setJourneyTime(e.target.value)} required className="pl-10" />
+
+                    <div className="form-section-title">Vehicle & Passengers</div>
+                    <div className="form-grid">
+                        <div className="input-group">
+                            <Label>👥 Number of Passengers</Label>
+                            <Input type="number" className="input-field" placeholder="e.g. 25" value={passengers} onChange={e => setPassengers(e.target.value)} required/>
+                        </div>
+                        <div className="input-group">
+                            <Label>🚌 Vehicle Type</Label>
+                            <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
+                                <SelectTrigger className="input-field">
+                                    <SelectValue placeholder="Select vehicle type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {rateCard.map((vehicle, index) => (
+                                        <SelectItem key={index} value={index.toString()}>
+                                            {vehicle.vehicleType} ({vehicle.seatingCapacity} Seater, {vehicle.busType})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                </div>
-                
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                        <Label htmlFor="return-date">Return Date</Label>
-                        <Calendar className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                        <Input id="return-date" type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} required className="pl-10" />
+
+                    <div className="form-section-title">Your Contact Information</div>
+                    <div className="form-grid">
+                         <div className="input-group">
+                            <Label>👤 Full Name</Label>
+                            <Input type="text" className="input-field" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
+                        </div>
+
+                        <div className="input-group">
+                            <Label>📞 Mobile Number</Label>
+                            <Input type="tel" className="input-field" placeholder="Enter mobile number" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
+                        </div>
+
+                        <div className="input-group full-width">
+                            <Label>✉️ Email Address</Label>
+                            <Input type="email" className="input-field" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required />
+                        </div>
+
+                        <div className="input-group full-width">
+                            <Label>📝 Notes (Optional)</Label>
+                            <Textarea className="input-field" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                        </div>
                     </div>
-                     <div className="relative">
-                        <Label htmlFor="return-time">Return Time</Label>
-                        <Clock className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                        <Input id="return-time" type="time" value={returnTime} onChange={e => setReturnTime(e.target.value)} required className="pl-10" />
+
+                    <div className="action-area">
+                        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                           {isSubmitting ? 'Submitting...' : 'Request a Quote ➔'}
+                        </button>
                     </div>
-                </div>
 
-                 <div className="relative">
-                  <Label htmlFor="passengers">Number of Passengers</Label>
-                  <Users className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                  <Input id="passengers" type="number" placeholder="e.g., 25" value={passengers} onChange={e => setPassengers(e.target.value)} required className="pl-10" />
-                </div>
-                
-                <div className="relative">
-                    <Label htmlFor="vehicle-type">Vehicle Type</Label>
-                    <Car className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
-                    <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
-                        <SelectTrigger id="vehicle-type" className="pl-10">
-                            <SelectValue placeholder="Select vehicle type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {rateCard.map((vehicle, index) => (
-                                <SelectItem key={index} value={index.toString()}>
-                                    {vehicle.vehicleType} ({vehicle.seatingCapacity} Seater, {vehicle.busType})
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                
-                <div className="md:col-span-2">
-                    <h3 className="text-lg font-semibold text-foreground border-b pb-2 mt-4">Your Contact Information</h3>
-                </div>
-
-                <div className="grid gap-2">
-                    <Label htmlFor="full-name">Full Name</Label>
-                    <Input id="full-name" type="text" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
-                </div>
-
-                <div className="grid gap-2">
-                    <Label htmlFor="mobile">Mobile Number</Label>
-                    <Input id="mobile" type="tel" placeholder="Enter your mobile number" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
-                </div>
-
-                <div className="grid gap-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required />
-                </div>
-                
-                <div className="grid gap-2 md:col-span-2">
-                    <Label htmlFor="notes">Notes (Optional)</Label>
-                    <Textarea id="notes" placeholder="Any additional details" value={notes} onChange={e => setNotes(e.target.value)} />
-                </div>
-
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
-                 <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white text-base py-6" size="lg" disabled={isSubmitting}>
-                    {isSubmitting ? 'Submitting...' : 'Request a Quote'}
-                  </Button>
-              </div>
-
-          </form>
-        ) : (
-           <div className="text-center p-8 text-muted-foreground">
-            <p>Loading location services...</p>
-           </div>
-        )}
-      </div>
-      
-       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                </form>
+                ) : (
+                    <div className="text-center p-8 text-gray-500">
+                        Loading map services...
+                    </div>
+                )}
+            </div>
+        </div>
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Error</AlertDialogTitle>
@@ -365,7 +330,7 @@ export default function SpecialOfferPage() {
                     <AlertDialogTitle>Request Submitted Successfully!</AlertDialogTitle>
                     <AlertDialogDescription>
                         Thanks for creating a request for the special offer. Our team will contact you shortly with a discounted quote. You can also track your request online.
-                    </AlertDialogDescription>
+                    </dAlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}`)}>
