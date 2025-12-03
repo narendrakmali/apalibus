@@ -1,164 +1,137 @@
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, Search, Book, Star, ShieldCheck, Armchair } from 'lucide-react';
+'use client';
 import Link from 'next/link';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { useJsApiLoader } from '@react-google-maps/api';
+import PlacesAutocomplete from '@/components/places-autocomplete';
+import { useRouter } from 'next/navigation';
 import placeholderImages from '@/lib/placeholder-images.json';
 
+const libraries: ('places')[] = ['places'];
+
+interface Location {
+  address: string;
+  lat?: number;
+  lng?: number;
+}
 
 export default function HomePage() {
+  const [fromLocation, setFromLocation] = useState<Location>({ address: 'Navi Mumbai, Maharashtra, India' });
+  const [toLocation, setToLocation] = useState<Location>({ address: 'Sangli, Maharashtra, India' });
+  const [departureDate, setDepartureDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
+  const [passengers, setPassengers] = useState('');
+  const router = useRouter();
 
-  const features = [
-    { text: "Reliable", description:"Reliable instillocates in usurie and comfortable ueilk being.", icon: <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bus-front"><path d="M5 17h14"/><path d="M6 17H4.5a1.5 1.5 0 0 1 0-3H6"/><path d="M18 17h1.5a1.5 1.5 0 0 0 0-3H18"/><path d="M7 17V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12"/><path d="M9 5h6"/><path d="M10 11h4"/><path d="m8 17 2 4"/><path d="m16 17-2 4"/></svg>},
-    { text: "Comfortable", description: "Comfortable can be edewn to your nouired experience.", icon: <Armchair className="w-8 h-8 text-primary" /> },
-    { text: "Verified Operators", description: "Verified operators collcxderant or prewntrat all available.", icon: <ShieldCheck className="w-8 h-8 text-primary" /> },
-  ];
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  const howItWorks = [
-    {
-      step: 1,
-      title: "Search Your Route",
-      description: "Enter your destination, journey dates, and number of passengers.",
-      icon: <Search className="w-8 h-8 text-primary" />,
-    },
-    {
-      step: 2,
-      title: "Select Your Bus",
-      description: "Choose from a wide range of verified buses that suit your needs.",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bus-front"><path d="M5 17h14"/><path d="M6 17H4.5a1.5 1.5 0 0 1 0-3H6"/><path d="M18 17h1.5a1.5 1.5 0 0 0 0-3H18"/><path d="M7 17V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12"/><path d="M9 5h6"/><path d="M10 11h4"/><path d="m8 17 2 4"/><path d="m16 17-2 4"/></svg>,
-    },
-    {
-      step: 3,
-      title: "Book & Travel",
-      description: "Confirm your booking with secure payment and enjoy a comfortable journey.",
-      icon: <Book className="w-8 h-8 text-primary" />,
-    },
-  ];
-  
-  const testimonials = [
-      {
-          quote: "Booking a bus for our corporate outing was seamless. The bus was clean, and the driver was very professional. Highly recommended!",
-          author: "Rohan Sharma",
-          company: "Corporate Client"
-      },
-      {
-          quote: "I used Sakpal Travels for a family trip, and it was a fantastic experience. The booking process is simple, and their operator network is reliable.",
-          author: "Priya Desai",
-          company: "Family Traveler"
-      },
-       {
-          quote: "As an operator, Sakpal Travels has helped me reach more customers. The dashboard is easy to use and has improved my business.",
-          author: "Mr. Shinde",
-          company: "Bus Operator"
-      }
-  ];
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script-homepage',
+    googleMapsApiKey: googleMapsApiKey!,
+    libraries,
+    language: 'en',
+    skip: !googleMapsApiKey,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = new URLSearchParams({
+        from: fromLocation.address,
+        to: toLocation.address,
+        journeyDate: departureDate,
+        returnDate: returnDate,
+        passengers: passengers,
+    }).toString();
+    router.push(`/search?${query}`);
+  };
 
   return (
-    <div className="flex flex-col bg-background">
-      {/* Hero Section */}
-      <section className="w-full bg-gradient-to-br from-blue-700 via-blue-500 to-cyan-400 relative">
-        <div className="container mx-auto px-4 md:px-6 grid md:grid-cols-2 gap-8 items-center py-20 md:py-32 lg:py-40">
-          <div className="max-w-xl text-center md:text-left">
-            <h1 className="text-4xl font-bold tracking-tight font-display sm:text-5xl lg:text-6xl text-white">
-              Book Buses with Ease
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-blue-100">
-              Get the posolution to ohsite and tredly werting busentibouds services.
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
-               <Button asChild size="lg" className="w-full sm:w-auto bg-cyan-400 hover:bg-cyan-500 text-blue-900 shadow-lg transform hover:scale-105 transition-transform">
-                <Link href="/search">Get an Estimate</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto bg-white/20 text-white border-white/50 hover:bg-white/30">
-                <Link href="/explore-routes">Explore Routes</Link>
-              </Button>
-            </div>
-          </div>
-          <div className="hidden md:flex justify-center">
-            <Image 
-                src={placeholderImages.busExterior.src}
-                alt={placeholderImages.busExterior.alt}
-                width={600} 
-                height={400} 
-                className="rounded-lg shadow-xl"
-                data-ai-hint={placeholderImages.busExterior.hint}
-            />
+    <section 
+        className="hero" 
+        style={{ '--hero-bg-image': `url('${placeholderImages.heroBus.src}')` } as React.CSSProperties}
+    >
+      <div className="hero-container">
+        <div className="hero-text">
+          <span className="badge">⭐ Special Offer</span>
+          <h1>
+            Book Buses
+            <br />
+            with Ease.
+          </h1>
+          <p>
+            Reliable, comfortable, and verified operators for the{' '}
+            <strong>Nirankari Samagam</strong>. Get instant estimates and book your
+            journey in minutes.
+          </p>
+
+          <div className="cta-buttons">
+            <Link href="/explore-routes" className="btn-outline">
+              Explore Routes
+            </Link>
           </div>
         </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="w-full py-16 md:py-20 bg-background">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <div key={feature.text} className="text-center">
-                  <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mx-auto mb-4">
-                      {feature.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold font-display text-primary">{feature.text}</h3>
-                  <p className="mt-1 text-muted-foreground">{feature.description}</p>
+        <div className="booking-card">
+          <h2>Plan Your Trip</h2>
+          <span className="sub-text">Mumbai ⇄ Sangli (Special Rates)</span>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-grid">
+                {isLoaded ? (
+                    <>
+                        <div className="input-group full-width">
+                            <label>📍 From</label>
+                             <PlacesAutocomplete 
+                                onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
+                                initialValue={fromLocation.address}
+                                className="input-field"
+                            />
+                        </div>
+
+                        <div className="input-group full-width">
+                            <label>📍 To</label>
+                            <PlacesAutocomplete 
+                                onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })}
+                                initialValue={toLocation.address}
+                                className="input-field"
+                            />
+                        </div>
+                    </>
+                ) : (
+                    <div className="full-width text-sm text-gray-500">Loading location search...</div>
+                )}
+
+
+              <div className="input-group">
+                <label>📅 Departure</label>
+                <input type="date" className="input-field" required value={departureDate} onChange={e => setDepartureDate(e.target.value)} />
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <div className="input-group">
+                <label>📅 Return</label>
+                <input type="date" className="input-field" value={returnDate} onChange={e => setReturnDate(e.target.value)} />
+              </div>
 
-      {/* How It Works Section */}
-      <section id="how-it-works" className="w-full py-20 md:py-24 bg-secondary">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-display text-primary">How It Works</h2>
-             <p className="mt-4 text-muted-foreground">
-                Three simple steps to book your ideal bus.
-             </p>
-          </div>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {howItWorks.map((step) => (
-              <Card key={step.step} className="text-center bg-background shadow-md hover:shadow-xl transition-shadow">
-                <CardHeader>
-                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mx-auto mb-4">
-                        {step.icon}
-                    </div>
-                    <CardTitle className="text-lg font-semibold font-display">Step {step.step}: {step.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="mt-1 text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+              <div className="input-group full-width">
+                <label>👥 Passengers</label>
+                <input
+                  type="number"
+                  className="input-field"
+                  placeholder="Number of seats"
+                  min="1"
+                  value={passengers}
+                  onChange={e => setPassengers(e.target.value)}
+                />
+              </div>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="w-full py-20 md:py-24 bg-background">
-         <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center max-w-2xl mx-auto mb-12">
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-display text-primary">What Our Users Say</h2>
-                <p className="mt-4 text-muted-foreground">
-                    Trusted by travelers and operators across the country.
-                </p>
+              <div className="full-width">
+                <button type="submit" className="btn-search">
+                  Search Buses ➔
+                </button>
+              </div>
             </div>
-             <div className="grid gap-8 md:grid-cols-3">
-                {testimonials.map((testimonial, index) => (
-                    <Card key={index} className="bg-secondary/50 border-0">
-                        <CardContent className="pt-6">
-                            <div className="flex mb-2">
-                                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
-                            </div>
-                            <p className="italic text-foreground/80">"{testimonial.quote}"</p>
-                        </CardContent>
-                        <CardHeader className="pt-2">
-                           <CardTitle className="text-base font-semibold">{testimonial.author}</CardTitle>
-                           <CardDescription>{testimonial.company}</CardDescription>
-                        </CardHeader>
-                    </Card>
-                ))}
-            </div>
-         </div>
-      </section>
-    </div>
+          </form>
+        </div>
+      </div>
+    </section>
   );
 }

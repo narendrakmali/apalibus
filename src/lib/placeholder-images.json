@@ -13,5 +13,10 @@
     "src": "https://picsum.photos/seed/bus-interior/1920/1080",
     "alt": "Clean and modern interior of a passenger bus",
     "hint": "bus interior"
+  },
+  "heroBus": {
+    "src": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1920&auto=format&fit=crop",
+    "alt": "A modern tour bus on a scenic road.",
+    "hint": "tour bus"
   }
 }
