@@ -41,7 +41,7 @@ export default function RootLayout({
       <body className={cn("min-h-screen flex flex-col font-sans antialiased", ptSans.variable, spaceGrotesk.variable, poppins.variable)}>
           <FirebaseClientProvider>
             <Header />
-            <main className="flex-grow">
+            <main className="flex-grow bg-background">
               <ErrorBoundary
                   FallbackComponent={ErrorFallback}
                   onReset={() => {

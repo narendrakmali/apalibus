@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { useAuth, useFirestore } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
+import placeholderImages from '@/lib/placeholder-images.json';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -21,7 +23,8 @@ export default function AdminLoginPage() {
   const firestore = useFirestore();
   const router = useRouter();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
     setIsLoading(true);
 
@@ -35,15 +38,12 @@ export default function AdminLoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check if the user has the isAdmin flag in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists() && userDoc.data().isAdmin) {
-        // User is an admin, proceed to dashboard
         router.push('/admin');
       } else {
-        // Not an admin
         await auth.signOut();
         setError("You do not have administrative privileges.");
       }
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
-          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+          errorMessage = "Invalid email or password.";
           break;
         case 'auth/invalid-email':
           errorMessage = "Please enter a valid email address.";
@@ -71,16 +71,25 @@ export default function AdminLoginPage() {
 
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-secondary/50 py-12 px-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4">
+       <Image
+          src={placeholderImages.busTerminal.src}
+          alt={placeholderImages.busTerminal.alt}
+          data-ai-hint={placeholderImages.busTerminal.hint}
+          fill
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
+        <div className="absolute inset-0 bg-black/60 z-10" />
+
+      <Card className="w-full max-w-md z-20 bg-background/80 backdrop-blur-sm border-white/20 text-foreground">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-display">Admin Login</CardTitle>
-          <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
+          <CardTitle className="text-3xl font-display text-primary">Admin Access</CardTitle>
+          <CardDescription className="text-muted-foreground/90">Please sign in to continue</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white/80">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -88,23 +97,25 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-white/10 border-white/20 focus:bg-white/20"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white/80">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                 className="bg-white/10 border-white/20 focus:bg-white/20"
               />
             </div>
-            {error && <p className="text-center text-sm text-destructive">{error}</p>}
-            <Button onClick={handleLogin} disabled={isLoading} className="w-full">
+            {error && <p className="text-center text-sm text-destructive bg-destructive/20 p-2 rounded-md">{error}</p>}
+            <Button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-base">
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>

@@ -17,7 +17,6 @@ export default function Header() {
   const auth = useAuth();
   const firestore = useFirestore();
   const [user, authLoading] = useAuthState(auth);
-  const [isOperator, setIsOperator] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -40,17 +39,9 @@ export default function Header() {
             setIsAdmin(false);
           }
 
-          // Check for operator
-          const operatorDocRef = doc(firestore, 'busOperators', user.uid);
-          const operatorDoc = await getDoc(operatorDocRef);
-          if (operatorDoc.exists()) {
-            setIsOperator(true);
-          } else {
-            setIsOperator(false);
-          }
         } catch (serverError) {
             const permissionError = new FirestorePermissionError({
-              path: `/users/${user.uid} or /busOperators/${user.uid}`,
+              path: `/users/${user.uid}`,
               operation: 'get',
             });
             errorEmitter.emit('permission-error', permissionError);
@@ -59,7 +50,6 @@ export default function Header() {
         }
       } else {
         setIsAdmin(false);
-        setIsOperator(false);
         setLoadingRoles(false);
       }
     };
@@ -73,7 +63,6 @@ export default function Header() {
   };
 
   const guestLinks = [
-    { href: "/operator-login", label: "Operator Login" },
     { href: "/admin/login", label: "Admin Login" },
   ];
 
@@ -94,11 +83,6 @@ export default function Header() {
           <Link href="/admin"><Shield className="mr-2 h-4 w-4" />Admin Dashboard</Link>
         </Button>
       )}
-      {isOperator && (
-         <Button asChild variant="ghost" size="sm">
-          <Link href="/operator-dashboard"><Building className="mr-2 h-4 w-4" />Operator Dashboard</Link>
-        </Button>
-      )}
       <Button onClick={handleLogout} variant="outline" size="sm">
         <LogOut className="mr-2 h-4 w-4" />
         Logout
@@ -108,9 +92,6 @@ export default function Header() {
   
   const guestNav = (
      <div className="flex items-center gap-2">
-       <Button asChild variant="ghost" size="sm">
-            <Link href="/operator-login">Operator Login</Link>
-        </Button>
         <Button asChild variant="outline" size="sm">
             <Link href="/admin/login">Admin Login</Link>
         </Button>
@@ -157,7 +138,6 @@ export default function Header() {
                  {(!isMounted || authLoading || loadingRoles) ? <Skeleton className="h-8 w-24" /> : user && (user.isAnonymous === false) ? (
                     <>
                         {isAdmin && <SheetClose asChild><Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Shield className="h-5 w-5" /> Admin</Link></SheetClose>}
-                        {isOperator && <SheetClose asChild><Link href="/operator-dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Building className="h-5 w-5" /> Operator</Link></SheetClose>}
                         <SheetClose asChild>
                             <Button onClick={handleLogout} variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
                                 <LogOut className="mr-2 h-5 w-5" /> Logout
