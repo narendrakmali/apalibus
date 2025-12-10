@@ -38,9 +38,8 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Left Side */}
-        <div className="flex items-center gap-3">
-          {/* Placeholder for SNM Logo */}
+        {/* Left Side: Logo and Branding */}
+        <div className="flex items-center gap-3 flex-shrink-0">
           <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
             SNM
           </div>
@@ -50,12 +49,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Center - Title for larger screens */}
-        <div className="hidden lg:block absolute left-1/2 -translate-x-1/2">
-            <h2 className="text-lg font-semibold text-slate-700">59th Annual Samagam</h2>
-        </div>
-
-        {/* Right Side */}
+        {/* Right Side: Nav and Actions */}
         <div className="flex items-center gap-4">
           {authLoading ? null : user ? (
             <>
