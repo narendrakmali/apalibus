@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { Button } from "./ui/button";
-import { BusFront, Menu, LogOut, Shield, Building, Star } from "lucide-react";
+import { BusFront, Menu, LogOut, Shield } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -119,11 +118,6 @@ export default function Header() {
         </SheetHeader>
         <div className="flex-1 overflow-y-auto">
             <nav className="grid gap-4 text-base font-medium py-4">
-                 <SheetClose asChild>
-                    <Link href="/special-offer" className="flex items-center gap-2 text-yellow-500 font-bold hover:text-yellow-400">
-                        <Star className="h-5 w-5" /> Special Offer
-                    </Link>
-                </SheetClose>
                 {baseLinks.map(link => (
                     <SheetClose asChild key={link.href}>
                         <Link href={link.href} className="text-muted-foreground hover:text-foreground">
@@ -179,15 +173,6 @@ export default function Header() {
             </nav>
 
             <div className="ml-auto flex gap-2 sm:gap-4 items-center">
-                 <Button asChild className="bg-accent hover:bg-accent/90 animate-pulse">
-                    <Link
-                        href="/special-offer"
-                        className="flex items-center gap-1 text-sm font-bold"
-                    >
-                        <Star className="h-4 w-4" />
-                        Special Offer
-                    </Link>
-                 </Button>
                 <div className="hidden sm:flex">
                 {(!isMounted || authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
                 </div>
