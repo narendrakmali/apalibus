@@ -1,470 +1,252 @@
 
 'use client';
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
-import { useJsApiLoader } from "@react-google-maps/api";
-import PlacesAutocomplete from "@/components/places-autocomplete";
-import { rateCard } from "@/lib/rate-card";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
-import { useCurrentLocation } from "@/hooks/use-current-location";
-import { useRouter } from "next/navigation";
-import { useAuth, useFirestore } from '@/firebase';
-import { signInAnonymously } from "firebase/auth";
-import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
-import { Textarea } from "@/components/ui/textarea";
 
-const libraries: ("places")[] = ["places"];
+import React, { useState } from 'react';
+import { 
+  Bus, Train, Home, FileText, Upload, Download, 
+  Calendar, MapPin, Users, CheckCircle, Menu, X 
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 
-interface Location {
-  address: string;
-  lat?: number;
-  lng?: number;
-}
-
-interface EstimateDetails {
-  totalCost: number;
-  baseFare: number;
-  driverAllowance: number;
-  permitCharges: number;
-  numDays: number;
-  totalKm: number;
-  singleJourneyKm?: number;
-  returnJourneyKm?: number;
-}
-
-
-export default function SearchPage() {
-  const [fromLocation, setFromLocation] = useState<Location>({ address: "" });
-  const [toLocation, setToLocation] = useState<Location>({ address: "" });
-  const [journeyDate, setJourneyDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [passengers, setPassengers] = useState("");
-  const [selectedVehicle, setSelectedVehicle] = useState("");
-  const [seatType, setSeatType] = useState("");
-
-  const [fullName, setFullName] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [email, setEmail] = useState("");
-
-  const [estimate, setEstimate] = useState<EstimateDetails | null>(null);
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showRequestConfirm, setShowRequestConfirm] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-
-  const router = useRouter();
-  const auth = useAuth();
-  const firestore = useFirestore();
-
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: googleMapsApiKey!,
-    libraries,
-    language: 'en',
-    skip: !googleMapsApiKey,
-  });
-
-  const { locationName, coords } = useCurrentLocation(isLoaded);
-
-  useEffect(() => {
-    if (locationName && coords) {
-      setFromLocation({ address: locationName, lat: coords.lat, lng: coords.lng });
-    }
-  }, [locationName, coords]);
-
-  const handleSubmit = () => {
-     if (!fromLocation.lat || !fromLocation.lng || !toLocation.lat || !toLocation.lng) {
-      setError("Please select valid 'From' and 'To' locations from the suggestions.");
-      setIsAlertOpen(true);
-      return;
-    }
-    
-    if (!selectedVehicle || !journeyDate || !returnDate || !passengers) {
-      setError("Please fill all trip details: Vehicle Type, Passengers, Journey Date, and Return Date.");
-      setIsAlertOpen(true);
-      return;
-    }
-
-    if (!fullName || !mobileNumber || !email) {
-       setError("Please provide your contact information: Name, Mobile, and Email.");
-      setIsAlertOpen(true);
-      return;
-    }
-
-    const startDate = new Date(journeyDate);
-    const endDate = new Date(returnDate);
-    if(startDate > endDate) {
-      setError("Return date must be after the journey date.");
-      setIsAlertOpen(true);
-      return;
-    }
-    
-    setError(null);
-    setEstimate(null);
-
-    const directionsService = new window.google.maps.DirectionsService();
-    directionsService.route(
-      {
-        origin: { lat: fromLocation.lat, lng: fromLocation.lng },
-        destination: { lat: toLocation.lat, lng: toLocation.lng },
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK && result) {
-          const oneWayDistance = result.routes[0].legs[0].distance!.value / 1000; // in km
-
-          const rateInfo = rateCard[parseInt(selectedVehicle)];
-
-          if (!rateInfo) {
-            setError("No rate information found for the selected bus configuration.");
-            setIsAlertOpen(true);
-            return;
-          }
-
-          const numDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
-          
-          const singleJourneyKm = oneWayDistance + 20;
-          const returnJourneyKm = oneWayDistance + 20;
-          const calculatedTotalKm = singleJourneyKm + returnJourneyKm;
-          
-          const minKmForTrip = rateInfo.minKmPerDay * numDays;
-          const totalKm = Math.max(calculatedTotalKm, minKmForTrip);
-          
-          const baseFare = totalKm * rateInfo.ratePerKm;
-          const totalDriverAllowance = numDays * rateInfo.driverAllowance;
-          const totalPermitCharges = numDays * rateInfo.permitCharges;
-
-          const totalCost = baseFare + totalDriverAllowance + totalPermitCharges;
-
-          setEstimate({
-            totalCost,
-            baseFare,
-            driverAllowance: totalDriverAllowance,
-            permitCharges: totalPermitCharges,
-            numDays,
-            totalKm,
-            singleJourneyKm: Math.round(singleJourneyKm),
-            returnJourneyKm: Math.round(returnJourneyKm),
-          });
-        } else {
-          setError("Could not calculate the distance between the selected locations.");
-        }
-        setIsAlertOpen(true);
-      }
-    );
-  }
-
-  const handleShare = () => {
-    if (!estimate) {
-        alert("Please calculate an estimate first before sharing.");
-        return;
-    }
-    const rateInfo = rateCard[parseInt(selectedVehicle)];
-
-    const subject = "Bus Trip Estimate";
-    const body = `
-Hello ${fullName},
-
-Here is the estimated cost for your bus journey for ${passengers} passengers:
-
-From: ${fromLocation.address}
-To: ${toLocation.address}
-Journey Date: ${journeyDate}
-Return Date: ${returnDate}
-Vehicle: ${rateInfo.vehicleType} (${rateInfo.seatingCapacity} Seater ${rateInfo.busType})
-Seat Type: ${seatType || 'Not specified'}
-
-Estimated Cost Breakdown:
-- Single Journey Distance: ~${estimate.singleJourneyKm} km
-- Return Journey Distance: ~${estimate.returnJourneyKm} km
-- Base Fare (for ~${estimate.totalKm} km): ${estimate.baseFare.toLocaleString('en-IN')}
-- Driver Allowance (for ${estimate.numDays} days): ${estimate.driverAllowance.toLocaleString('en-IN')}
-- Permit Charges (for ${estimate.numDays} days): ${estimate.permitCharges.toLocaleString('en-IN')}
-
-Total Estimated Cost: ${estimate.totalCost.toLocaleString('en-IN')}
-
-Please note: This is an approximate cost. Actual cost may vary based on final details.
-
-Thank you,
-Bus Booking Team
-    `;
-
-    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
-  };
-
-  const generateAlphanumericId = (length: number): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }
-
-  const handleCreateRequest = async () => {
-    if (isSubmitting) return;
-    
-    const rateInfo = selectedVehicle ? rateCard[parseInt(selectedVehicle)] : null;
-
-    if (!fromLocation.address || !toLocation.address || !journeyDate || !returnDate || !passengers || !rateInfo || !fullName || !mobileNumber || !email) {
-      setError("Please fill out all fields before submitting a request.");
-      setIsAlertOpen(true);
-      return;
-    }
-    setShowRequestConfirm(false);
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      let user = auth.currentUser;
-      if (!user) {
-        const userCredential = await signInAnonymously(auth);
-        user = userCredential.user;
-      }
-
-      if (!user) {
-        throw new Error("Could not create an anonymous user.");
-      }
-
-      const requestId = generateAlphanumericId(8);
-      const docRef = doc(firestore, "bookingRequests", requestId);
-
-      const requestData = {
-        id: requestId,
-        userId: user.uid,
-        fromLocation,
-        toLocation,
-        journeyDate,
-        returnDate,
-        seats: passengers,
-        busType: `${rateInfo.vehicleType} (${rateInfo.seatingCapacity} Seater ${rateInfo.busType})`,
-        seatType,
-        estimate,
-        contact: {
-          name: fullName,
-          mobile: mobileNumber,
-          email: email,
-        },
-        status: "pending",
-        createdAt: serverTimestamp(),
-      };
-      
-      setDoc(docRef, requestData)
-        .then(() => {
-          setShowSuccessDialog(true);
-        })
-        .catch((serverError) => {
-          const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'create',
-            requestResourceData: requestData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-        });
-
-    } catch (e: any) {
-      setError(`Failed to create booking request: ${e.message}`);
-      setIsAlertOpen(true);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleBookNow = () => {
-    if (!estimate) {
-        handleSubmit();
-    } else {
-        setShowRequestConfirm(true);
-    }
-  }
+// --- COMPONENT 1: SIDEBAR NAVIGATION ---
+const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: string, setActiveTab: (tab: string) => void, isOpen: boolean, setIsOpen: (isOpen: boolean) => void}) => {
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard Overview', icon: <Home size={20} />, href: '/search' },
+    { id: 'msrtc', label: 'MSRTC Booking', icon: <Bus size={20} />, href: '/msrtc-booking' },
+    { id: 'private', label: 'Private Bus (Toll)', icon: <FileText size={20} />, href: '/search' },
+    { id: 'train', label: 'Train Arrivals', icon: <Train size={20} />, href: '#' },
+  ];
 
   return (
-    <div className="booking-page-wrapper">
-        <div className="booking-card-container">
-            <div className="booking-card">
-                <div className="form-header">
-                    <span className="badge">Group & Private</span>
-                    <h1>Rent a Bus</h1>
-                    <p>Reliable group travel packages for any occasion. Get an instant estimate.</p>
-                </div>
-                {isLoaded ? (
-                <form onSubmit={(e) => { e.preventDefault(); handleBookNow(); }}>
-                    <div className="form-section-title">Trip Details</div>
-                    <div className="form-grid">
-                        <div className="input-group">
-                            <Label>📍 From</Label>
-                            <PlacesAutocomplete 
-                                onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
-                                initialValue={fromLocation.address}
-                                className="input-field"
-                            />
-                        </div>
-                        <div className="input-group">
-                            <Label>📍 To (Destination)</Label>
-                            <PlacesAutocomplete 
-                                onLocationSelect={(address, lat, lng) => setToLocation({ address, lat, lng })}
-                                initialValue={toLocation.address}
-                                className="input-field"
-                            />
-                        </div>
-                        <div className="input-group">
-                            <Label>📅 Journey Date</Label>
-                            <Input type="date" className="input-field" value={journeyDate} onChange={e => setJourneyDate(e.target.value)} required />
-                        </div>
-                        <div className="input-group">
-                            <Label>📅 Return Date</Label>
-                            <Input type="date" className="input-field" value={returnDate} onChange={e => setReturnDate(e.target.value)} required />
-                        </div>
-                    </div>
-
-                    <div className="form-section-title">Vehicle & Passengers</div>
-                    <div className="form-grid">
-                        <div className="input-group">
-                            <Label>👥 Number of Passengers</Label>
-                            <Input type="number" className="input-field" placeholder="e.g. 25" value={passengers} onChange={e => setPassengers(e.target.value)} required/>
-                        </div>
-                        <div className="input-group">
-                            <Label>🚌 Vehicle Type</Label>
-                            <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
-                                <SelectTrigger className="input-field">
-                                    <SelectValue placeholder="Select vehicle type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {rateCard.map((vehicle, index) => (
-                                        <SelectItem key={index} value={index.toString()}>
-                                            {vehicle.vehicleType} ({vehicle.seatingCapacity} Seater, {vehicle.busType})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div className="form-section-title">Your Contact Information</div>
-                    <div className="form-grid">
-                         <div className="input-group">
-                            <Label>👤 Full Name</Label>
-                            <Input type="text" className="input-field" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} required />
-                        </div>
-
-                        <div className="input-group">
-                            <Label>📞 Mobile Number</Label>
-                            <Input type="tel" className="input-field" placeholder="Enter mobile number" value={mobileNumber} onChange={e => setMobileNumber(e.target.value)} required />
-                        </div>
-
-                        <div className="input-group full-width">
-                            <Label>✉️ Email Address</Label>
-                            <Input type="email" className="input-field" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} required />
-                        </div>
-                    </div>
-
-                    <div className="action-area">
-                        <button type="button" onClick={handleShare} className="btn btn-secondary">Share Estimate</button>
-                        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                           {isSubmitting ? 'Submitting...' : 'Get Estimate & Book ➔'}
-                        </button>
-                    </div>
-
-                </form>
-                ) : (
-                    <div className="text-center p-8 text-gray-500">
-                        Loading map services...
-                    </div>
-                )}
-            </div>
+    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
+      <div className="flex items-center justify-between p-6 border-b border-slate-700">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center font-bold">SNM</div>
+          <span className="font-bold text-lg">Transport Seva</span>
         </div>
-        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{error ? 'Error' : 'Estimated Fare Breakdown'}</AlertDialogTitle>
-              {estimate && !error && (
-                <AlertDialogDescription>
-                  This is an approximate cost for a {estimate.numDays}-day trip for {passengers} passengers. Actual cost may vary.
-                </AlertDialogDescription>
-              )}
-            </AlertDialogHeader>
-            <div className="py-4 space-y-2">
-              {error ? (
-                <p className="text-destructive">{error}</p>
-              ) : estimate ? (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Single Journey KM</span>
-                    <span>~{estimate.singleJourneyKm} km</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Return Journey KM</span>
-                    <span>~{estimate.returnJourneyKm} km</span>
-                  </div>
-                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Base Fare ({estimate.totalKm} km)</span>
-                    <span>{estimate.baseFare.toLocaleString('en-IN')}</span>
-                  </div>
-                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Driver Allowance ({estimate.numDays} days)</span>
-                    <span>{estimate.driverAllowance.toLocaleString('en-IN')}</span>
-                  </div>
-                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Permit Charges ({estimate.numDays} days)</span>
-                    <span>{estimate.permitCharges.toLocaleString('en-IN')}</span>
-                  </div>
+        <button onClick={() => setIsOpen(false)} className="md:hidden text-slate-400">
+          <X size={24} />
+        </button>
+      </div>
 
-                  <div className="border-t my-2"></div>
+      <nav className="mt-6 px-4 space-y-2">
+        {menuItems.map((item) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            onClick={() => setActiveTab(item.id)}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              activeTab === item.id 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' 
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            {item.icon}
+            <span className="font-medium">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
 
-                  <div className="flex justify-between font-bold text-lg pt-2 mt-2">
-                    <span>Total Estimate</span>
-                    <span>{estimate.totalCost.toLocaleString('en-IN')}</span>
-                  </div>
-                </>
-              ) : (
-                 <p>Calculating estimate...</p>
-              )}
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogAction onClick={() => { setIsAlertOpen(false); setError(null); if (estimate) { setShowRequestConfirm(true); } }}>OK</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        <AlertDialog open={showRequestConfirm} onOpenChange={setShowRequestConfirm}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Booking Request</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This will submit your request to our operators. They will review it and provide a final quote. Are you sure you want to proceed?
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleCreateRequest}>Submit Request</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-
-        <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Request Submitted Successfully!</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Thanks for creating a request. Our backend team will update you about your request by call, or you can check your status online.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}`)}>
-                        Check Status
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+      <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+            <span className="font-bold text-sm">BC</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-white">Branch Coordinator</p>
+            <p className="text-xs text-slate-400">Branch: Chembur</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
+};
+
+// --- COMPONENT 2: THE CLEAN FORM ---
+const BookingForm = () => {
+  return (
+    <div className="max-w-5xl mx-auto">
+      {/* Page Header */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Private Bus Request</h1>
+          <p className="text-slate-500">Submit vehicle details for Toll Exemption Pass.</p>
+        </div>
+        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-200">
+          Draft Request
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* LEFT COLUMN: Main Form Inputs */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Card 1: Journey Details */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center gap-2">
+              <MapPin size={18} className="text-blue-600" />
+              <h3 className="font-bold text-slate-700">Journey Details</h3>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">From (Branch Location)</label>
+                <input type="text" defaultValue="Navi Mumbai, Maharashtra" className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-600 focus:outline-none" readOnly />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">To (Destination)</label>
+                <input type="text" defaultValue="Samagam Ground, Sangli" className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-600 focus:outline-none" readOnly />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Departure Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 text-slate-400" size={18} />
+                  <input type="date" className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Return Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 text-slate-400" size={18} />
+                  <input type="date" className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Vehicle Details */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center gap-2">
+              <Bus size={18} className="text-orange-600" />
+              <h3 className="font-bold text-slate-700">Vehicle Information</h3>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Vehicle Type</label>
+                <select className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                  <option>Private Luxury Bus (45+ Seater)</option>
+                  <option>Tempo Traveler (12+ Seater)</option>
+                  <option>Car / SUV</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Passenger Count</label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-3 text-slate-400" size={18} />
+                  <input type="number" placeholder="e.g. 50" className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium text-slate-700">Vehicle Number (RC)</label>
+                <input type="text" placeholder="MH-04-AB-1234" className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono uppercase tracking-wider" />
+                <p className="text-xs text-slate-500">Enter exact number as per number plate.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: The "Mukhi Letter" Workflow */}
+        <div className="space-y-6">
+          
+          <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
+            <h3 className="font-bold text-blue-900 mb-2">Toll Exemption Process</h3>
+            <p className="text-sm text-blue-700 mb-4">
+              To get the Toll Pass, you must upload the authority letter signed by your Branch Mukhi.
+            </p>
+            
+            {/* Step 1 */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-xs font-bold">1</div>
+                <span className="text-sm font-semibold text-slate-700">Download Template</span>
+              </div>
+              <button className="w-full flex items-center justify-center gap-2 bg-white border border-blue-200 text-blue-700 py-2 rounded-lg hover:bg-blue-50 transition text-sm font-medium">
+                <Download size={16} /> Download PDF
+              </button>
+            </div>
+
+            {/* Step 2 */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-xs font-bold">2</div>
+                <span className="text-sm font-semibold text-slate-700">Upload Signed Copy</span>
+              </div>
+              <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center bg-white cursor-pointer hover:bg-blue-50 transition">
+                <Upload size={24} className="mx-auto text-blue-400 mb-2" />
+                <p className="text-xs text-slate-500">Click to upload photo of signed letter</p>
+              </div>
+            </div>
+
+          </div>
+
+          <button className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-200 transition flex items-center justify-center gap-2">
+            <CheckCircle size={20} /> Submit Request
+          </button>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN LAYOUT CONTAINER ---
+const DashboardLayout = () => {
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('private'); // Default to the screen we are fixing
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex font-sans">
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        isOpen={isSidebarOpen} 
+        setIsOpen={setSidebarOpen} 
+      />
+      
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header Toggle */}
+        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center gap-3">
+          <button onClick={() => setSidebarOpen(true)} className="text-slate-600">
+            <Menu size={24} />
+          </button>
+          <span className="font-bold text-slate-800">Samagam Transport</span>
+        </header>
+
+        {/* Main Content Scroll Area */}
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          {activeTab === 'private' && <BookingForm />}
+          {activeTab === 'dashboard' && <DashboardOverview />}
+          {activeTab !== 'private' && activeTab !== 'dashboard' && (
+            <div className="flex items-center justify-center h-full">
+              <Card className="w-full max-w-md">
+                <CardHeader>
+                  <CardTitle>Under Construction</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-500">This section is currently under development. Please check back later.</p>
+                  <Button onClick={() => setActiveTab('private')} className="mt-4">Go to Private Bus Request</Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+const DashboardOverview = () => {
+    return (
+        <div>
+            <h1 className="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
+            <p className="text-slate-500">Welcome, Coordinator. Here's a summary of your branch's transport activities.</p>
+            {/* Add dashboard widgets here */}
+        </div>
+    )
 }
+
+export default DashboardLayout;
