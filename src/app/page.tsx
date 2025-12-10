@@ -14,7 +14,7 @@ import {
     RecaptchaVerifier,
     ConfirmationResult
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useRouter } from 'next/navigation';
@@ -26,7 +26,7 @@ let confirmationResult: ConfirmationResult | null = null;
 
 const AuthCard = () => {
   const [isRegistering, setIsRegistering] = useState(false);
-  const [authMethod, setAuthMethod] = useState('mobile'); 
+  const [authMethod, setAuthMethod] = useState('email'); 
   
   const [name, setName] = useState('');
   const [branchName, setBranchName] = useState('');
@@ -45,36 +45,32 @@ const AuthCard = () => {
   const firestore = useFirestore();
   const router = useRouter();
 
-
   const handleSendOTP = async () => {
     setError('');
     setInfo('');
     if (!identifier) {
-      setError("Please enter your Mobile Number or Email.");
+      setError("Please enter your Mobile Number.");
       return;
     }
     setIsLoading(true);
 
-    if (authMethod === 'mobile') {
-      try {
+    try {
         if (!recaptchaVerifier) {
             recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-              'size': 'invisible',
+                'size': 'invisible',
             });
         }
         
         confirmationResult = await signInWithPhoneNumber(auth, identifier, recaptchaVerifier);
         setOtpSent(true);
         setInfo(`OTP sent to ${identifier}.`);
-      } catch (err: any) {
+    } catch (err: any) {
         console.error("SMS Error:", err);
         setError(`Failed to send OTP: ${err.message}`);
-        // Reset verifier if it fails.
         if (recaptchaVerifier) {
             recaptchaVerifier.clear();
             recaptchaVerifier = null;
         }
-      }
     }
     setIsLoading(false);
   };
@@ -92,21 +88,11 @@ const AuthCard = () => {
                 const userCredential = await confirmationResult.confirm(otp);
                 const user = userCredential.user;
 
-                // Save user data to Firestore
                 const userRef = doc(firestore, 'users', user.uid);
-                const userData = {
-                    id: user.uid,
-                    name,
-                    mobileNumber: user.phoneNumber,
-                    email: '', // No email in phone auth
-                    branchName,
-                    zone,
-                    sewadalUnit,
-                    isAdmin: false
-                };
+                const userData = { id: user.uid, name, mobileNumber: user.phoneNumber, email: '', branchName, zone, sewadalUnit, isAdmin: false };
                 await setDoc(userRef, userData);
                 
-                router.push('/admin');
+                router.push('/search'); // Redirect to user tools
 
             } else { // Email registration
                 const userCredential = await createUserWithEmailAndPassword(auth, identifier, password);
@@ -114,41 +100,38 @@ const AuthCard = () => {
                 await sendEmailVerification(user);
 
                 const userRef = doc(firestore, 'users', user.uid);
-                const userData = {
-                    id: user.uid,
-                    name,
-                    email: user.email,
-                    mobileNumber: '',
-                    branchName,
-                    zone,
-                    sewadalUnit,
-                    isAdmin: false
-                };
+                const userData = { id: user.uid, name, email: user.email, mobileNumber: '', branchName, zone, sewadalUnit, isAdmin: false };
                 await setDoc(userRef, userData);
 
-                setInfo("Registration successful! Please check your email for a verification link.");
+                setInfo("Registration successful! Please check your email for a verification link to log in.");
                 setIsRegistering(false);
             }
         } catch (err: any) {
-            console.error("Registration Error:", err);
             let userMessage = `Registration failed: ${err.message}`;
-            if (err.code === 'auth/email-already-in-use') {
-                userMessage = "This email is already registered. Please log in.";
-            } else if (err.code === 'auth/invalid-email') {
-                userMessage = "Please enter a valid email address.";
-            } else if (err.code === 'auth/weak-password') {
-                userMessage = "Password is too weak. It must be at least 6 characters long.";
-            } else if (err.code === 'auth/invalid-verification-code') {
-                userMessage = "Invalid OTP. Please try again.";
-            }
+            if (err.code === 'auth/email-already-in-use') userMessage = "This email is already registered. Please log in.";
+            if (err.code === 'auth/invalid-email') userMessage = "Please enter a valid email address.";
+            if (err.code === 'auth/weak-password') userMessage = "Password must be at least 6 characters long.";
+            if (err.code === 'auth/invalid-verification-code') userMessage = "Invalid OTP. Please try again.";
             setError(userMessage);
         }
     } else { // Login logic
       try {
-        await signInWithEmailAndPassword(auth, identifier, password);
-        router.push('/admin');
+        const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
+        const user = userCredential.user;
+
+        if (!user.emailVerified && authMethod === 'email') {
+            setError("Your email is not verified. Please check your inbox for the verification link.");
+            await auth.signOut();
+        } else {
+             const userDocRef = doc(firestore, 'users', user.uid);
+             const userDoc = await getDoc(userDocRef);
+             if (userDoc.exists() && userDoc.data().isAdmin) {
+                router.push('/admin');
+             } else {
+                router.push('/search'); // Default redirect for non-admins
+             }
+        }
       } catch (err: any) {
-        console.error("Login Error:", err);
         let userMessage = `Login failed: ${err.message}`;
         if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
             userMessage = "Invalid credentials. Please check your login details.";
@@ -308,7 +291,7 @@ const AuthCard = () => {
           </div>
         )}
 
-        {( (isRegistering && authMethod === 'mobile' && otpSent) || (isRegistering && authMethod === 'email') || !isRegistering ) && (
+        {((isRegistering && authMethod === 'email') || (isRegistering && authMethod === 'mobile' && otpSent) || !isRegistering ) && (
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               {isRegistering ? 'Set Password' : 'Password'}
@@ -336,7 +319,7 @@ const AuthCard = () => {
           className={`w-full font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 shadow-lg disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed disabled:shadow-none bg-blue-700 hover:bg-blue-800 text-white shadow-blue-200`}
         >
             {isLoading ? 'Processing...' : (
-                isRegistering ? <><UserPlus size={18} /> Verify & Register</> : <><LogIn size={18} /> Access Dashboard</>
+                isRegistering ? <><UserPlus size={18} /> Verify & Register</> : <><LogIn size={18} /> Access Tools</>
             )}
         </button>
 
@@ -381,7 +364,7 @@ const SamagamLoginPage = () => {
               <span className="text-blue-700">Digital Sewa Platform</span>
             </h2>
             <p className="text-lg text-slate-600">
-              Dhan Nirankar Ji. This portal assists Branch Mukhis in managing travel plans for the upcoming Samagam. 
+              Dhan Nirankar Ji. This portal assists Branch-Coordinators in managing travel plans for the upcoming Samagam. 
               Please log in to submit bus demands, train arrival data, and vehicle pass requests.
             </p>
             
@@ -412,5 +395,3 @@ const SamagamLoginPage = () => {
 };
 
 export default SamagamLoginPage;
-
-    
