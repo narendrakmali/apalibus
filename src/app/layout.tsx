@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>Sakpal Travels</title>
+        <title>Bus Booking</title>
         <meta name="description" content="A comprehensive web-based bus booking platform." />
       </head>
       <body className={cn("min-h-screen flex flex-col font-sans antialiased", ptSans.variable, spaceGrotesk.variable, poppins.variable)}>

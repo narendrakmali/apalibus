@@ -40,7 +40,7 @@ export default function SpecialOfferPage() {
   const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [email, setEmail] = useState("");
-  const [notes, setNotes] = useState("Regarding Nirankari Samagam Special Offer");
+  const [notes, setNotes] = useState("Regarding Special Offer");
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +194,7 @@ export default function SpecialOfferPage() {
             <div className="booking-card">
                 <div className="form-header">
                     <span className="badge">⭐ Special Discount</span>
-                    <h1>Nirankari Samagam, Sangli</h1>
+                    <h1>Special Offer to Sangli</h1>
                     <p>Reliable group travel packages from Mumbai/Navi Mumbai. Get a special quote.</p>
                 </div>
                 {isLoaded ? (
@@ -310,7 +310,7 @@ export default function SpecialOfferPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Booking Request</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will submit your request for the Nirankari Samagam special offer. Our team will review it and contact you with a final quote. Are you sure you want to proceed?
+                        This will submit your request for the special offer. Our team will review it and contact you with a final quote. Are you sure you want to proceed?
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

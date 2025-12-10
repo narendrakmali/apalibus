@@ -169,7 +169,7 @@ export default function SearchPage() {
     }
     const rateInfo = rateCard[parseInt(selectedVehicle)];
 
-    const subject = "Bus Trip Estimate from Sakpal Travels";
+    const subject = "Bus Trip Estimate";
     const body = `
 Hello ${fullName},
 
@@ -194,7 +194,7 @@ Total Estimated Cost: ${estimate.totalCost.toLocaleString('en-IN')}
 Please note: This is an approximate cost. Actual cost may vary based on final details.
 
 Thank you,
-Sakpal Travels
+Bus Booking Team
     `;
 
     const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

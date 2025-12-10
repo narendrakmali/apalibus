@@ -68,8 +68,6 @@ export default function Header() {
 
   const baseLinks = [
       { href: "/", label: "Home" },
-      { href: "/about", label: "About" },
-      { href: "/contact", label: "Contact" },
       { href: "/search", label: "Group Booking" },
       { href: "/msrtc-booking", label: "MSRTC Booking" },
       { href: "/stage-calculator", label: "Stage Calculator" },
@@ -111,12 +109,12 @@ export default function Header() {
             <SheetClose asChild>
                 <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
                 <BusFront className="h-6 w-6 text-primary" />
-                <span className="text-lg font-bold font-inter">Sakpal Travels</span>
+                <span className="text-lg font-bold font-inter">Bus Booking</span>
                 </Link>
             </SheetClose>
             <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
             <SheetDescription className="sr-only">
-            A list of links to navigate the Sakpal Travels website.
+            A list of links to navigate the bus booking website.
             </SheetDescription>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto">
@@ -165,7 +163,7 @@ export default function Header() {
         <div className="px-4 lg:px-6 h-16 flex items-center">
             <Link href="/" className="flex items-center justify-center mr-6">
                 <BusFront className="h-6 w-6 text-primary" />
-                <span className="ml-2 text-lg font-bold font-inter">Sakpal Travels</span>
+                <span className="ml-2 text-lg font-bold font-inter">Bus Booking</span>
             </Link>
             
             <nav className="hidden lg:flex gap-4 sm:gap-6 items-center">
