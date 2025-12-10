@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Bus, Train, Users, Phone, ArrowRight, ShieldCheck, Mail, Lock, UserPlus, LogIn, MapPin } from 'lucide-react';
+import { Bus, Train, Users, Phone, ArrowRight, ShieldCheck, Mail, Lock, UserPlus, LogIn, MapPin, User, Building, Globe } from 'lucide-react';
 import placeholderImages from '@/lib/placeholder-images.json';
 
 const AuthCard = () => {
@@ -11,11 +11,15 @@ const AuthCard = () => {
   const [authMethod, setAuthMethod] = useState('mobile'); // 'mobile' or 'email'
   
   // Form States
+  const [name, setName] = useState('');
+  const [branchName, setBranchName] = useState('');
+  const [zone, setZone] = useState('');
+  const [sewadalUnit, setSewadalUnit] = useState('');
+
   const [identifier, setIdentifier] = useState(''); // Holds Phone or Email
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState('');
 
   // Simulation Logic
   const handleSendOTP = () => {
@@ -28,7 +32,7 @@ const AuthCard = () => {
     e.preventDefault();
     if (isRegistering) {
       // Registration Logic
-      console.log("Registering:", { identifier, password, selectedBranch, otp });
+      console.log("Registering:", { name, branchName, zone, sewadalUnit, identifier, password, otp });
       alert("Registration Successful! Welcome, Coordinator.");
     } else {
       // Login Logic
@@ -55,51 +59,88 @@ const AuthCard = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         
-        {/* Toggle: Mobile vs Email (Only visible during Registration) */}
         {isRegistering && (
-          <div className="flex bg-slate-100 p-1 rounded-lg mb-2">
-            <button
-              type="button"
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition ${authMethod === 'mobile' ? 'bg-white shadow text-blue-700' : 'text-slate-500'}`}
-              onClick={() => setAuthMethod('mobile')}
-            >
-              <Phone size={16} /> Mobile
-            </button>
-            <button
-              type="button"
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition ${authMethod === 'email' ? 'bg-white shadow text-blue-700' : 'text-slate-500'}`}
-              onClick={() => setAuthMethod('email')}
-            >
-              <Mail size={16} /> Email
-            </button>
-          </div>
-        )}
-
-        {/* Input: Branch Selection (Only for Registration) */}
-        {isRegistering && (
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Select Your Branch</label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 text-slate-400" size={18} />
-              <select 
-                className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white"
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-              >
-                <option value="">Select Branch...</option>
-                <option value="mum-chembur">Mumbai - Chembur</option>
-                <option value="pune-nigdi">Pune - Nigdi</option>
-                <option value="th-thane">Thane - West</option>
-                <option value="other">Other (Type Manually)</option>
-              </select>
+          <>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Your Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 text-slate-400" size={18} />
+                <input 
+                  type="text"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="e.g. Prem Kumar"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Branch Name</label>
+              <div className="relative">
+                <Building className="absolute left-3 top-3 text-slate-400" size={18} />
+                <input 
+                  type="text"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="e.g. Chembur"
+                  value={branchName}
+                  onChange={(e) => setBranchName(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+             <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Zone</label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-3 text-slate-400" size={18} />
+                <input 
+                  type="text"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="e.g. Mumbai"
+                  value={zone}
+                  onChange={(e) => setZone(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+             <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Sewadal Unit Number (Optional)</label>
+              <div className="relative">
+                <ShieldCheck className="absolute left-3 top-3 text-slate-400" size={18} />
+                <input 
+                  type="text"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="e.g. 836"
+                  value={sewadalUnit}
+                  onChange={(e) => setSewadalUnit(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex bg-slate-100 p-1 rounded-lg mb-2">
+                <button
+                  type="button"
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition ${authMethod === 'mobile' ? 'bg-white shadow text-blue-700' : 'text-slate-500'}`}
+                  onClick={() => setAuthMethod('mobile')}
+                >
+                  <Phone size={16} /> Mobile
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition ${authMethod === 'email' ? 'bg-white shadow text-blue-700' : 'text-slate-500'}`}
+                  onClick={() => setAuthMethod('email')}
+                >
+                  <Mail size={16} /> Email
+                </button>
+            </div>
+          </>
         )}
 
         {/* Input: Mobile or Email */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            {authMethod === 'mobile' ? 'Mobile Number' : 'Email Address'}
+            {isRegistering 
+              ? `Verification ${authMethod === 'mobile' ? 'Mobile Number' : 'Email'}`
+              : 'Coordinator Login ID (Mobile/Email)'}
           </label>
           <div className="relative">
             {authMethod === 'mobile' ? <Phone className="absolute left-3 top-3 text-slate-400" size={18} /> : <Mail className="absolute left-3 top-3 text-slate-400" size={18} />}
@@ -109,6 +150,7 @@ const AuthCard = () => {
               placeholder={authMethod === 'mobile' ? '+91 98765 43210' : 'coordinator@email.com'}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
+              required
             />
           </div>
         </div>
@@ -133,6 +175,7 @@ const AuthCard = () => {
               placeholder="1 2 3 4"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
+              required
             />
             <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
                OTP sent to {identifier}
@@ -154,6 +197,7 @@ const AuthCard = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
           </div>
@@ -250,5 +294,3 @@ const SamagamLoginPage = () => {
 };
 
 export default SamagamLoginPage;
-
-    
