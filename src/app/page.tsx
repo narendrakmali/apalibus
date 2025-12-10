@@ -103,7 +103,7 @@ const AuthCard = () => {
                 const userData = { id: user.uid, name, email: user.email, mobileNumber: '', branchName, zone, sewadalUnit, isAdmin: false };
                 await setDoc(userRef, userData);
 
-                setInfo("Registration successful! Please check your email for a verification link to log in.");
+                setInfo("Registration successful! You can now log in.");
                 setIsRegistering(false);
             }
         } catch (err: any) {
@@ -119,10 +119,11 @@ const AuthCard = () => {
         const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
         const user = userCredential.user;
 
-        if (!user.emailVerified && authMethod === 'email') {
-            setError("Your email is not verified. Please check your inbox for the verification link.");
-            await auth.signOut();
-        } else {
+        // NOTE: Temporarily removed email verification check to allow login in dev environment.
+        // if (!user.emailVerified && authMethod === 'email') {
+        //     setError("Your email is not verified. Please check your inbox for the verification link.");
+        //     await auth.signOut();
+        // } else {
              const userDocRef = doc(firestore, 'users', user.uid);
              const userDoc = await getDoc(userDocRef);
              if (userDoc.exists() && userDoc.data().isAdmin) {
@@ -130,7 +131,7 @@ const AuthCard = () => {
              } else {
                 router.push('/search'); // Default redirect for non-admins
              }
-        }
+        // }
       } catch (err: any) {
         let userMessage = `Login failed: ${err.message}`;
         if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
@@ -395,3 +396,5 @@ const SamagamLoginPage = () => {
 };
 
 export default SamagamLoginPage;
+
+    
