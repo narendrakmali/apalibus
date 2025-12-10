@@ -34,7 +34,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
            <div className="hidden md:flex items-center gap-2 text-blue-800 bg-blue-50 px-4 py-2 rounded-full">
             <Phone size={18} />
-            <span className="font-semibold text-sm">Helpline: +91 98765 43210</span>
+            <span className="font-semibold text-sm">Helpline: 18001232005</span>
           </div>
 
           {user && !user.isAnonymous && (
