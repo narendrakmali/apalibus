@@ -5,52 +5,180 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Bus, Train, Users, Phone, ArrowRight, ShieldCheck, Mail, Lock, UserPlus, LogIn, MapPin, User, Building, Globe } from 'lucide-react';
 import placeholderImages from '@/lib/placeholder-images.json';
+import { useAuth, useFirestore } from '@/firebase';
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword,
+    sendEmailVerification,
+    signInWithPhoneNumber, 
+    RecaptchaVerifier,
+    ConfirmationResult
+} from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { useRouter } from 'next/navigation';
+
+// Declare recaptchaVerifier and confirmationResult outside the component
+// to persist them across re-renders.
+let recaptchaVerifier: RecaptchaVerifier | null = null;
+let confirmationResult: ConfirmationResult | null = null;
 
 const AuthCard = () => {
   const [isRegistering, setIsRegistering] = useState(false);
-  const [authMethod, setAuthMethod] = useState('mobile'); // 'mobile' or 'email'
+  const [authMethod, setAuthMethod] = useState('mobile'); 
   
-  // Form States
   const [name, setName] = useState('');
   const [branchName, setBranchName] = useState('');
   const [zone, setZone] = useState('');
   const [sewadalUnit, setSewadalUnit] = useState('');
 
-  const [identifier, setIdentifier] = useState(''); // Holds Phone or Email
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
 
-  // Simulation Logic
-  const handleSendOTP = () => {
-    if (!identifier) return alert("Please enter your Mobile or Email");
-    setOtpSent(true);
-    alert(`OTP sent to ${identifier} (Simulated: 1234)`);
-  };
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isRegistering) {
-      // Registration Logic
-      console.log("Registering:", { name, branchName, zone, sewadalUnit, identifier, password, otp });
-      alert("Registration Successful! Welcome, Branch-Coordinator.");
-    } else {
-      // Login Logic
-      console.log("Logging in:", { identifier, password });
-      alert("Login Successful! Redirecting to Dashboard...");
+
+  const handleSendOTP = async () => {
+    setError('');
+    setInfo('');
+    if (!identifier) {
+      setError("Please enter your Mobile Number or Email.");
+      return;
     }
+    setIsLoading(true);
+
+    if (authMethod === 'mobile') {
+      try {
+        if (!recaptchaVerifier) {
+            recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+              'size': 'invisible',
+            });
+        }
+        
+        confirmationResult = await signInWithPhoneNumber(auth, identifier, recaptchaVerifier);
+        setOtpSent(true);
+        setInfo(`OTP sent to ${identifier}.`);
+      } catch (err: any) {
+        console.error("SMS Error:", err);
+        setError(`Failed to send OTP: ${err.message}`);
+        // Reset verifier if it fails.
+        if (recaptchaVerifier) {
+            recaptchaVerifier.clear();
+            recaptchaVerifier = null;
+        }
+      }
+    }
+    setIsLoading(false);
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setInfo('');
+    setIsLoading(true);
+
+    if (isRegistering) {
+        try {
+            if (authMethod === 'mobile') {
+                if (!confirmationResult) throw new Error("OTP not verified yet.");
+                const userCredential = await confirmationResult.confirm(otp);
+                const user = userCredential.user;
+
+                // Save user data to Firestore
+                const userRef = doc(firestore, 'users', user.uid);
+                const userData = {
+                    id: user.uid,
+                    name,
+                    mobileNumber: user.phoneNumber,
+                    email: '', // No email in phone auth
+                    branchName,
+                    zone,
+                    sewadalUnit,
+                    isAdmin: false
+                };
+                await setDoc(userRef, userData);
+                
+                router.push('/admin');
+
+            } else { // Email registration
+                const userCredential = await createUserWithEmailAndPassword(auth, identifier, password);
+                const user = userCredential.user;
+                await sendEmailVerification(user);
+
+                const userRef = doc(firestore, 'users', user.uid);
+                const userData = {
+                    id: user.uid,
+                    name,
+                    email: user.email,
+                    mobileNumber: '',
+                    branchName,
+                    zone,
+                    sewadalUnit,
+                    isAdmin: false
+                };
+                await setDoc(userRef, userData);
+
+                setInfo("Registration successful! Please check your email for a verification link.");
+                setIsRegistering(false);
+            }
+        } catch (err: any) {
+            console.error("Registration Error:", err);
+            let userMessage = `Registration failed: ${err.message}`;
+            if (err.code === 'auth/email-already-in-use') {
+                userMessage = "This email is already registered. Please log in.";
+            } else if (err.code === 'auth/invalid-email') {
+                userMessage = "Please enter a valid email address.";
+            } else if (err.code === 'auth/weak-password') {
+                userMessage = "Password is too weak. It must be at least 6 characters long.";
+            } else if (err.code === 'auth/invalid-verification-code') {
+                userMessage = "Invalid OTP. Please try again.";
+            }
+            setError(userMessage);
+        }
+    } else { // Login logic
+      try {
+        await signInWithEmailAndPassword(auth, identifier, password);
+        router.push('/admin');
+      } catch (err: any) {
+        console.error("Login Error:", err);
+        let userMessage = `Login failed: ${err.message}`;
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            userMessage = "Invalid credentials. Please check your login details.";
+        }
+        setError(userMessage);
+      }
+    }
+    setIsLoading(false);
+  };
+
+  const handleToggleRegister = () => {
+    setIsRegistering(!isRegistering);
+    setOtpSent(false);
+    setError('');
+    setInfo('');
+    setIdentifier('');
+    setPassword('');
+  }
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100 max-w-md mx-auto w-full transition-all duration-300">
       
-      {/* Header: Toggle between Login & Register */}
+      <div id="recaptcha-container"></div>
+
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-slate-800">
           {isRegistering ? 'Branch-Coordinator Sign Up' : 'Branch-Coordinator Login'}
         </h3>
         <button 
-          onClick={() => { setIsRegistering(!isRegistering); setOtpSent(false); }}
+          onClick={handleToggleRegister}
           className="text-sm text-blue-600 font-medium hover:bg-blue-50 px-3 py-1 rounded-full transition"
         >
           {isRegistering ? 'Back to Login' : 'New User?'}
@@ -135,19 +263,18 @@ const AuthCard = () => {
           </>
         )}
 
-        {/* Input: Mobile or Email */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             {isRegistering 
               ? `Verification ${authMethod === 'mobile' ? 'Mobile Number' : 'Email'}`
-              : 'Branch-Coordinator Login ID (Mobile/Email)'}
+              : 'Branch-Coordinator Login ID (Email)'}
           </label>
           <div className="relative">
-            {authMethod === 'mobile' ? <Phone className="absolute left-3 top-3 text-slate-400" size={18} /> : <Mail className="absolute left-3 top-3 text-slate-400" size={18} />}
+            {authMethod === 'mobile' && isRegistering ? <Phone className="absolute left-3 top-3 text-slate-400" size={18} /> : <Mail className="absolute left-3 top-3 text-slate-400" size={18} />}
             <input 
-              type={authMethod === 'mobile' ? 'tel' : 'email'}
+              type={authMethod === 'mobile' && isRegistering ? 'tel' : 'email'}
               className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder={authMethod === 'mobile' ? '+91 98765 43210' : 'coordinator@email.com'}
+              placeholder={authMethod === 'mobile' && isRegistering ? '+91 98765 43210' : 'coordinator@email.com'}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
@@ -155,36 +282,33 @@ const AuthCard = () => {
           </div>
         </div>
 
-        {/* OTP Logic (Only for Registration) */}
-        {isRegistering && !otpSent && (
+        {isRegistering && authMethod === 'mobile' && !otpSent && (
           <button 
             type="button"
             onClick={handleSendOTP}
-            className="w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition"
+            disabled={isLoading}
+            className="w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition disabled:opacity-50"
           >
-            Send Verification OTP
+            {isLoading ? 'Sending...' : 'Send Verification OTP'}
           </button>
         )}
 
-        {isRegistering && otpSent && (
+        {isRegistering && authMethod === 'mobile' && otpSent && (
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Enter OTP</label>
             <input 
               type="text" 
               className="w-full px-4 py-3 rounded-lg border border-green-300 focus:ring-2 focus:ring-green-500 outline-none bg-green-50 text-center tracking-widest font-bold text-lg"
-              placeholder="1 2 3 4"
+              placeholder="1 2 3 4 5 6"
+              maxLength={6}
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               required
             />
-            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-               OTP sent to {identifier}
-            </p>
           </div>
         )}
 
-        {/* Password Input (For Login AND Registration) */}
-        {(otpSent || !isRegistering) && (
+        {( (isRegistering && authMethod === 'mobile' && otpSent) || (isRegistering && authMethod === 'email') || !isRegistering ) && (
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               {isRegistering ? 'Set Password' : 'Password'}
@@ -203,23 +327,21 @@ const AuthCard = () => {
           </div>
         )}
 
-        {/* Submit Button */}
+        {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
+        {info && <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg">{info}</p>}
+
         <button 
           type="submit" 
-          disabled={isRegistering && !otpSent}
-          className={`w-full font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 shadow-lg ${
-            isRegistering && !otpSent 
-              ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
-              : 'bg-blue-700 hover:bg-blue-800 text-white shadow-blue-200'
-          }`}
+          disabled={isLoading || (isRegistering && authMethod === 'mobile' && !otpSent)}
+          className={`w-full font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 shadow-lg disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed disabled:shadow-none bg-blue-700 hover:bg-blue-800 text-white shadow-blue-200`}
         >
-          {isRegistering ? <> <UserPlus size={18} /> Verify & Register</> : <> <LogIn size={18} /> Access Dashboard </>} 
-          
+            {isLoading ? 'Processing...' : (
+                isRegistering ? <><UserPlus size={18} /> Verify & Register</> : <><LogIn size={18} /> Access Dashboard</>
+            )}
         </button>
 
       </form>
 
-      {/* Footer Info */}
       <div className="mt-6 pt-4 border-t border-slate-100 text-center">
         <p className="text-xs text-slate-400">
           {isRegistering 
@@ -236,7 +358,6 @@ const SamagamLoginPage = () => {
 
   return (
       <main className="flex-grow flex items-center justify-center relative p-4">
-        {/* Background Image */}
         <div className="absolute inset-0 z-0 overflow-hidden">
            <Image
             src={placeholderImages.samagamGround.src}
@@ -251,7 +372,6 @@ const SamagamLoginPage = () => {
 
         <div className="max-w-6xl w-full grid md:grid-cols-2 gap-12 z-10 items-center">
           
-          {/* Left Column: Welcome & Updates */}
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
               <ShieldCheck size={16} /> Official Transport Portal
@@ -265,7 +385,6 @@ const SamagamLoginPage = () => {
               Please log in to submit bus demands, train arrival data, and vehicle pass requests.
             </p>
             
-            {/* Quick Stats / Info Cards */}
             <div className="grid grid-cols-3 gap-4 mt-8">
               <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
                 <Bus className="mx-auto text-blue-600 mb-2" />
@@ -285,7 +404,6 @@ const SamagamLoginPage = () => {
             </div>
           </div>
 
-          {/* Right Column: Login Form */}
           <AuthCard />
 
         </div>
@@ -294,3 +412,5 @@ const SamagamLoginPage = () => {
 };
 
 export default SamagamLoginPage;
+
+    
