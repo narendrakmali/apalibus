@@ -2,183 +2,48 @@
 
 import Link from 'next/link';
 import { Button } from "./ui/button";
-import { BusFront, Menu, LogOut, Shield } from "lucide-react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { useAuth, useFirestore } from '@/firebase';
+import { Phone, Shield } from "lucide-react";
+import { useAuth } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-import { Skeleton } from './ui/skeleton';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function Header() {
   const auth = useAuth();
-  const firestore = useFirestore();
   const [user, authLoading] = useAuthState(auth);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loadingRoles, setLoadingRoles] = useState(true);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const checkUserRole = async () => {
-      if (user) {
-        setLoadingRoles(true);
-        try {
-          // Check for admin
-          const userDocRef = doc(firestore, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists() && userDoc.data().isAdmin) {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
-
-        } catch (serverError) {
-            const permissionError = new FirestorePermissionError({
-              path: `/users/${user.uid}`,
-              operation: 'get',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        } finally {
-            setLoadingRoles(false);
-        }
-      } else {
-        setIsAdmin(false);
-        setLoadingRoles(false);
-      }
-    };
-    if (isMounted) {
-      checkUserRole();
-    }
-  }, [user, firestore, isMounted]);
-
-  const handleLogout = () => {
-    auth.signOut();
-  };
-
-  const guestLinks = [
-    { href: "/admin/login", label: "Admin Login" },
-  ];
-
-  const baseLinks = [
-      { href: "/", label: "Home" },
-      { href: "/search", label: "Group Booking" },
-      { href: "/msrtc-booking", label: "MSRTC Booking" },
-      { href: "/stage-calculator", label: "Stage Calculator" },
-      { href: "/track-status", label: "Track Request" },
-  ];
-
-   const userNav = (
-    <div className="flex items-center gap-2">
-      {isAdmin && (
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/admin"><Shield className="mr-2 h-4 w-4" />Admin Dashboard</Link>
-        </Button>
-      )}
-      <Button onClick={handleLogout} variant="outline" size="sm">
-        <LogOut className="mr-2 h-4 w-4" />
-        Logout
-      </Button>
-    </div>
-  );
-  
-  const guestNav = (
-     <div className="flex items-center gap-2">
-        <Button asChild variant="outline" size="sm">
-            <Link href="/admin/login">Admin Login</Link>
-        </Button>
-    </div>
-  );
-
-  const MobileNav = () => (
-    <Sheet>
-        <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="lg:hidden">
-            <Menu className="h-6 w-6" />
-            <span className="sr-only">Toggle navigation menu</span>
-        </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="flex flex-col">
-        <SheetHeader className="text-left">
-            <SheetClose asChild>
-                <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                <BusFront className="h-6 w-6 text-primary" />
-                <span className="text-lg font-bold font-inter">Bus Booking</span>
-                </Link>
-            </SheetClose>
-            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-            <SheetDescription className="sr-only">
-            A list of links to navigate the bus booking website.
-            </SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto">
-            <nav className="grid gap-4 text-base font-medium py-4">
-                {baseLinks.map(link => (
-                    <SheetClose asChild key={link.href}>
-                        <Link href={link.href} className="text-muted-foreground hover:text-foreground">
-                        {link.label}
-                        </Link>
-                    </SheetClose>
-                ))}
-
-                <div className="border-t pt-4 mt-2 space-y-4">
-                 {(!isMounted || authLoading || loadingRoles) ? <Skeleton className="h-8 w-24" /> : user && (user.isAnonymous === false) ? (
-                    <>
-                        {isAdmin && <SheetClose asChild><Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-foreground"><Shield className="h-5 w-5" /> Admin</Link></SheetClose>}
-                        <SheetClose asChild>
-                            <Button onClick={handleLogout} variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
-                                <LogOut className="mr-2 h-5 w-5" /> Logout
-                            </Button>
-                        </SheetClose>
-                    </>
-                 ) : (
-                    guestLinks.map(link => (
-                        <SheetClose asChild key={link.href}>
-                            <Link href={link.href} className="text-muted-foreground hover:text-foreground">
-                            {link.label}
-                            </Link>
-                        </SheetClose>
-                    ))
-                 )}
-                </div>
-            </nav>
-        </div>
-        </SheetContent>
-    </Sheet>
-  );
 
   return (
-    <header className="bg-card shadow-sm border-b sticky top-0 z-50">
-        <div className="px-4 lg:px-6 h-16 flex items-center">
-            <Link href="/" className="flex items-center justify-center mr-6">
-                <BusFront className="h-6 w-6 text-primary" />
-                <span className="ml-2 text-lg font-bold font-inter">Bus Booking</span>
-            </Link>
-            
-            <nav className="hidden lg:flex gap-4 sm:gap-6 items-center">
-                {baseLinks.map(link => (
-                    <Link
-                        key={link.href}
-                        href={link.href}
-                        className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                    >
-                        {link.label}
-                    </Link>
-                ))}
-            </nav>
-
-            <div className="ml-auto flex gap-2 sm:gap-4 items-center">
-                <div className="hidden sm:flex">
-                {(!isMounted || authLoading || loadingRoles) ? <Skeleton className="h-10 w-32" /> : user && (user.isAnonymous === false) ? userNav : guestNav}
-                </div>
-                <MobileNav />
-            </div>
+    <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        {/* Left Side */}
+        <div className="flex items-center gap-3">
+          {/* Placeholder for SNM Logo */}
+          <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+            SNM
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-800">Samagam Transport Seva</h1>
+            <p className="text-xs text-slate-500">59th Annual Nirankari Sant Samagam, Sangli</p>
+          </div>
         </div>
+
+        {/* Center - Title for larger screens */}
+        <div className="hidden lg:block absolute left-1/2 -translate-x-1/2">
+            <h2 className="text-lg font-semibold text-slate-700">59th Annual Nirankari Sant Samagam</h2>
+        </div>
+
+        {/* Right Side */}
+        <div className="flex items-center gap-4">
+           <div className="hidden md:flex items-center gap-2 text-blue-800 bg-blue-50 px-4 py-2 rounded-full">
+            <Phone size={18} />
+            <span className="font-semibold text-sm">Helpline: +91 98765 43210</span>
+          </div>
+
+          {user && !user.isAnonymous && (
+             <Button asChild variant="outline" size="sm">
+                <Link href="/admin"><Shield className="mr-2 h-4 w-4" />Admin Dashboard</Link>
+            </Button>
+          )}
+        </div>
+      </div>
     </header>
   );
 }

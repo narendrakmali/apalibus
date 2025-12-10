@@ -18,5 +18,10 @@
     "src": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1920&auto=format&fit=crop",
     "alt": "A modern tour bus on a scenic road.",
     "hint": "tour bus"
+  },
+  "samagamGround": {
+    "src": "https://picsum.photos/seed/samagam/1920/1080",
+    "alt": "A vast ground prepared for a large spiritual gathering at dawn.",
+    "hint": "vast ground"
   }
 }
