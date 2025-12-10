@@ -33,7 +33,7 @@ const AuthCard = () => {
     if (isRegistering) {
       // Registration Logic
       console.log("Registering:", { name, branchName, zone, sewadalUnit, identifier, password, otp });
-      alert("Registration Successful! Welcome, Coordinator.");
+      alert("Registration Successful! Welcome, Branch-Coordinator.");
     } else {
       // Login Logic
       console.log("Logging in:", { identifier, password });
@@ -47,7 +47,7 @@ const AuthCard = () => {
       {/* Header: Toggle between Login & Register */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-bold text-slate-800">
-          {isRegistering ? 'Coordinator Sign Up' : 'Coordinator Login'}
+          {isRegistering ? 'Branch-Coordinator Sign Up' : 'Branch-Coordinator Login'}
         </h3>
         <button 
           onClick={() => { setIsRegistering(!isRegistering); setOtpSent(false); }}
@@ -140,7 +140,7 @@ const AuthCard = () => {
           <label className="block text-sm font-medium text-slate-700 mb-1">
             {isRegistering 
               ? `Verification ${authMethod === 'mobile' ? 'Mobile Number' : 'Email'}`
-              : 'Coordinator Login ID (Mobile/Email)'}
+              : 'Branch-Coordinator Login ID (Mobile/Email)'}
           </label>
           <div className="relative">
             {authMethod === 'mobile' ? <Phone className="absolute left-3 top-3 text-slate-400" size={18} /> : <Mail className="absolute left-3 top-3 text-slate-400" size={18} />}

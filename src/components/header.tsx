@@ -21,13 +21,13 @@ export default function Header() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-800">Samagam Transport Seva</h1>
-            <p className="text-xs text-slate-500">59th Annual Nirankari Sant Samagam, Sangli</p>
+            <p className="text-xs text-slate-500">59th Annual Samagam, Sangli</p>
           </div>
         </div>
 
         {/* Center - Title for larger screens */}
         <div className="hidden lg:block absolute left-1/2 -translate-x-1/2">
-            <h2 className="text-lg font-semibold text-slate-700">59th Annual Nirankari Sant Samagam</h2>
+            <h2 className="text-lg font-semibold text-slate-700">59th Annual Samagam</h2>
         </div>
 
         {/* Right Side */}
@@ -47,5 +47,3 @@ export default function Header() {
     </header>
   );
 }
-
-    
