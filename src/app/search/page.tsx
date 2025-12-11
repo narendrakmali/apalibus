@@ -13,10 +13,10 @@ import Link from 'next/link';
 // --- COMPONENT 1: SIDEBAR NAVIGATION ---
 const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: string, setActiveTab: (tab: string) => void, isOpen: boolean, setIsOpen: (isOpen: boolean) => void}) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard Overview', icon: <Home size={20} />, href: '/search' },
+    { id: 'dashboard', label: 'Dashboard Overview', icon: <Home size={20} />, href: '/' },
     { id: 'request-quote', label: 'Request a Quote', icon: <FilePen size={20} />, href: '/request-quote' },
     { id: 'msrtc', label: 'MSRTC Booking', icon: <Bus size={20} />, href: '/msrtc-booking' },
-    { id: 'private', label: 'Private Bus (Toll)', icon: <FileText size={20} />, href: '/search' },
+    { id: 'private', label: 'Private Bus (Toll)', icon: <FileText size={20} />, href: '/' },
     { id: 'train', label: 'Train Arrivals', icon: <Train size={20} />, href: '#' },
   ];
 
