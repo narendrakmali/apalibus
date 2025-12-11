@@ -8,12 +8,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 
 // --- COMPONENT 1: SIDEBAR NAVIGATION ---
 const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: string, setActiveTab: (tab: string) => void, isOpen: boolean, setIsOpen: (isOpen: boolean) => void}) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard Overview', icon: <Home size={20} />, href: '/' },
     { id: 'request-quote', label: 'Request a Quote', icon: <FilePen size={20} />, href: '/request-quote' },
     { id: 'msrtc', label: 'MSRTC Booking', icon: <Bus size={20} />, href: '/msrtc-booking' },
     { id: 'private', label: 'Private Bus (Toll)', icon: <FileText size={20} />, href: '/' },
@@ -197,66 +197,16 @@ const BookingForm = () => {
 // --- MAIN LAYOUT CONTAINER ---
 const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard'); // Default to the dashboard overview
+  const [activeTab, setActiveTab] = useState('request-quote');
 
   const renderContent = () => {
     switch (activeTab) {
       case 'private':
         return <BookingForm />;
-      case 'dashboard':
-        return <DashboardOverview />;
       default:
         return (
-          <div className="flex items-center justify-center h-full">
-            <Card className="w-full max-w-md text-center">
-              <CardHeader>
-                <CardTitle>Under Construction</CardTitle>
-                <CardDescription>This feature is not yet available.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-500">The page you selected is currently under development. Please check back later or select another option from the sidebar.</p>
-                <Button onClick={() => setActiveTab('dashboard')} className="mt-4">Go to Dashboard</Button>
-              </CardContent>
-            </Card>
-          </div>
-        );
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-100 flex font-sans">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        isOpen={isSidebarOpen} 
-        setIsOpen={setSidebarOpen} 
-      />
-      
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header Toggle */}
-        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-600">
-            <Menu size={24} />
-          </button>
-          <span className="font-bold text-slate-800">Samagam Transport</span>
-        </header>
-
-        {/* Main Content Scroll Area */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-          {renderContent()}
-        </main>
-      </div>
-    </div>
-  );
-};
-
-const DashboardOverview = () => {
-    return (
-        <div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">Dashboard Overview</h1>
-            <p className="text-slate-500 mb-8">Welcome, Branch Coordinator. Here is a summary of your transport requests.</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Private Bus Request</CardTitle>
@@ -294,7 +244,77 @@ const DashboardOverview = () => {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+            <TrainArrivals />
+          </>
+        );
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex font-sans">
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        isOpen={isSidebarOpen} 
+        setIsOpen={setSidebarOpen} 
+      />
+      
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header Toggle */}
+        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center gap-3">
+          <button onClick={() => setSidebarOpen(true)} className="text-slate-600">
+            <Menu size={24} />
+          </button>
+          <span className="font-bold text-slate-800">Samagam Transport</span>
+        </header>
+
+        {/* Main Content Scroll Area */}
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+const trainData = [
+    { train: '11029 - Koyna Express', arrival: '17:00 (Miraj)', departure: '17:05 (Miraj)' },
+    { train: '11045 - Dikshabhoomi Express', arrival: '03:50 (Miraj)', departure: '03:55 (Miraj)' },
+    { train: '11024 - Sahyadri Express', arrival: '05:55 (Miraj)', departure: '06:00 (Miraj)' },
+    { train: '11403 - Nagpur - Kolhapur Special', arrival: '04:55 (Miraj)', departure: '05:00 (Miraj)' },
+    { train: '11039 - Maharashtra Express', arrival: '08:15 (Miraj)', departure: '08:20 (Miraj)' },
+    { train: '01023 - Pune - Sangli DEMU', arrival: '11:45 (Sangli)', departure: 'End' },
+    { train: '16508 - Jodhpur Express', arrival: '22:15 (Miraj)', departure: '22:20 (Miraj)' },
+];
+
+const TrainArrivals = () => {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Train Arrival & Departure Details</CardTitle>
+                <CardDescription>Timings for major trains at Sangli, Miraj, and nearby stations.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Train Name & Number</TableHead>
+                            <TableHead>Arrival Time & Station</TableHead>
+                            <TableHead>Departure Time & Station</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {trainData.map((t, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-medium">{t.train}</TableCell>
+                                <TableCell>{t.arrival}</TableCell>
+                                <TableCell>{t.departure}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
     )
 }
 
