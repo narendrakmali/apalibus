@@ -3,7 +3,7 @@
 
 import { Link, usePathname, useRouter } from '@/navigation';
 import { Button } from "./ui/button";
-import { Phone, Shield, LogOut, Bus, MapPin, Search, User, Globe } from "lucide-react";
+import { LogOut, Bus, MapPin, Search, User, Globe, Shield } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -21,6 +21,7 @@ const LanguageSwitcher = () => {
     const locale = useLocale();
     const router = useRouter();
     const pathname = usePathname();
+    const t = useTranslations('Header');
 
     const switchLocale = (nextLocale: string) => {
         router.replace(pathname, { locale: nextLocale });
@@ -31,7 +32,7 @@ const LanguageSwitcher = () => {
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
                     <Globe className="h-4 w-4 mr-2" />
-                    {locale.toUpperCase()}
+                    <span>{t('language')}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -80,16 +81,9 @@ export default function Header() {
     await auth.signOut();
   };
 
-  // Hide header on the main page to avoid duplication with dashboard header
-  if (pathname === '/') {
-    return null;
-  }
-
-
   return (
     <header className="bg-card shadow-sm border-b sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Left Side: Logo and Branding */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
@@ -102,9 +96,7 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Right Side: Nav and Actions */}
-        <div className="flex items-center gap-6">
-
+        <div className="flex items-center gap-2">
            <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
               <Button variant="ghost" asChild>
                 <Link href="/"><Search className="mr-2 h-4 w-4"/>{t('dashboard')}</Link>
@@ -134,6 +126,7 @@ export default function Header() {
                   <Link href="/"><User className="mr-2 h-4 w-4"/>{t('login')}</Link>
                 </Button>
             )}
+             <div className="h-6 border-l border-slate-200 mx-2"></div>
             <LanguageSwitcher />
            </div>
 
