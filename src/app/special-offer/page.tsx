@@ -83,7 +83,7 @@ export default function SpecialOfferPage() {
 
   const validateAndSubmit = () => {
     if (!fromLocation.address || !toLocation.address) {
-      setError("Please select valid 'From' and 'To' locations.");
+      setError("Please select valid 'Pickup Location' and 'To' locations.");
       setIsAlertOpen(true);
       return;
     }
@@ -326,7 +326,7 @@ export default function SpecialOfferPage() {
                     <AlertDialogTitle>Request Submitted Successfully!</AlertDialogTitle>
                     <AlertDialogDescription>
                         Thanks for creating a request for the special offer. Our team will contact you shortly with a discounted quote. You can also track your request online.
-                    </AlertDialogDescription>
+                    </description>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}`)}>
@@ -338,3 +338,5 @@ export default function SpecialOfferPage() {
     </div>
   );
 }
+
+    

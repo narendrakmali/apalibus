@@ -14,11 +14,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useCurrentLocation } from '@/hooks/use-current-location';
-import { Combobox } from '@/components/ui/combobox';
-import { loadDepots, type Depot } from '@/lib/stageCalculator';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
@@ -26,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
+import PlacesAutocomplete from '@/components/places-autocomplete';
 
 interface Passenger {
   name: string;
@@ -35,21 +32,13 @@ interface Passenger {
   idProof: File | null;
 }
 
-const libraries: ("places")[] = ["places"];
+interface Location {
+  address: string;
+  lat?: number;
+  lng?: number;
+}
 
-// Haversine formula to calculate distance between two lat-lon points
-const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  const R = 6371; // Radius of the earth in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c; // Distance in km
-  return d;
-};
+const libraries: ("places")[] = ["places"];
 
 
 export default function MsrtcBookingPage() {
@@ -59,8 +48,8 @@ export default function MsrtcBookingPage() {
   const [zone, setZone] = useState('');
   
   const [travelDate, setTravelDate] = useState<Date>();
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('Sangli Samagam');
+  const [origin, setOrigin] = useState<Location>({ address: "" });
+  const [destination, setDestination] = useState<Location>({ address: "Sangli Samagam" });
   const [busType, setBusType] = useState('');
   const [purpose, setPurpose] = useState('');
   
@@ -68,9 +57,6 @@ export default function MsrtcBookingPage() {
     { name: '', age: '', gender: '', idProof: null },
   ]);
 
-  const [depots, setDepots] = useState<Depot[]>([]);
-  const [loadingDepots, setLoadingDepots] = useState(true);
-  
   const [uploadMode, setUploadMode] = useState<'manual' | 'file'>('manual');
   const [passengerFile, setPassengerFile] = useState<File | null>(null);
 
@@ -99,33 +85,13 @@ export default function MsrtcBookingPage() {
     skip: !googleMapsApiKey,
   });
 
-  const { coords } = useCurrentLocation(isLoaded);
+  const { locationName, coords } = useCurrentLocation(isLoaded);
 
   useEffect(() => {
-    const fetchDepots = async () => {
-      try {
-        setLoadingDepots(true);
-        const data = await loadDepots();
-        if (coords) {
-          const sortedDepots = data.map((depot: Depot) => ({
-            ...depot,
-            distance: getDistance(coords.lat, coords.lng, depot.lat, depot.lon),
-          })).sort((a: any, b: any) => a.distance - b.distance);
-          setDepots(sortedDepots);
-          setOrigin(sortedDepots[0]?.name.toLowerCase() || ''); // Pre-select the nearest depot
-        } else {
-            setDepots(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch depots:", error);
-      } finally {
-        setLoadingDepots(false);
-      }
-    };
-
-    fetchDepots();
-  }, [coords]);
-
+    if (locationName && coords) {
+      setOrigin({ address: locationName, lat: coords.lat, lng: coords.lng });
+    }
+  }, [locationName, coords]);
 
   const handleAddPassenger = () => {
     setPassengers([...passengers, { name: '', age: '', gender: '', idProof: null }]);
@@ -160,7 +126,7 @@ export default function MsrtcBookingPage() {
     e.preventDefault();
     setError(null);
 
-    if (!origin || !destination || !busType || !travelDate || numPassengers <= 0) {
+    if (!origin.address || !destination.address || !busType || !travelDate || numPassengers <= 0) {
         setError("Please fill out all required travel details.");
         return;
     }
@@ -198,8 +164,8 @@ export default function MsrtcBookingPage() {
             contactNumber: mobileNumber,
             email,
             travelDate,
-            origin,
-            destination,
+            origin: origin.address,
+            destination: destination.address,
             busType,
             purpose,
             numPassengers,
@@ -243,11 +209,6 @@ export default function MsrtcBookingPage() {
     document.body.removeChild(link);
   };
 
-  const depotOptions = depots.map(depot => ({
-      value: depot.name.toLowerCase(),
-      label: depot.name
-  }));
-
 
   return (
     <div className="container mx-auto py-12 px-4 md:px-6 bg-secondary/30">
@@ -282,79 +243,79 @@ export default function MsrtcBookingPage() {
 
             <fieldset className="space-y-4 p-4 border rounded-lg">
               <legend className="text-lg font-semibold px-2">2. Travel Details</legend>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                   <Label htmlFor="travelDate">Travel Date</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                            variant={"outline"}
-                            className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !travelDate && "text-muted-foreground"
-                            )}
-                            >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {travelDate ? format(travelDate, "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                            mode="single"
-                            selected={travelDate}
-                            onSelect={setTravelDate}
-                            initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
+               {isLoaded ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="travelDate">Travel Date</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !travelDate && "text-muted-foreground"
+                                )}
+                                >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {travelDate ? format(travelDate, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                mode="single"
+                                selected={travelDate}
+                                onSelect={setTravelDate}
+                                initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="busType">Bus Type</Label>
+                        <Select onValueChange={setBusType} value={busType}>
+                            <SelectTrigger><SelectValue placeholder="Select bus type" /></SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="Shivneri">Shivneri (AC)</SelectItem>
+                            <SelectItem value="Asiad">Asiad (Non-AC)</SelectItem>
+                            <SelectItem value="Hirkani">Hirkani (Semi-Luxury)</SelectItem>
+                            <SelectItem value="Ordinary">Ordinary</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="origin">Pickup Location</Label>
+                        <PlacesAutocomplete 
+                            onLocationSelect={(address, lat, lng) => setOrigin({ address, lat, lng })}
+                            initialValue={origin.address}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="destination">Destination</Label>
+                        <Input id="destination" value={destination.address} disabled />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="numPassengers">Number of Passengers</Label>
+                        <Input id="numPassengers" type="number" min="1" value={numPassengers} onChange={(e) => setNumPassengers(Number(e.target.value))} placeholder="e.g., 25" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="numConcession">Passengers with Concession</Label>
+                        <Input id="numConcession" type="number" min="0" max={numPassengers} value={numConcession} onChange={(e) => setNumConcession(Number(e.target.value))} placeholder="e.g., 5" required />
+                    </div>
+                    <div className="md:col-span-2 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+                        <p className="text-xs text-yellow-800 font-semibold">
+                            For concessional fare, Aadhaar card is mandatory for Females &amp; Sr. Citizens, and a valid certificate is required for Divyang passengers.
+                        </p>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="purpose">Purpose of Travel</Label>
+                        <Textarea id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g., Pilgrimage, School Trip, etc."/>
+                    </div>
                 </div>
-                 <div className="space-y-2">
-                  <Label htmlFor="busType">Bus Type</Label>
-                  <Select onValueChange={setBusType} value={busType}>
-                    <SelectTrigger><SelectValue placeholder="Select bus type" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Shivneri">Shivneri (AC)</SelectItem>
-                      <SelectItem value="Asiad">Asiad (Non-AC)</SelectItem>
-                       <SelectItem value="Hirkani">Hirkani (Semi-Luxury)</SelectItem>
-                      <SelectItem value="Ordinary">Ordinary</SelectItem>
-                    </SelectContent>
-                  </Select>
+               ) : (
+                <div className="text-center p-8 text-gray-500">
+                    Loading map services...
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="origin">Pickup Location (Nearest Depot)</Label>
-                  {loadingDepots ? <Skeleton className="h-10 w-full" /> : (
-                    <Combobox
-                        options={depotOptions}
-                        value={origin}
-                        onChange={setOrigin}
-                        placeholder="Select pickup depot..."
-                        searchPlaceholder="Search depot..."
-                        notFoundText="No depot found."
-                    />
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="destination">Destination</Label>
-                   <Input id="destination" value={destination} disabled />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="numPassengers">Number of Passengers</Label>
-                    <Input id="numPassengers" type="number" min="1" value={numPassengers} onChange={(e) => setNumPassengers(Number(e.target.value))} placeholder="e.g., 25" required />
-                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="numConcession">Passengers with Concession</Label>
-                    <Input id="numConcession" type="number" min="0" max={numPassengers} value={numConcession} onChange={(e) => setNumConcession(Number(e.target.value))} placeholder="e.g., 5" required />
-                 </div>
-                 <div className="md:col-span-2 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
-                    <p className="text-xs text-yellow-800 font-semibold">
-                        For concessional fare, Aadhaar card is mandatory for Females &amp; Sr. Citizens, and a valid certificate is required for Divyang passengers.
-                    </p>
-                </div>
-                 <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="purpose">Purpose of Travel</Label>
-                    <Textarea id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g., Pilgrimage, School Trip, etc."/>
-                </div>
-              </div>
+               )}
             </fieldset>
 
             <fieldset className="p-4 border rounded-lg">
@@ -462,3 +423,5 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
+
+    
