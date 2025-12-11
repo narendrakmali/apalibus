@@ -4,19 +4,19 @@
 import React, { useState } from 'react';
 import {
   Bus, Train, Home, FileText, Upload, Download,
-  Calendar, MapPin, Users, CheckCircle, Menu, X, FilePen
+  Calendar, MapPin, Users, CheckCircle, Menu, X, FilePen, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 
 // --- COMPONENT 1: SIDEBAR NAVIGATION ---
 const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: string, setActiveTab: (tab: string) => void, isOpen: boolean, setIsOpen: (isOpen: boolean) => void}) => {
   const menuItems = [
-    { id: 'request-quote', label: 'Request a Quote', icon: <FilePen size={20} />, href: '/request-quote' },
-    { id: 'msrtc', label: 'MSRTC Booking', icon: <Bus size={20} />, href: '/msrtc-booking' },
-    { id: 'train', label: 'Train Arrivals', icon: <Train size={20} />, href: '#' },
+    { id: 'request-quote', label: 'Private Bus Request', icon: <FilePen size={20} />, href: '/request-quote' },
+    { id: 'msrtc', label: 'MSRTC-Bus-Request', icon: <Bus size={20} />, href: '/msrtc-booking' },
+    { id: 'inform-transport', label: 'Inform Transport', icon: <Info size={20} />, href: '/inform-transport' },
+    { id: 'track-status', label: 'Track Status', icon: <MapPin size={20} />, href: '/track-status' },
   ];
 
   return (
@@ -96,6 +96,18 @@ const DashboardLayout = () => {
                     </Button>
                 </CardContent>
             </Card>
+             <Card className="shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-semibold">Inform Transport Dept.</CardTitle>
+                    <Info size={18} className="text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">Already booked a bus? Submit your vehicle and ticket details here.</p>
+                    <Button asChild>
+                        <Link href="/inform-transport">Submit Vehicle Info</Link>
+                    </Button>
+                </CardContent>
+            </Card>
             <Card className="shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-lg font-semibold">Track Requests</CardTitle>
@@ -141,3 +153,5 @@ const DashboardLayout = () => {
 
 
 export default DashboardLayout;
+
+    

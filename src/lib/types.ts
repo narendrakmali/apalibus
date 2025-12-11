@@ -82,3 +82,22 @@ export interface MsrtcBooking {
     status: 'pending' | 'confirmed' | 'rejected' | 'fulfilled';
     createdAt: Timestamp | string;
 }
+
+
+export interface VehicleSubmission {
+  id: string;
+  userId: string;
+  contactName: string;
+  contactMobile: string;
+  coordinatorName: string;
+  bookingType: 'Private Bus' | 'MSRTC Bus';
+  busRegistration?: string;
+  operatorName?: string;
+  journeyDate: string;
+  returnDate: string;
+  passengerCount: number;
+  ticketImageUrl: string;
+  createdAt: Timestamp;
+}
+
+    

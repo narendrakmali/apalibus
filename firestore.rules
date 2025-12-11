@@ -15,6 +15,7 @@
  * - /payments/{paymentId}: Stores payment information.
  * - /bookingRequests/{requestId}: Open write for all, managed by operators/admins.
  * - /msrtcBookings/{bookingId}: Open write for all, managed by admins.
+ * - /vehicleSubmissions/{submissionId}: Open write for all, managed by admins.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -117,5 +118,15 @@ service cloud.firestore {
       allow list: if isOperator() || isAdmin();
       allow update, delete: if isAdmin();
     }
+    
+    /**
+     * @description Rules for pre-booked vehicle submissions.
+     */
+    match /vehicleSubmissions/{submissionId} {
+       allow create: if true; // Anyone can submit their vehicle info.
+       allow get, list, update, delete: if isAdmin(); // Only admins can manage submissions.
+    }
   }
 }
+
+    
