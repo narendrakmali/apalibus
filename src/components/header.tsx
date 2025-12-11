@@ -1,47 +1,14 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Link, usePathname, useRouter } from '@/navigation';
+import { Link, usePathname } from '@/navigation';
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { Menu, X, Bus, LogOut, User, Globe, Shield, MapPin, Search } from 'lucide-react';
+import { Menu, X, Bus, LogOut, User, Shield, MapPin, Search } from 'lucide-react';
 import { Button } from './ui/button';
-import { useLocale, useTranslations } from 'next-intl';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-const LanguageSwitcher = () => {
-    const locale = useLocale();
-    const router = useRouter();
-    const pathname = usePathname();
-    const t = useTranslations('Header');
-
-    const switchLocale = (nextLocale: string) => {
-        router.replace(pathname, { locale: nextLocale });
-    };
-
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-full justify-start">
-                    <Globe className="h-4 w-4 mr-2" />
-                    <span>{t('language')}</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => switchLocale('en')}>English</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchLocale('hi')}>हिंदी (Hindi)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchLocale('mr')}>मराठी (Marathi)</DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
-};
+import { useTranslations } from 'next-intl';
+import LanguageSwitcher from './language-switcher';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -121,7 +88,7 @@ export default function Header() {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-4">
              {(authLoading) ? null : user ? (
                 <>
                 {isAdmin && (
@@ -138,7 +105,7 @@ export default function Header() {
                   <Link href="/"><User className="mr-2 h-4 w-4"/>{t('login')}</Link>
                 </Button>
             )}
-             <div className="h-6 border-l border-slate-200 mx-1"></div>
+             <div className="border-l border-slate-200 h-6"></div>
             <LanguageSwitcher />
           </div>
 
@@ -199,9 +166,10 @@ export default function Header() {
                     {t('login')}
                   </Link>
             )}
-             <div className="border-t border-slate-100 mt-2 pt-2">
+             <div className="border-t border-slate-100 my-2"></div>
+             <div className="px-2 py-2">
                 <LanguageSwitcher />
-            </div>
+             </div>
             </div>
           </div>
         </div>
