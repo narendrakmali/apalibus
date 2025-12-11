@@ -19,6 +19,15 @@ export default function Dashboard() {
       buttonText: t('requestQuoteButton')
     },
     {
+      title: t('msrtcBusRequest'),
+      desc: t('msrtcDescription'),
+      icon: <Bus className="w-8 h-8 text-blue-600" />,
+      href: "/msrtc-booking",
+      color: "bg-blue-50 border-blue-200",
+      btnColor: "text-blue-600",
+      buttonText: t('newMsrtcRequestButton')
+    },
+    {
       title: t('informTransport'),
       desc: t('informTransportDescription'),
       icon: <Car className="w-8 h-8 text-emerald-600" />,
@@ -48,7 +57,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card, idx) => (
           <div key={idx} className={`h-full p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 bg-white hover:border-slate-300 flex flex-col`}>
               <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${card.color}`}>
