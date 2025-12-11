@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -53,9 +54,11 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
 
 
 export default function MsrtcBookingPage() {
-  const [organizerName, setOrganizerName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [email, setEmail] = useState('');
+  const [branch, setBranch] = useState('');
+  const [zone, setZone] = useState('');
+  
   const [travelDate, setTravelDate] = useState<Date>();
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -162,8 +165,8 @@ export default function MsrtcBookingPage() {
         setError("Please fill out all required travel details.");
         return;
     }
-    if (!organizerName || !contactNumber || !email) {
-        setError("Please provide all organizer contact details.");
+    if (!branch || !zone || !mobileNumber || !email) {
+        setError("Please provide all coordinator details: Branch, Zone, Mobile, and Email.");
         return;
     }
 
@@ -177,13 +180,12 @@ export default function MsrtcBookingPage() {
         }
         
         if (!user) {
-            throw new Error("Could not create an anonymous user.");
+            throw new Error("Could not create an anonymous user session.");
         }
 
         const bookingId = generateAlphanumericId(8);
         const docRef = doc(firestore, "msrtcBookings", bookingId);
 
-        // We need to remove the File object before saving to Firestore
         const serializablePassengers = passengers.map(p => ({
             name: p.name,
             age: p.age,
@@ -192,9 +194,9 @@ export default function MsrtcBookingPage() {
 
         const bookingData = {
             id: bookingId,
-            userId: user.uid,
-            organizerName,
-            contactNumber,
+            userId: user.uid, // Anonymous user ID
+            organizerName: `${branch} / ${zone}`, // Combined field
+            contactNumber: mobileNumber,
             email,
             travelDate,
             origin,
@@ -203,7 +205,7 @@ export default function MsrtcBookingPage() {
             purpose,
             numPassengers,
             numConcession,
-            passengers: uploadMode === 'manual' ? serializablePassengers : [], // Store passenger list if entered manually
+            passengers: uploadMode === 'manual' ? serializablePassengers : [],
             status: "pending",
             createdAt: serverTimestamp(),
         };
@@ -221,8 +223,6 @@ export default function MsrtcBookingPage() {
             errorEmitter.emit('permission-error', permissionError);
           });
         
-        // TODO: In a real app, handle passengerFile upload to Firebase Storage if it exists.
-
     } catch (err: any) {
         setError(`Failed to submit request: ${err.message}`);
     } finally {
@@ -238,7 +238,7 @@ export default function MsrtcBookingPage() {
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "passenger_list_template.csv");
-    document.body.appendChild(link); // Required for FF
+    document.body.appendChild(link);
     
     link.click();
     document.body.removeChild(link);
@@ -259,26 +259,28 @@ export default function MsrtcBookingPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Organizer Details */}
             <fieldset className="space-y-4 p-4 border rounded-lg">
-              <legend className="text-lg font-semibold px-2">1. Organizer Details</legend>
+              <legend className="text-lg font-semibold px-2">1. Coordinator Details</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="organizerName">Name of Group Organizer</Label>
-                  <Input id="organizerName" value={organizerName} onChange={(e) => setOrganizerName(e.target.value)} required />
+                  <Label htmlFor="branch">Branch Name</Label>
+                  <Input id="branch" value={branch} onChange={(e) => setBranch(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contactNumber">Contact Number</Label>
-                  <Input id="contactNumber" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required />
+                  <Label htmlFor="zone">Zone</Label>
+                  <Input id="zone" value={zone} onChange={(e) => setZone(e.target.value)} required />
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
+                  <Label htmlFor="contactNumber">Mobile Number</Label>
+                  <Input id="contactNumber" type="tel" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
               </div>
             </fieldset>
 
-            {/* Travel Details */}
             <fieldset className="space-y-4 p-4 border rounded-lg">
               <legend className="text-lg font-semibold px-2">2. Travel Details</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -365,7 +367,6 @@ export default function MsrtcBookingPage() {
               </div>
             </fieldset>
 
-            {/* Passenger List */}
             <fieldset className="p-4 border rounded-lg">
                 <legend className="text-lg font-semibold px-2">3. Passenger List</legend>
                 <div className="flex gap-4 mb-4 border-b pb-4">
@@ -461,7 +462,7 @@ export default function MsrtcBookingPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${contactNumber}`)}>
+                    <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}`)}>
                         Check Status
                     </AlertDialogAction>
                 </AlertDialogFooter>

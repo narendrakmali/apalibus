@@ -3,45 +3,25 @@
  * @fileoverview Firestore Security Rules for the bus booking application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user profiles and bookings.
- * Bus operator data and bus data are also secured based on operator ownership.
- * Payments are secured via lookup to ensure only associated users can access them.
- * Booking requests are publicly writable by authenticated users, and readable/updatable by operators.
+ * This ruleset has been updated to allow open access for data submission,
+ * as the application no longer requires user authentication. All users can
+ * create booking requests. Admin and operator roles are still protected.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile information, secured by owner-only access.
+ * - /users/{userId}: No longer primarily used for auth, but may store admin flags.
  * - /busOperators/{busOperatorId}: Stores bus operator information, secured by owner-only access.
  * - /busOperators/{busOperatorId}/buses/{busId}: Stores bus information, secured by operator ownership.
- * - /users/{userId}/bookings/{bookingId}: Stores booking information, secured by user ownership.
- * - /payments/{paymentId}: Stores payment information, secured by lookup via booking.
- * - /bookingRequests/{requestId}: Stores user-submitted booking requests.
- * - /msrtcBookings/{bookingId}: Stores user-submitted MSRTC group booking requests.
- *
- * Key Security Decisions:
- * - User data is private and only accessible to the user themselves.
- * - Bus operator data is private and only accessible to the operator themselves.
- * - Listing of users is explicitly denied unless querying by mobile number.
- * - Payments can be accessed only by users with a booking associated with that payment.
- * - Data validation is relaxed in this prototype to allow for rapid iteration. Only authorization-critical
- *   data is validated (e.g., user IDs on create operations).
- *
- * Denormalization for Authorization:
- * - The `Bus` entity under a `BusOperator` will have operator information denormalized onto it, though the provided schema does not define these fields.
- * - The `Booking` entity under a `User` will have user information denormalized onto it, though the provided schema does not define these fields.
- *
- * Structural Segregation:
- * - Private user data (profiles, bookings) is stored under /users/{userId} to ensure owner-only access.
+ * - /users/{userId}/bookings/{bookingId}: Legacy, may not be used.
+ * - /payments/{paymentId}: Stores payment information.
+ * - /bookingRequests/{requestId}: Open write for all, managed by operators/admins.
+ * - /msrtcBookings/{bookingId}: Open write for all, managed by admins.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is authenticated.
-     * @path N/A
-     * @allow N/A
-     * @deny N/A
-     * @principle Requires authentication for all protected resources.
+     * @description Checks if the request is from an authenticated user.
      */
     function isSignedIn() {
       return request.auth != null;
@@ -49,32 +29,16 @@ service cloud.firestore {
 
     /**
      * @description Checks if the authenticated user ID matches the provided user ID.
-     * @path N/A
-     * @allow N/A
-     * @deny N/A
-     * @principle Enforces document ownership.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
-    /**
-     * @description Checks if the authenticated user is the owner of an existing document.
-     * @path N/A
-     * @allow N/A
-     * @deny N/A
-     * @principle Combines ownership and existence checks for safer destructive operations.
-     */
-    function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-    }
     
     /**
-     * @description Checks if the user has an 'operator' role.
-     * This is a placeholder for a real role check. In a real app, this would check a custom claim or a document.
+     * @description Checks if the user has an 'operator' role by seeing if they exist in the busOperators collection.
      */
     function isOperator() {
-        return isSignedIn() && get(/databases/$(database)/documents/busOperators/$(request.auth.uid)).data != null;
+        return isSignedIn() && exists(/databases/$(database)/documents/busOperators/$(request.auth.uid));
     }
     
      /**
@@ -86,117 +50,71 @@ service cloud.firestore {
 
 
     /**
-     * @description Rules for user profiles.
-     * @path /users/{userId}
-     * @allow (create) User with ID 'user_abc' creates their profile: request.auth.uid == 'user_abc'.
-     * @allow (get) User with ID 'user_abc' reads their profile: request.auth.uid == 'user_abc'.
-     * @allow (update) User with ID 'user_abc' updates their profile: request.auth.uid == 'user_abc'.
-     * @allow (delete) User with ID 'user_abc' deletes their profile: request.auth.uid == 'user_abc'.
-     * @deny (create) User with ID 'user_xyz' attempts to create a profile for 'user_abc': request.auth.uid != 'user_abc'.
-     * @principle Enforces document ownership for user profiles.
+     * @description User profiles are primarily for admins/operators now.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if (isExistingOwner(userId) && request.resource.data.id == resource.data.id) || isAdmin(); // Enforce immutability of user ID.
-      allow delete: if isExistingOwner(userId) || isAdmin();
+      allow get, list, create, update, delete: if isAdmin();
     }
 
     /**
      * @description Rules for bus operator profiles.
-     * @path /busOperators/{busOperatorId}
-     * @allow (create) Operator with ID 'operator_abc' creates their profile: request.auth.uid == 'operator_abc'.
-     * @allow (get) Operator with ID 'operator_abc' reads their profile: request.auth.uid == 'operator_abc'.
-     * @allow (update) Operator with ID 'operator_abc' updates their profile: request.auth.uid == 'operator_abc'.
-     * @allow (delete) Operator with ID 'operator_abc' deletes their profile: request.auth.uid == 'operator_abc'.
-     * @deny (create) Operator with ID 'operator_xyz' attempts to create a profile for 'operator_abc': request.auth.uid != 'operator_abc'.
-     * @principle Enforces document ownership for bus operator profiles.
      */
     match /busOperators/{busOperatorId} {
       allow get: if isOwner(busOperatorId) || isAdmin();
-      allow list: if isAdmin(); // Listing bus operators is permitted for admins.
+      allow list: if isAdmin();
       allow create: if (isSignedIn() && request.resource.data.id == busOperatorId) || isAdmin();
-      allow update: if isExistingOwner(busOperatorId) && request.resource.data.id == resource.data.id || isAdmin(); // Enforce immutability of operator ID.
-      allow delete: if isExistingOwner(busOperatorId) || isAdmin();
+      allow update: if (isOwner(busOperatorId) && request.resource.data.id == resource.data.id) || isAdmin();
+      allow delete: if isOwner(busOperatorId) || isAdmin();
 
         /**
          * @description Rules for buses owned by a bus operator.
-         * @path /busOperators/{busOperatorId}/buses/{busId}
-         * @allow (create) Operator 'operator_abc' creates a bus 'bus_123': request.auth.uid == 'operator_abc' && request.resource.data.operatorId == 'operator_abc'.
-         * @allow (get) Operator 'operator_abc' or any user reads bus 'bus_123' info.
-         * @allow (update) Operator 'operator_abc' updates bus 'bus_123': request.auth.uid == 'operator_abc' && resource.data.operatorId == 'operator_abc'.
-         * @allow (delete) Operator 'operator_abc' deletes bus 'bus_123': request.auth.uid == 'operator_abc' && resource.data.operatorId == 'operator_abc'.
-         * @deny (create) User attempts to create a bus under operator 'operator_abc'.
-         * @principle Enforces operator ownership for buses.  Allows public read access to bus information.
          */
         match /buses/{busId} {
           allow get, list: if true; // Public read access to bus information.
           allow create: if isOwner(busOperatorId) && request.resource.data.operatorId == busOperatorId && request.resource.data.id == busId;
-          allow update: if isExistingOwner(busOperatorId) && resource.data.operatorId == busOperatorId && request.resource.data.operatorId == resource.data.operatorId || isAdmin(); //Enforce immutability of operatorId
-          allow delete: if isExistingOwner(busOperatorId) && resource.data.operatorId == busOperatorId || isAdmin();
+          allow update: if (isOwner(busOperatorId) && resource.data.operatorId == busOperatorId && request.resource.data.operatorId == resource.data.operatorId) || isAdmin();
+          allow delete: if (isOwner(busOperatorId) && resource.data.operatorId == busOperatorId) || isAdmin();
         }
     }
 
     /**
-     * @description Rules for user bookings.
-     * @path /users/{userId}/bookings/{bookingId}
-     * @allow (create) User with ID 'user_abc' creates a booking 'booking_123': request.auth.uid == 'user_abc'.
-     * @allow (get) User with ID 'user_abc' reads their booking 'booking_123': request.auth.uid == 'user_abc'.
-     * @allow (update) User with ID 'user_abc' updates their booking 'booking_123': request.auth.uid == 'user_abc'.
-     * @allow (delete) User with ID 'user_abc' deletes their booking 'booking_123': request.auth.uid == 'user_abc'.
-     * @deny (create) User with ID 'user_xyz' attempts to create a booking for 'user_abc'.
-     * @principle Enforces document ownership for user bookings.
+     * @description Legacy user bookings. Limited access.
      */
     match /users/{userId}/bookings/{bookingId} {
-      allow get, list: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId) && request.resource.data.userId == userId && request.resource.data.id == bookingId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.userId == userId || isAdmin(); //Enforce immability of userId
-      allow delete: if isExistingOwner(userId) || isAdmin();
+      allow read, list, create, update, delete: if isOwner(userId) || isAdmin();
     }
 
     /**
-     * @description Rules for payments. Payments are accessible if the user has a booking with paymentId.
-     * @path /payments/{paymentId}
-     * @allow (get) User with a booking associated with payment 'payment_123' reads payment info.
-     * @deny (get) User without a related booking attempts to read payment 'payment_123'.
-     * @principle Payment access is restricted to users with associated bookings.
+     * @description Payment rules.
      */
     match /payments/{paymentId} {
-        allow get: if get(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.userId == request.auth.uid || isAdmin();
+        allow get: if isAdmin(); // Only admins can see payments for now
         allow list: if isAdmin();
-        allow create: if false; //Payments should be created server side.
-        allow update: if isAdmin();
-        allow delete: if isAdmin();
+        allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Rules for booking requests.
-     * @path /bookingRequests/{requestId}
-     * @allow (create) Any authenticated user can create a request for themselves.
-     * @allow (read, list) Any authenticated user can read requests (for operators to view).
-     * @allow (update) Any authenticated user (operator) can update the status.
-     * @principle Allows users to submit requests and operators to manage them.
+     * @description Rules for private booking requests. Now publicly writable.
      */
     match /bookingRequests/{requestId} {
-      allow create: if isSignedIn();
-      allow get: if isOperator() || isOwner(resource.data.userId) || isAdmin();
-      allow list: if isAdmin() || isOperator() || isSignedIn();
-      allow update: if isOperator() || isOwner(resource.data.userId) || isAdmin();
-      allow delete: if isAdmin(); // Requests should not be deleted, but marked as cancelled/rejected.
+      allow create: if true; // Anyone can create a request.
+      // Reading a specific request is allowed if you know its ID (e.g. for status tracking), or are an operator/admin.
+      allow get: if true; 
+      // Listing is restricted to operators and admins to protect user data.
+      allow list: if isOperator() || isAdmin();
+      allow update: if isOperator() || isAdmin(); // Only operators/admins can update (e.g. approve)
+      allow delete: if isAdmin(); 
     }
 
     /**
-     * @description Rules for MSRTC group booking requests.
-     * @path /msrtcBookings/{bookingId}
-     * @allow (create) Any authenticated user can create a request for themselves.
-     * @allow (read, list) Admins can read/list all MSRTC booking requests. Users can read/list their own requests if querying by userId.
-     * @principle Allows users to submit MSRTC requests and admins to view them.
+     * @description Rules for MSRTC group booking requests. Now publicly writable.
      */
     match /msrtcBookings/{bookingId} {
-      allow create: if isSignedIn();
-      allow get: if isAdmin() || isOwner(resource.data.userId);
-      allow list: if isAdmin() || isOperator() || isSignedIn();
+      allow create: if true; // Anyone can create an MSRTC request.
+      // Reading a specific request is allowed if you know its ID.
+      allow get: if true;
+      // Listing is restricted to operators and admins.
+      allow list: if isOperator() || isAdmin();
       allow update, delete: if isAdmin();
     }
   }
