@@ -110,7 +110,6 @@ const DashboardLayout = () => {
                 </CardContent>
             </Card>
         </div>
-        <TrainArrivals />
         </>
     );
   }
@@ -142,45 +141,5 @@ const DashboardLayout = () => {
   );
 };
 
-const trainData = [
-    { train: '11029 - Koyna Express', arrival: '17:00 (Miraj)', departure: '17:05 (Miraj)' },
-    { train: '11045 - Dikshabhoomi Express', arrival: '03:50 (Miraj)', departure: '03:55 (Miraj)' },
-    { train: '11024 - Sahyadri Express', arrival: '05:55 (Miraj)', departure: '06:00 (Miraj)' },
-    { train: '11403 - Nagpur - Kolhapur Special', arrival: '04:55 (Miraj)', departure: '05:00 (Miraj)' },
-    { train: '11039 - Maharashtra Express', arrival: '08:15 (Miraj)', departure: '08:20 (Miraj)' },
-    { train: '01023 - Pune - Sangli DEMU', arrival: '11:45 (Sangli)', departure: 'End' },
-    { train: '16508 - Jodhpur Express', arrival: '22:15 (Miraj)', departure: '22:20 (Miraj)' },
-];
-
-const TrainArrivals = () => {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Train Arrival & Departure Details</CardTitle>
-                <CardDescription>Timings for major trains at Sangli, Miraj, and nearby stations.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Train Name & Number</TableHead>
-                            <TableHead>Arrival Time & Station</TableHead>
-                            <TableHead>Departure Time & Station</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {trainData.map((t, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="font-medium">{t.train}</TableCell>
-                                <TableCell>{t.arrival}</TableCell>
-                                <TableCell>{t.departure}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    )
-}
 
 export default DashboardLayout;
