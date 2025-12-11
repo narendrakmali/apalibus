@@ -2,8 +2,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Bus, Train, Home, FileText, Upload, Download, 
+import {
+  Bus, Train, Home, FileText, Upload, Download,
   Calendar, MapPin, Users, CheckCircle, Menu, X, FilePen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,10 +20,10 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: st
   ];
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
+    <div className={`fixed inset-y-0 left-0 z-50 w-60 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
       <div className="flex items-center justify-between p-6 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center font-bold">SNM</div>
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center font-bold">SNM</div>
           <span className="font-bold text-lg">Transport Seva</span>
         </div>
         <button onClick={() => setIsOpen(false)} className="md:hidden text-slate-400">
@@ -37,13 +37,13 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: st
             key={item.id}
             href={item.href}
             onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-              activeTab === item.id 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              activeTab === item.id
+                ? 'bg-primary text-white shadow-lg'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            {item.icon}
+            {React.cloneElement(item.icon, { className: `transition-colors ${activeTab === item.id ? 'text-white' : 'text-slate-400'}` })}
             <span className="font-medium">{item.label}</span>
           </Link>
         ))}
@@ -71,69 +71,67 @@ const DashboardLayout = () => {
 
   const renderContent = () => {
     return (
-        <>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Private Bus Request</CardTitle>
+                    <CardTitle className="text-lg font-semibold">Private Bus Request</CardTitle>
                     <FilePen size={18} className="text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-slate-500 text-sm mb-4">The easiest way to book a bus. Just tell us your needs and we'll send you a quote.</p>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">The easiest way to book a bus. Just tell us your needs and we'll send you a quote.</p>
                     <Button asChild>
                         <Link href="/request-quote">Request a Quote</Link>
                     </Button>
                 </CardContent>
             </Card>
-            <Card>
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">MSRTC(ST) Bus Request</CardTitle>
+                    <CardTitle className="text-lg font-semibold">MSRTC(ST) Bus Request</CardTitle>
                     <Bus size={18} className="text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-slate-500 text-sm mb-4">Submit a formal request for group booking with MSRTC, including concessions.</p>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">Submit a formal request for group booking with MSRTC, including concessions.</p>
                     <Button asChild>
                         <Link href="/msrtc-booking">New MSRTC(ST) Request</Link>
                     </Button>
                 </CardContent>
             </Card>
-            <Card>
+            <Card className="shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Track Requests</CardTitle>
+                    <CardTitle className="text-lg font-semibold">Track Requests</CardTitle>
                     <MapPin size={18} className="text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-slate-500 text-sm mb-4">Check the status of your submitted private and MSRTC booking requests.</p>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">Check the status of your submitted private and MSRTC booking requests.</p>
                     <Button asChild variant="outline">
                         <Link href="/track-status">Check Status</Link>
                     </Button>
                 </CardContent>
             </Card>
         </div>
-        </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex font-sans">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        isOpen={isSidebarOpen} 
-        setIsOpen={setSidebarOpen} 
+    <div className="min-h-screen bg-background flex font-sans">
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isOpen={isSidebarOpen}
+        setIsOpen={setSidebarOpen}
       />
-      
+
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header Toggle */}
-        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-600">
+        <header className="md:hidden bg-card border-b p-4 flex items-center gap-3">
+          <button onClick={() => setSidebarOpen(true)} className="text-foreground/80">
             <Menu size={24} />
           </button>
-          <span className="font-bold text-slate-800">Samagam Transport</span>
+          <span className="font-bold text-foreground">Samagam Transport</span>
         </header>
 
         {/* Main Content Scroll Area */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
           {renderContent()}
         </main>
       </div>

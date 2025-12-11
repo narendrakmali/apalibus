@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: 220 13% 97%; /* slate-50 */
+    --background: 210 20% 98%; /* slate-50 */
     --foreground: 224 71.4% 4.1%; /* slate-900 */
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
@@ -13,41 +13,40 @@
     --popover-foreground: 224 71.4% 4.1%;
     --primary: 221 83% 53%; /* blue-600 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 142 76% 36%; /* green-600 */
-    --accent-foreground: 0 0% 100%;
+    --secondary: 215 28% 92%;
+    --secondary-foreground: 224 71.4% 4.1%;
+    --muted: 215 28% 92%;
+    --muted-foreground: 215 16% 47%; /* slate-600 */
+    --accent: 210 20% 98%;
+    --accent-foreground: 224 71.4% 4.1%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 226 50% 91%; /* slate-200 */
+    --input: 226 50% 91%;
     --ring: 221 83% 53%;
-    --radius: 0.5rem;
-    --navy-blue: 221 83% 33%;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 222.2 47.4% 11.2%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 47.4% 11.2%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 47.4% 11.2%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 215 78% 51%;
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 142 76% 46%;
-    --accent-foreground: 0 0% 100%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 16% 57%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 210 20% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 215 78% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 221 83% 53%;
   }
 }
 
@@ -60,4 +59,13 @@
      font-family: 'Poppins', sans-serif;
      overflow-x: hidden;
   }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+    .input-field {
+        @apply flex h-11 w-full rounded-xl border border-input bg-transparent px-4 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    }
 }

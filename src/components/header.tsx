@@ -22,12 +22,17 @@ export default function Header() {
     setClientLoaded(true);
     const checkAdminStatus = async () => {
       if (user) {
-        const userDocRef = doc(firestore, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists() && userDoc.data().isAdmin) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
+        try {
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists() && userDoc.data().isAdmin) {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        } catch (error) {
+            console.error("Failed to check admin status:", error);
+            setIsAdmin(false);
         }
       } else {
         setIsAdmin(false);
@@ -39,7 +44,7 @@ export default function Header() {
   const handleLogout = async () => {
     await auth.signOut();
   };
-  
+
   // Hide header on the main page to avoid duplication with dashboard header
   if (pathname === '/') {
     return null;
@@ -47,25 +52,25 @@ export default function Header() {
 
 
   return (
-    <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+    <header className="bg-card shadow-sm border-b sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Left Side: Logo and Branding */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
               SNM
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-800">Transport Seva</h1>
-              <p className="text-xs text-slate-500">59th Annual Samagam, Sangli</p>
+              <h1 className="text-xl font-bold text-foreground">Transport Seva</h1>
+              <p className="text-xs text-muted-foreground">59th Annual Samagam, Sangli</p>
             </div>
           </Link>
         </div>
 
         {/* Right Side: Nav and Actions */}
-        <div className="flex items-center gap-4">
-          
-           <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
+        <div className="flex items-center gap-6">
+
+           <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
               <Button variant="ghost" asChild>
                 <Link href="/"><Search className="mr-2 h-4 w-4"/>Dashboard</Link>
               </Button>
@@ -76,7 +81,7 @@ export default function Header() {
                 <Link href="/track-status"><MapPin className="mr-2 h-4 w-4"/>Track Status</Link>
               </Button>
           </nav>
-            
+
           <div className="flex items-center gap-2">
             {(authLoading || !clientLoaded) ? null : user ? (
                 <>
