@@ -1,8 +1,7 @@
-
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import Link from 'next-intl/link';
+import { Link } from '@/navigation';
 import { Book, Users, Bus, Ticket, Send } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -121,3 +120,5 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+    

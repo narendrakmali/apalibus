@@ -1,4 +1,3 @@
-
 'use client';
 
 import { PT_Sans, Space_Grotesk, Poppins } from "next/font/google";
@@ -34,25 +33,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // The `lang` attribute will be set in the locale-specific layout.
-    <html lang="en"> 
-      <head>
-        <title>Bus Booking</title>
-        <meta name="description" content="A comprehensive web-based bus booking platform." />
-      </head>
-      <body className={cn("min-h-screen flex flex-col font-sans antialiased", ptSans.variable, spaceGrotesk.variable, poppins.variable)}>
-          <FirebaseClientProvider>
-              <ErrorBoundary
-                  FallbackComponent={ErrorFallback}
-                  onReset={() => {
-                      // This will force a hard reload of the page
-                      window.location.reload();
-                  }}
-              >
-                {children}
-              </ErrorBoundary>
-          </FirebaseClientProvider>
-      </body>
-    </html>
+    <FirebaseClientProvider>
+        <ErrorBoundary
+            FallbackComponent={ErrorFallback}
+            onReset={() => {
+                // This will force a hard reload of the page
+                window.location.reload();
+            }}
+        >
+          {children}
+        </ErrorBoundary>
+    </FirebaseClientProvider>
   );
 }
+
+    

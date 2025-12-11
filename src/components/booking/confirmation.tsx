@@ -1,11 +1,10 @@
-
 'use client';
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Download, Share2 } from "lucide-react";
-import Link from "next-intl/link";
+import { Link } from '@/navigation';
 import Image from "next/image";
 import placeholderImages from '@/lib/placeholder-images.json';
 
@@ -87,3 +86,5 @@ export default function BookingConfirmation({ bookingId }: { bookingId: string }
         </div>
     );
 }
+
+    

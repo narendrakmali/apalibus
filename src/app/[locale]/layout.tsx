@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider, useMessages } from 'next-intl';
+import {NextIntlClientProvider, useMessages} from 'next-intl';
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 
@@ -20,11 +20,17 @@ export default function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <Header />
-      <main className="flex-grow bg-background">
-        {children}
-      </main>
-      <Footer />
+        <html lang={locale}>
+          <body>
+            <Header />
+            <main className="flex-grow bg-background">
+              {children}
+            </main>
+            <Footer />
+          </body>
+        </html>
     </NextIntlClientProvider>
   );
 }
+
+    

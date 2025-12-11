@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -8,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import Link from 'next-intl/link';
+import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
 
 // --- COMPONENT 1: SIDEBAR NAVIGATION ---
@@ -156,3 +155,5 @@ const DashboardLayout = () => {
 
 
 export default DashboardLayout;
+
+    

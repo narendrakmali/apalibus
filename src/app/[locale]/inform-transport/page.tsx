@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
-import { useRouter } from 'next-intl/client';
+import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 
 export default function InformTransportPage() {
@@ -351,3 +350,5 @@ export default function InformTransportPage() {
     </>
   );
 }
+
+    

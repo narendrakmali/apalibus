@@ -1,4 +1,3 @@
-
 'use client';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +8,7 @@ import { loadGoogleMaps } from "@/lib/google-maps-loader";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
-import { useRouter } from "next-intl/client";
+import { useRouter } from '@/navigation';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -361,3 +360,5 @@ export default function RequestQuotePage() {
     </div>
   );
 }
+
+    

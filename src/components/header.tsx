@@ -1,14 +1,12 @@
-
 'use client';
 
-import Link from 'next-intl/link';
+import { Link, usePathname, useRouter } from '@/navigation';
 import { Button } from "./ui/button";
 import { Phone, Shield, LogOut, Bus, MapPin, Search, User, Globe } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next-intl/client';
 import { useLocale, useTranslations } from 'next-intl';
 
 import {
@@ -22,7 +20,6 @@ const LanguageSwitcher = () => {
     const locale = useLocale();
     const router = useRouter();
     const pathname = usePathname();
-    const t = useTranslations('Header');
 
     const switchLocale = (nextLocale: string) => {
         router.replace(pathname, { locale: nextLocale });
@@ -144,3 +141,5 @@ export default function Header() {
     </header>
   );
 }
+
+    

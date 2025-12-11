@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BookingRequest } from '@/hooks/use-admin-data';
 import { ArrowRight, FileText } from "lucide-react";
-import Link from "next-intl/link";
+import { Link } from '@/navigation';
 
 
 function formatFirebaseTimestamp(timestamp: any) {
@@ -89,3 +88,5 @@ export function RequestsTable({ requests }: { requests: BookingRequest[] }) {
         </Table>
     );
 }
+
+    
