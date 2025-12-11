@@ -1,18 +1,14 @@
+
+import createNextIntlPlugin from 'next-intl/plugin';
+ 
+const withNextIntl = createNextIntlPlugin(
+  // This is the default shape of the plugin, pointing to the i18n file
+  './src/i18n.ts'
+);
+ 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-      },
-    ],
-  },
 };
-
-export default nextConfig;
+ 
+export default withNextIntl(nextConfig);
