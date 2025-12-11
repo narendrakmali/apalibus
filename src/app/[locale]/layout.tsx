@@ -7,6 +7,8 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { locales } from '@/navigation';
 import type { Metadata } from 'next';
+import "../globals.css";
+
 
 export const metadata: Metadata = {
   title: 'Samagam Transport Seva',
