@@ -25,11 +25,13 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <FirebaseClientProvider>
-            <Header />
-            <main className="flex-grow bg-background">
-              {children}
-            </main>
-            <Footer />
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow bg-background">
+                {children}
+              </main>
+              <Footer />
+            </div>
           </FirebaseClientProvider>
         </NextIntlClientProvider>
       </body>

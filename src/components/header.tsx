@@ -118,7 +118,6 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <LanguageSwitcher />
             {(authLoading || !clientLoaded) ? null : user ? (
                 <>
                 {isAdmin && (
@@ -135,6 +134,7 @@ export default function Header() {
                   <Link href="/"><User className="mr-2 h-4 w-4"/>{t('login')}</Link>
                 </Button>
             )}
+            <LanguageSwitcher />
            </div>
 
         </div>
