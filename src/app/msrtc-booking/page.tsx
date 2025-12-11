@@ -212,17 +212,17 @@ export default function MsrtcBookingPage() {
 
 
   return (
-    <div className="container mx-auto py-12 px-4 md:px-6 bg-secondary/30">
-      <Card className="max-w-4xl mx-auto">
+    <div className="bg-slate-50 min-h-screen py-12 px-4">
+      <Card className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 rounded-2xl shadow-lg border border-slate-200">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-display text-primary">MSRTC-Bus-Request</CardTitle>
-          <CardDescription>Fill out the form below to request a group booking with concessions.</CardDescription>
+          <CardTitle className="text-3xl font-bold text-slate-800">MSRTC-Bus-Request</CardTitle>
+          <CardDescription className="text-slate-500 mt-2">Fill out the form below to request a group booking with concessions.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
-            <fieldset className="space-y-4 p-4 border rounded-lg">
-              <legend className="text-lg font-semibold px-2">1. Coordinator Details</legend>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <fieldset className="space-y-6 p-6 border rounded-xl">
+              <legend className="text-xl font-semibold px-2 text-slate-700">1. Coordinator Details</legend>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="branch">Branch Name</Label>
                   <Input id="branch" value={branch} onChange={(e) => setBranch(e.target.value)} required />
@@ -242,8 +242,8 @@ export default function MsrtcBookingPage() {
               </div>
             </fieldset>
 
-            <fieldset className="space-y-4 p-4 border rounded-lg">
-              <legend className="text-lg font-semibold px-2">2. Travel & Passenger Details</legend>
+            <fieldset className="space-y-6 p-6 border rounded-xl">
+              <legend className="text-xl font-semibold px-2 text-slate-700">2. Travel & Passenger Details</legend>
                {isMapsLoaded ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -253,7 +253,7 @@ export default function MsrtcBookingPage() {
                                 <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-full justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal h-11 rounded-xl text-base",
                                     !travelDate && "text-muted-foreground"
                                 )}
                                 >
@@ -295,9 +295,9 @@ export default function MsrtcBookingPage() {
                         <Input id="destination" value={destination.address} disabled />
                     </div>
                     
-                    <div className="md:col-span-2 space-y-4 p-4 border rounded-lg bg-background">
+                    <div className="md:col-span-2 space-y-4 p-4 border rounded-lg bg-slate-100">
                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 items-center">
-                            <div className="col-span-6 font-semibold text-sm">Passenger Bifurcation:</div>
+                            <div className="col-span-6 font-semibold text-sm text-slate-600">Passenger Bifurcation:</div>
                             <div className="space-y-1">
                                 <Label htmlFor="numGents" className="text-xs">Gents</Label>
                                 <Input id="numGents" type="number" min="0" value={numGents} onChange={(e) => setNumGents(Number(e.target.value))} />
@@ -318,9 +318,9 @@ export default function MsrtcBookingPage() {
                                 <Label htmlFor="numChildren" className="text-xs">Children (5-12)</Label>
                                 <Input id="numChildren" type="number" min="0" value={numChildren} onChange={(e) => setNumChildren(Number(e.target.value))} />
                             </div>
-                            <div className="flex flex-col items-center justify-center p-2 bg-secondary rounded-md h-full">
-                                <Label className="text-xs font-bold">Total</Label>
-                                <div className="text-xl font-bold">{totalPassengers}</div>
+                            <div className="flex flex-col items-center justify-center p-2 bg-slate-200 rounded-md h-full">
+                                <Label className="text-xs font-bold text-slate-600">Total</Label>
+                                <div className="text-xl font-bold text-slate-800">{totalPassengers}</div>
                             </div>
                         </div>
                     </div>
@@ -331,20 +331,20 @@ export default function MsrtcBookingPage() {
                         </p>
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="purpose">Purpose of Travel</Label>
-                        <Textarea id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g., Pilgrimage, School Trip, etc."/>
+                        <Label htmlFor="purpose">Additional Remark</Label>
+                        <Textarea id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} placeholder="e.g., Any special instructions or notes for the booking."/>
                     </div>
                 </div>
                ) : (
-                <div className="text-center p-8 text-gray-500">
+                <div className="text-center p-8 text-slate-500">
                     Loading map services...
                 </div>
                )}
             </fieldset>
 
-            <fieldset className="p-4 border rounded-lg">
-                <legend className="text-lg font-semibold px-2">3. Passenger List (Optional)</legend>
-                <div className="flex gap-4 mb-4 border-b pb-4">
+            <fieldset className="p-6 border rounded-xl">
+                <legend className="text-xl font-semibold px-2 text-slate-700">3. Passenger List (Optional)</legend>
+                <div className="flex gap-4 my-4 border-b pb-4">
                     <Button type="button" variant={uploadMode === 'manual' ? 'default' : 'outline'} onClick={() => setUploadMode('manual')}>
                         Enter Manually
                     </Button>
@@ -355,7 +355,7 @@ export default function MsrtcBookingPage() {
 
                 {uploadMode === 'file' ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-slate-500">
                       Upload a CSV or Excel file with passenger details. The file should contain columns for: Name, Age, Gender, and Aadhaar Number (for concessions).
                     </p>
                     <div className="flex gap-4 items-center">
@@ -379,7 +379,7 @@ export default function MsrtcBookingPage() {
                 ) : (
                   <div className="space-y-4">
                       {passengers.map((passenger, index) => (
-                          <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end p-2 border-b">
+                          <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end p-3 border-b">
                               <div className="md:col-span-4 space-y-1">
                                   <Label htmlFor={`p-name-${index}`} className="text-xs">Name</Label>
                                   <Input id={`p-name-${index}`} placeholder="Full Name" value={passenger.name} onChange={(e) => handlePassengerChange(index, 'name', e.target.value)} required />
@@ -401,7 +401,7 @@ export default function MsrtcBookingPage() {
                               </div>
                               <div className="md:col-span-3 space-y-1">
                                   <Label htmlFor={`p-id-${index}`} className="text-xs">ID Proof (Aadhaar)</Label>
-                                  <Input id={`p-id-${index}`} type="file" onChange={(e) => handlePassengerChange(index, 'idProof', e)} className="h-10 pt-2 text-xs"/>
+                                  <Input id={`p-id-${index}`} type="file" onChange={(e) => handlePassengerChange(index, 'idProof', e)} className="h-11 pt-2 text-xs"/>
                               </div>
                               <div className="md:col-span-1">
                                   <Button type="button" variant="ghost" size="icon" onClick={() => handleRemovePassenger(index)} disabled={passengers.length === 1}>
@@ -419,7 +419,7 @@ export default function MsrtcBookingPage() {
             
             {error && <p className="text-center text-sm text-destructive py-2">{error}</p>}
 
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-end pt-6">
                 <Button type="submit" size="lg" disabled={isSubmitting}>
                     {isSubmitting ? "Submitting..." : "Submit Request"}
                 </Button>
