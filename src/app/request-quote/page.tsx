@@ -32,13 +32,19 @@ export default function RequestQuotePage() {
   const [returnDate, setReturnDate] = useState("");
   const [journeyTime, setJourneyTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
-  const [passengers, setPassengers] = useState("");
   const [busType, setBusType] = useState("");
   
   const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
+
+  const [numGents, setNumGents] = useState(0);
+  const [numLadies, setNumLadies] = useState(0);
+  const [numSrCitizen, setNumSrCitizen] = useState(0);
+  const [numAmritCitizen, setNumAmritCitizen] = useState(0);
+  const [numChildren, setNumChildren] = useState(0);
+  const totalPassengers = numGents + numLadies + numSrCitizen + numAmritCitizen + numChildren;
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,8 +86,8 @@ export default function RequestQuotePage() {
   }, [isLoaded]);
 
   const validateAndSubmit = () => {
-    if (!fromLocation.address || !toLocation.address || !busType || !journeyDate || !returnDate || !passengers || !journeyTime || !returnTime) {
-      setError("Please fill all trip details: locations, dates, times, bus type, and passenger count.");
+    if (!fromLocation.address || !toLocation.address || !busType || !journeyDate || !returnDate || totalPassengers <= 0 || !journeyTime || !returnTime) {
+      setError("Please fill all trip details: locations, dates, times, bus type, and at least one passenger.");
       setIsAlertOpen(true);
       return;
     }
@@ -143,7 +149,12 @@ export default function RequestQuotePage() {
         returnDate,
         journeyTime,
         returnTime,
-        seats: passengers,
+        seats: totalPassengers.toString(),
+        numGents,
+        numLadies,
+        numSrCitizen,
+        numAmritCitizen,
+        numChildren,
         busType,
         seatType: '', // Not specified in this form, can be added if needed
         estimate: null, // No estimate on initial request
@@ -220,10 +231,7 @@ export default function RequestQuotePage() {
                                     <Label>Return Time</Label>
                                     <Input type="time" value={returnTime} onChange={e => setReturnTime(e.target.value)} required />
                                 </div>
-                                <div className="space-y-1">
-                                    <Label>Number of Passengers</Label>
-                                    <Input type="number" placeholder="e.g. 45" value={passengers} onChange={e => setPassengers(e.target.value)} required/>
-                                </div>
+                                
                                 <div className="space-y-1">
                                     <Label>Preferred Bus Type</Label>
                                     <Select onValueChange={setBusType} value={busType}>
@@ -238,6 +246,39 @@ export default function RequestQuotePage() {
                                             <SelectItem value="Any">Any Available</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div className="border-b pb-6">
+                            <h2 className="text-lg font-semibold text-slate-700 mb-4">Passenger Details</h2>
+                             <div className="space-y-4 p-4 border rounded-lg bg-background">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 items-center">
+                                    <div className="col-span-6 font-semibold text-sm">Passenger Bifurcation:</div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numGents" className="text-xs">Gents</Label>
+                                        <Input id="numGents" type="number" min="0" value={numGents} onChange={(e) => setNumGents(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numLadies" className="text-xs">Ladies</Label>
+                                        <Input id="numLadies" type="number" min="0" value={numLadies} onChange={(e) => setNumLadies(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numSrCitizen" className="text-xs">Sr. Citizen (65+)</Label>
+                                        <Input id="numSrCitizen" type="number" min="0" value={numSrCitizen} onChange={(e) => setNumSrCitizen(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numAmritCitizen" className="text-xs">Amrit (75+)</Label>
+                                        <Input id="numAmritCitizen" type="number" min="0" value={numAmritCitizen} onChange={(e) => setNumAmritCitizen(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numChildren" className="text-xs">Children (5-12)</Label>
+                                        <Input id="numChildren" type="number" min="0" value={numChildren} onChange={(e) => setNumChildren(Number(e.target.value))} />
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center p-2 bg-secondary rounded-md h-full">
+                                        <Label className="text-xs font-bold">Total</Label>
+                                        <div className="text-xl font-bold">{totalPassengers}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

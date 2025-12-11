@@ -18,8 +18,11 @@ export interface BookingRequest {
   seats: string;
   busType: string;
   seatType: string;
-  numPassengers?: number;
-  numConcession?: number;
+  numGents?: number;
+  numLadies?: number;
+  numSrCitizen?: number;
+  numAmritCitizen?: number;
+  numChildren?: number;
   estimatedFare?: number;
   estimate: {
     totalCost: number;
@@ -69,7 +72,11 @@ export interface MsrtcBooking {
     busType: string;
     purpose: string;
     numPassengers: number;
-    numConcession: number;
+    numGents?: number;
+    numLadies?: number;
+    numSrCitizen?: number;
+    numAmritCitizen?: number;
+    numChildren?: number;
     estimatedFare: number;
     passengers: any[]; // Consider defining a Passenger type
     status: 'pending' | 'confirmed' | 'rejected' | 'fulfilled';

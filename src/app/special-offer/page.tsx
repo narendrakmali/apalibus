@@ -34,13 +34,19 @@ export default function SpecialOfferPage() {
   const [returnDate, setReturnDate] = useState("");
   const [journeyTime, setJourneyTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
-  const [passengers, setPassengers] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
   
   const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("Regarding Special Offer");
+
+  const [numGents, setNumGents] = useState(0);
+  const [numLadies, setNumLadies] = useState(0);
+  const [numSrCitizen, setNumSrCitizen] = useState(0);
+  const [numAmritCitizen, setNumAmritCitizen] = useState(0);
+  const [numChildren, setNumChildren] = useState(0);
+  const totalPassengers = numGents + numLadies + numSrCitizen + numAmritCitizen + numChildren;
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +94,7 @@ export default function SpecialOfferPage() {
       return;
     }
     
-    if (!selectedVehicle || !journeyDate || !returnDate || !passengers || !journeyTime || !returnTime) {
+    if (!selectedVehicle || !journeyDate || !returnDate || totalPassengers <= 0 || !journeyTime || !returnTime) {
       setError("Please fill all trip details including vehicle, passengers, dates, and times.");
       setIsAlertOpen(true);
       return;
@@ -153,7 +159,12 @@ export default function SpecialOfferPage() {
         returnDate,
         journeyTime,
         returnTime,
-        seats: passengers,
+        seats: totalPassengers.toString(),
+        numGents,
+        numLadies,
+        numSrCitizen,
+        numAmritCitizen,
+        numChildren,
         busType: `${rateInfo?.vehicleType} (${rateInfo?.seatingCapacity} Seater, ${rateInfo?.busType})`,
         seatType: '', // Not specified in this form
         estimate: null, // No estimate needed for special offer
@@ -233,12 +244,9 @@ export default function SpecialOfferPage() {
 
                     <div className="form-section-title">Vehicle & Passengers</div>
                     <div className="form-grid">
-                        <div className="input-group">
-                            <Label>👥 Number of Passengers</Label>
-                            <Input type="number" className="input-field" placeholder="e.g. 25" value={passengers} onChange={e => setPassengers(e.target.value)} required/>
-                        </div>
-                        <div className="input-group">
-                            <Label>🚌 Vehicle Type</Label>
+                        
+                        <div className="input-group full-width">
+                             <Label>🚌 Vehicle Type</Label>
                             <Select onValueChange={setSelectedVehicle} value={selectedVehicle}>
                                 <SelectTrigger className="input-field">
                                     <SelectValue placeholder="Select vehicle type" />
@@ -251,6 +259,38 @@ export default function SpecialOfferPage() {
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                         <div className="input-group full-width">
+                            <div className="space-y-4 p-4 border rounded-lg bg-background">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 items-center">
+                                    <div className="col-span-6 font-semibold text-sm">Passenger Bifurcation:</div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numGents" className="text-xs">Gents</Label>
+                                        <Input id="numGents" type="number" min="0" value={numGents} onChange={(e) => setNumGents(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numLadies" className="text-xs">Ladies</Label>
+                                        <Input id="numLadies" type="number" min="0" value={numLadies} onChange={(e) => setNumLadies(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numSrCitizen" className="text-xs">Sr. Citizen (65+)</Label>
+                                        <Input id="numSrCitizen" type="number" min="0" value={numSrCitizen} onChange={(e) => setNumSrCitizen(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numAmritCitizen" className="text-xs">Amrit (75+)</Label>
+                                        <Input id="numAmritCitizen" type="number" min="0" value={numAmritCitizen} onChange={(e) => setNumAmritCitizen(Number(e.target.value))} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="numChildren" className="text-xs">Children (5-12)</Label>
+                                        <Input id="numChildren" type="number" min="0" value={numChildren} onChange={(e) => setNumChildren(Number(e.target.value))} />
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center p-2 bg-secondary rounded-md h-full">
+                                        <Label className="text-xs font-bold">Total</Label>
+                                        <div className="text-xl font-bold">{totalPassengers}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -338,5 +378,3 @@ export default function SpecialOfferPage() {
     </div>
   );
 }
-
-    

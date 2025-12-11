@@ -272,6 +272,11 @@
         "seats": { "type": "string" },
         "busType": { "type": "string" },
         "seatType": { "type": "string" },
+        "numGents": { "type": "number" },
+        "numLadies": { "type": "number" },
+        "numSrCitizen": { "type": "number" },
+        "numAmritCitizen": { "type": "number" },
+        "numChildren": { "type": "number" },
         "estimate": { "type": "object" },
         "contact": { "type": "object" },
         "status": { "type": "string", "enum": ["pending", "approved", "rejected", "quote_rejected"] },
@@ -317,13 +322,17 @@
         "busType": { "type": "string" },
         "purpose": { "type": "string" },
         "numPassengers": { "type": "number" },
-        "numConcession": { "type": "number" },
+        "numGents": { "type": "number" },
+        "numLadies": { "type": "number" },
+        "numSrCitizen": { "type": "number" },
+        "numAmritCitizen": { "type": "number" },
+        "numChildren": { "type": "number" },
         "estimatedFare": { "type": "number" },
         "passengers": { "type": "array", "items": { "type": "object" }},
         "status": { "type": "string", "enum": ["pending", "confirmed", "rejected"], "default": "pending" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "userId", "organizerName", "contactNumber", "travelDate", "origin", "destination", "busType", "numPassengers", "numConcession", "status", "createdAt"]
+      "required": ["id", "userId", "organizerName", "contactNumber", "travelDate", "origin", "destination", "busType", "numPassengers", "status", "createdAt"]
     }
   },
   "auth": {

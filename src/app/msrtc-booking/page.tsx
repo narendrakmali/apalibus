@@ -49,7 +49,7 @@ export default function MsrtcBookingPage() {
   
   const [travelDate, setTravelDate] = useState<Date>();
   const [origin, setOrigin] = useState<Location>({ address: "" });
-  const [destination, setDestination] = useState<Location>({ address: "Sangli Samagam" });
+  const [destination, setToLocation] = useState<Location>({ address: "Sangli Samagam" });
   const [busType, setBusType] = useState('');
   const [purpose, setPurpose] = useState('');
   
@@ -70,10 +70,12 @@ export default function MsrtcBookingPage() {
   const router = useRouter();
 
 
-  // New state for passenger counts
-  const [numPassengers, setNumPassengers] = useState<number>(0);
-  const [numConcession, setNumConcession] = useState<number>(0);
-
+  const [numGents, setNumGents] = useState(0);
+  const [numLadies, setNumLadies] = useState(0);
+  const [numSrCitizen, setNumSrCitizen] = useState(0);
+  const [numAmritCitizen, setNumAmritCitizen] = useState(0);
+  const [numChildren, setNumChildren] = useState(0);
+  const totalPassengers = numGents + numLadies + numSrCitizen + numAmritCitizen + numChildren;
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -126,8 +128,8 @@ export default function MsrtcBookingPage() {
     e.preventDefault();
     setError(null);
 
-    if (!origin.address || !destination.address || !busType || !travelDate || numPassengers <= 0) {
-        setError("Please fill out all required travel details.");
+    if (!origin.address || !destination.address || !busType || !travelDate || totalPassengers <= 0) {
+        setError("Please fill out all required travel details and add at least one passenger.");
         return;
     }
     if (!branch || !zone || !mobileNumber || !email) {
@@ -168,8 +170,12 @@ export default function MsrtcBookingPage() {
             destination: destination.address,
             busType,
             purpose,
-            numPassengers,
-            numConcession,
+            numPassengers: totalPassengers,
+            numGents,
+            numLadies,
+            numSrCitizen,
+            numAmritCitizen,
+            numChildren,
             passengers: uploadMode === 'manual' ? serializablePassengers : [],
             status: "pending",
             createdAt: serverTimestamp(),
@@ -242,7 +248,7 @@ export default function MsrtcBookingPage() {
             </fieldset>
 
             <fieldset className="space-y-4 p-4 border rounded-lg">
-              <legend className="text-lg font-semibold px-2">2. Travel Details</legend>
+              <legend className="text-lg font-semibold px-2">2. Travel & Passenger Details</legend>
                {isLoaded ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -293,17 +299,40 @@ export default function MsrtcBookingPage() {
                         <Label htmlFor="destination">Destination</Label>
                         <Input id="destination" value={destination.address} disabled />
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="numPassengers">Number of Passengers</Label>
-                        <Input id="numPassengers" type="number" min="1" value={numPassengers} onChange={(e) => setNumPassengers(Number(e.target.value))} placeholder="e.g., 25" required />
+                    
+                    <div className="md:col-span-2 space-y-4 p-4 border rounded-lg bg-background">
+                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 items-center">
+                            <div className="col-span-6 font-semibold text-sm">Passenger Bifurcation:</div>
+                            <div className="space-y-1">
+                                <Label htmlFor="numGents" className="text-xs">Gents</Label>
+                                <Input id="numGents" type="number" min="0" value={numGents} onChange={(e) => setNumGents(Number(e.target.value))} />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="numLadies" className="text-xs">Ladies</Label>
+                                <Input id="numLadies" type="number" min="0" value={numLadies} onChange={(e) => setNumLadies(Number(e.target.value))} />
+                            </div>
+                             <div className="space-y-1">
+                                <Label htmlFor="numSrCitizen" className="text-xs">Sr. Citizen (65+)</Label>
+                                <Input id="numSrCitizen" type="number" min="0" value={numSrCitizen} onChange={(e) => setNumSrCitizen(Number(e.target.value))} />
+                            </div>
+                             <div className="space-y-1">
+                                <Label htmlFor="numAmritCitizen" className="text-xs">Amrit (75+)</Label>
+                                <Input id="numAmritCitizen" type="number" min="0" value={numAmritCitizen} onChange={(e) => setNumAmritCitizen(Number(e.target.value))} />
+                            </div>
+                             <div className="space-y-1">
+                                <Label htmlFor="numChildren" className="text-xs">Children (5-12)</Label>
+                                <Input id="numChildren" type="number" min="0" value={numChildren} onChange={(e) => setNumChildren(Number(e.target.value))} />
+                            </div>
+                            <div className="flex flex-col items-center justify-center p-2 bg-secondary rounded-md h-full">
+                                <Label className="text-xs font-bold">Total</Label>
+                                <div className="text-xl font-bold">{totalPassengers}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="numConcession">Passengers with Concession</Label>
-                        <Input id="numConcession" type="number" min="0" max={numPassengers} value={numConcession} onChange={(e) => setNumConcession(Number(e.target.value))} placeholder="e.g., 5" required />
-                    </div>
+                    
                     <div className="md:col-span-2 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
                         <p className="text-xs text-yellow-800 font-semibold">
-                            For concessional fare, Aadhaar card is mandatory for Females &amp; Sr. Citizens, and a valid certificate is required for Divyang passengers.
+                            For concessional fare, Aadhaar card is mandatory for Females & Sr. Citizens, and a valid certificate is required for Divyang passengers.
                         </p>
                     </div>
                     <div className="space-y-2 md:col-span-2">
@@ -319,7 +348,7 @@ export default function MsrtcBookingPage() {
             </fieldset>
 
             <fieldset className="p-4 border rounded-lg">
-                <legend className="text-lg font-semibold px-2">3. Passenger List</legend>
+                <legend className="text-lg font-semibold px-2">3. Passenger List (Optional)</legend>
                 <div className="flex gap-4 mb-4 border-b pb-4">
                     <Button type="button" variant={uploadMode === 'manual' ? 'default' : 'outline'} onClick={() => setUploadMode('manual')}>
                         Enter Manually
@@ -423,5 +452,3 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
-
-    
