@@ -77,6 +77,7 @@ export interface MsrtcBooking {
     numSrCitizen?: number;
     numAmritCitizen?: number;
     numChildren?: number;
+    numConcession?: number;
     estimatedFare: number;
     passengers: any[]; // Consider defining a Passenger type
     status: 'pending' | 'confirmed' | 'rejected' | 'fulfilled';
@@ -100,4 +101,5 @@ export interface VehicleSubmission {
   createdAt: Timestamp;
 }
 
+    
     

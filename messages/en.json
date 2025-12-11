@@ -1,3 +1,4 @@
+
 {
     "Header": {
         "title": "Transport Seva",
@@ -19,7 +20,7 @@
         "sidebarSubtitle": "Branch: Chembur",
         "coordinator": "Branch Coordinator",
         "privateBusRequest": "Private Bus Request",
-        "msrtcBusRequest": "MSRTC-Bus-Request",
+        "msrtcBusRequest": "MSRTC Bus Request",
         "informTransport": "Inform Transport",
         "trackStatus": "Track Status",
         "privateBusDescription": "The easiest way to book a bus. Just tell us your needs and we'll send you a quote.",
@@ -27,7 +28,7 @@
         "informTransportDescription": "Already booked a bus? Submit your vehicle and ticket details here.",
         "trackStatusDescription": "Check the status of your submitted private and MSRTC booking requests.",
         "requestQuoteButton": "Request a Quote",
-        "newMsrtcRequestButton": "New MSRTC-Bus-Request",
+        "newMsrtcRequestButton": "New MSRTC Request",
         "submitVehicleInfoButton": "Submit Vehicle Info",
         "checkStatusButton": "Check Status"
     },
@@ -118,5 +119,47 @@
         "successTitle": "Information Submitted Successfully!",
         "successDesc": "Thank you for providing your travel details. This will help us coordinate arrivals smoothly.",
         "backToDashboard": "Back to Dashboard"
+    },
+    "MsrtcBooking": {
+        "title": "MSRTC Group Booking Request",
+        "subtitle": "Submit a formal request for MSRTC group bookings. Our team will coordinate with MSRTC and get back to you.",
+        "organizerInfo": "Organizer Information",
+        "organizerName": "Organizer/Group Leader Full Name",
+        "contactNumber": "Contact Mobile Number",
+        "emailAddress": "Email Address (Optional)",
+        "tripDetails": "Trip Details",
+        "originDepot": "Origin Depot",
+        "selectOrigin": "Select origin depot",
+        "destinationDepot": "Destination Depot",
+        "selectDestination": "Select destination depot",
+        "searchDepot": "Search for a depot...",
+        "depotNotFound": "No depot found.",
+        "travelDate": "Date of Travel",
+        "busType": "Bus Type",
+        "nonAc": "Non-AC",
+        "ac": "AC (Shivshahi/Similar)",
+        "purpose": "Purpose of Travel",
+        "purposePlaceholder": "e.g., Attending 59th Annual Nirankari Samagam, Sangli",
+        "passengerDetails": "Passenger Details",
+        "bifurcation": "Passenger Bifurcation:",
+        "gents": "Gents",
+        "ladies": "Ladies",
+        "srCitizen": "Sr. Citizen (65+)",
+        "amritCitizen": "Amrit (75+)",
+        "children": "Children (5-12)",
+        "total": "Total",
+        "calculateFare": "Calculate Estimated Fare",
+        "estimatedFare": "Estimated Fare (per person)",
+        "concessionInfo": "You have {count} passengers eligible for ST concession. Final fare will be confirmed by the Transport Dept. after MSRTC verification.",
+        "submitRequest": "Submit MSRTC Request",
+        "submitting": "Submitting...",
+        "errorSelectDepots": "Please select both origin and destination depots to calculate fare.",
+        "errorFillAllFields": "Please fill in all required fields: organizer info, trip details, and at least one passenger.",
+        "errorAuth": "Could not authenticate your session. Please try again.",
+        "successTitle": "MSRTC Request Submitted!",
+        "successDescription": "Your group booking request has been received. Our team will verify the details with MSRTC and contact you on {mobile} with the final confirmation and payment details.",
+        "checkStatus": "Check Status"
     }
 }
+
+    
