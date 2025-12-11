@@ -14,7 +14,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useJsApiLoader } from '@react-google-maps/api';
+import { loadGoogleMaps } from '@/lib/google-maps-loader';
 import { useCurrentLocation } from '@/hooks/use-current-location';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
@@ -37,8 +37,6 @@ interface Location {
   lat?: number;
   lng?: number;
 }
-
-const libraries: ("places")[] = ["places"];
 
 
 export default function MsrtcBookingPage() {
@@ -63,6 +61,7 @@ export default function MsrtcBookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isMapsLoaded, setIsMapsLoaded] = useState(false);
 
 
   const auth = useAuth();
@@ -77,17 +76,13 @@ export default function MsrtcBookingPage() {
   const [numChildren, setNumChildren] = useState(0);
   const totalPassengers = numGents + numLadies + numSrCitizen + numAmritCitizen + numChildren;
 
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  useEffect(() => {
+    loadGoogleMaps()
+      .then(() => setIsMapsLoaded(true))
+      .catch((err) => console.error("Failed to load Google Maps", err));
+  }, []);
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: googleMapsApiKey!,
-    libraries,
-    language: 'en',
-    skip: !googleMapsApiKey,
-  });
-
-  const { locationName, coords } = useCurrentLocation(isLoaded);
+  const { locationName, coords } = useCurrentLocation(isMapsLoaded);
 
   useEffect(() => {
     if (locationName && coords) {
@@ -249,7 +244,7 @@ export default function MsrtcBookingPage() {
 
             <fieldset className="space-y-4 p-4 border rounded-lg">
               <legend className="text-lg font-semibold px-2">2. Travel & Passenger Details</legend>
-               {isLoaded ? (
+               {isMapsLoaded ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="travelDate">Travel Date</Label>
@@ -452,5 +447,7 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
+
+    
 
     

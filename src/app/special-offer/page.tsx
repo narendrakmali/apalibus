@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { useJsApiLoader } from "@react-google-maps/api";
+import { loadGoogleMaps } from "@/lib/google-maps-loader";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import { rateCard } from "@/lib/rate-card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -17,8 +17,6 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Textarea } from "@/components/ui/textarea";
-
-const libraries: ("places")[] = ["places"];
 
 interface Location {
   address: string;
@@ -53,21 +51,19 @@ export default function SpecialOfferPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRequestConfirm, setShowRequestConfirm] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isMapsLoaded, setIsMapsLoaded] = useState(false);
 
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
 
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  useEffect(() => {
+    loadGoogleMaps()
+      .then(() => setIsMapsLoaded(true))
+      .catch((err) => console.error("Failed to load Google Maps", err));
+  }, []);
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script-special',
-    googleMapsApiKey: googleMapsApiKey!,
-    libraries,
-    language: 'en',
-  });
-
-  const { locationName, coords } = useCurrentLocation(isLoaded);
+  const { locationName, coords } = useCurrentLocation(isMapsLoaded);
 
   useEffect(() => {
     if (locationName && coords) {
@@ -76,7 +72,7 @@ export default function SpecialOfferPage() {
   }, [locationName, coords]);
   
   useEffect(() => {
-    if (isLoaded) {
+    if (isMapsLoaded) {
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ address: 'Sangli, Maharashtra' }, (results, status) => {
         if (status === 'OK' && results && results[0]) {
@@ -85,7 +81,7 @@ export default function SpecialOfferPage() {
         }
       });
     }
-  }, [isLoaded]);
+  }, [isMapsLoaded]);
 
   const validateAndSubmit = () => {
     if (!fromLocation.address || !toLocation.address) {
@@ -208,7 +204,7 @@ export default function SpecialOfferPage() {
                     <h1>Special Offer to Sangli</h1>
                     <p>Reliable group travel packages from Mumbai/Navi Mumbai. Get a special quote.</p>
                 </div>
-                {isLoaded ? (
+                {isMapsLoaded ? (
                 <form onSubmit={(e) => { e.preventDefault(); validateAndSubmit(); }}>
                     <div className="form-section-title">Trip Details</div>
                     <div className="form-grid">
@@ -378,3 +374,5 @@ export default function SpecialOfferPage() {
     </div>
   );
 }
+
+    

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { useJsApiLoader } from "@react-google-maps/api";
+import { loadGoogleMaps } from "@/lib/google-maps-loader";
 import PlacesAutocomplete from "@/components/places-autocomplete";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useCurrentLocation } from "@/hooks/use-current-location";
@@ -16,8 +16,6 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Textarea } from "@/components/ui/textarea";
-
-const libraries: ("places")[] = ["places"];
 
 interface Location {
   address: string;
@@ -51,21 +49,19 @@ export default function RequestQuotePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRequestConfirm, setShowRequestConfirm] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isMapsLoaded, setIsMapsLoaded] = useState(false);
 
   const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
 
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  useEffect(() => {
+    loadGoogleMaps()
+      .then(() => setIsMapsLoaded(true))
+      .catch((err) => console.error("Failed to load Google Maps", err));
+  }, []);
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script-request-quote',
-    googleMapsApiKey: googleMapsApiKey!,
-    libraries,
-    language: 'en',
-  });
-
-  const { locationName, coords } = useCurrentLocation(isLoaded);
+  const { locationName, coords } = useCurrentLocation(isMapsLoaded);
 
   useEffect(() => {
     if (locationName && coords) {
@@ -74,7 +70,7 @@ export default function RequestQuotePage() {
   }, [locationName, coords]);
   
   useEffect(() => {
-    if (isLoaded) {
+    if (isMapsLoaded) {
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ address: 'Sangli, Maharashtra' }, (results, status) => {
         if (status === 'OK' && results && results[0]) {
@@ -83,7 +79,7 @@ export default function RequestQuotePage() {
         }
       });
     }
-  }, [isLoaded]);
+  }, [isMapsLoaded]);
 
   const validateAndSubmit = () => {
     if (!fromLocation.address || !toLocation.address || !busType || !journeyDate || !returnDate || totalPassengers <= 0 || !journeyTime || !returnTime) {
@@ -197,7 +193,7 @@ export default function RequestQuotePage() {
                     <h1 className="text-3xl font-bold text-slate-800">Private Bus Request</h1>
                     <p className="text-slate-500 mt-2">Fill in your travel details, and our team will provide a competitive quote within 24 hours.</p>
                 </div>
-                {isLoaded ? (
+                {isMapsLoaded ? (
                 <form onSubmit={(e) => { e.preventDefault(); validateAndSubmit(); }}>
                     <div className="space-y-6">
                         <div className="border-b pb-6">
@@ -367,5 +363,7 @@ export default function RequestQuotePage() {
     </div>
   );
 }
+
+    
 
     
