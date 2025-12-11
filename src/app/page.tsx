@@ -86,13 +86,13 @@ const DashboardLayout = () => {
             </Card>
             <Card className="shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-semibold">MSRTC(ST) Bus Request</CardTitle>
+                    <CardTitle className="text-lg font-semibold">MSRTC-Bus-Request</CardTitle>
                     <Bus size={18} className="text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground text-sm leading-relaxed mb-4">Submit a formal request for group booking with MSRTC, including concessions.</p>
                     <Button asChild>
-                        <Link href="/msrtc-booking">New MSRTC(ST) Request</Link>
+                        <Link href="/msrtc-booking">New MSRTC-Bus-Request</Link>
                     </Button>
                 </CardContent>
             </Card>
