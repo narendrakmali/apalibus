@@ -16,7 +16,6 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: st
   const menuItems = [
     { id: 'request-quote', label: 'Request a Quote', icon: <FilePen size={20} />, href: '/request-quote' },
     { id: 'msrtc', label: 'MSRTC Booking', icon: <Bus size={20} />, href: '/msrtc-booking' },
-    { id: 'private', label: 'Private Bus (Toll)', icon: <FileText size={20} />, href: '/' },
     { id: 'train', label: 'Train Arrivals', icon: <Train size={20} />, href: '#' },
   ];
 
@@ -65,189 +64,55 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: st
   );
 };
 
-// --- COMPONENT 2: THE CLEAN FORM ---
-const BookingForm = () => {
-  return (
-    <div className="max-w-5xl mx-auto">
-      {/* Page Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Private Bus Request</h1>
-          <p className="text-slate-500">Submit vehicle details for Toll Exemption Pass.</p>
-        </div>
-        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-200">
-          Draft Request
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* LEFT COLUMN: Main Form Inputs */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Card 1: Journey Details */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center gap-2">
-              <MapPin size={18} className="text-blue-600" />
-              <h3 className="font-bold text-slate-700">Journey Details</h3>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">From (Branch Location)</label>
-                <input type="text" defaultValue="Navi Mumbai, Maharashtra" className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-600 focus:outline-none" readOnly />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">To (Destination)</label>
-                <input type="text" defaultValue="Samagam Ground, Sangli" className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-600 focus:outline-none" readOnly />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Departure Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 text-slate-400" size={18} />
-                  <input type="date" className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Return Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 text-slate-400" size={18} />
-                  <input type="date" className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Vehicle Details */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center gap-2">
-              <Bus size={18} className="text-orange-600" />
-              <h3 className="font-bold text-slate-700">Vehicle Information</h3>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Vehicle Type</label>
-                <select className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                  <option>Private Luxury Bus (45+ Seater)</option>
-                  <option>Tempo Traveler (12+ Seater)</option>
-                  <option>Car / SUV</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Passenger Count</label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-3 text-slate-400" size={18} />
-                  <input type="number" placeholder="e.g. 50" className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-slate-700">Vehicle Number (RC)</label>
-                <input type="text" placeholder="MH-04-AB-1234" className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono uppercase tracking-wider" />
-                <p className="text-xs text-slate-500">Enter exact number as per number plate.</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN: The "Mukhi Letter" Workflow */}
-        <div className="space-y-6">
-          
-          <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-            <h3 className="font-bold text-blue-900 mb-2">Toll Exemption Process</h3>
-            <p className="text-sm text-blue-700 mb-4">
-              To get the Toll Pass, you must upload the authority letter signed by your Branch Mukhi.
-            </p>
-            
-            {/* Step 1 */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-xs font-bold">1</div>
-                <span className="text-sm font-semibold text-slate-700">Download Template</span>
-              </div>
-              <button className="w-full flex items-center justify-center gap-2 bg-white border border-blue-200 text-blue-700 py-2 rounded-lg hover:bg-blue-50 transition text-sm font-medium">
-                <Download size={16} /> Download PDF
-              </button>
-            </div>
-
-            {/* Step 2 */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-xs font-bold">2</div>
-                <span className="text-sm font-semibold text-slate-700">Upload Signed Copy</span>
-              </div>
-              <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center bg-white cursor-pointer hover:bg-blue-50 transition">
-                <Upload size={24} className="mx-auto text-blue-400 mb-2" />
-                <p className="text-xs text-slate-500">Click to upload photo of signed letter</p>
-              </div>
-            </div>
-
-          </div>
-
-          <button className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-200 transition flex items-center justify-center gap-2">
-            <CheckCircle size={20} /> Submit Request
-          </button>
-
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // --- MAIN LAYOUT CONTAINER ---
 const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('request-quote');
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'private':
-        return <BookingForm />;
-      default:
-        return (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Private Bus Request</CardTitle>
-                        <FilePen size={18} className="text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-slate-500 text-sm mb-4">The easiest way to book a bus. Just tell us your needs and we'll send you a quote.</p>
-                        <Button asChild>
-                            <Link href="/request-quote">Request a Quote</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">MSRTC(ST) Bus Request</CardTitle>
-                        <Bus size={18} className="text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-slate-500 text-sm mb-4">Submit a formal request for group booking with MSRTC, including concessions.</p>
-                        <Button asChild>
-                           <Link href="/msrtc-booking">New MSRTC(ST) Request</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Track Requests</CardTitle>
-                        <MapPin size={18} className="text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-slate-500 text-sm mb-4">Check the status of your submitted private and MSRTC booking requests.</p>
-                        <Button asChild variant="outline">
-                            <Link href="/track-status">Check Status</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-            <TrainArrivals />
-          </>
-        );
-    }
+    return (
+        <>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Private Bus Request</CardTitle>
+                    <FilePen size={18} className="text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <p className="text-slate-500 text-sm mb-4">The easiest way to book a bus. Just tell us your needs and we'll send you a quote.</p>
+                    <Button asChild>
+                        <Link href="/request-quote">Request a Quote</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">MSRTC(ST) Bus Request</CardTitle>
+                    <Bus size={18} className="text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <p className="text-slate-500 text-sm mb-4">Submit a formal request for group booking with MSRTC, including concessions.</p>
+                    <Button asChild>
+                        <Link href="/msrtc-booking">New MSRTC(ST) Request</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Track Requests</CardTitle>
+                    <MapPin size={18} className="text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <p className="text-slate-500 text-sm mb-4">Check the status of your submitted private and MSRTC booking requests.</p>
+                    <Button asChild variant="outline">
+                        <Link href="/track-status">Check Status</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+        <TrainArrivals />
+        </>
+    );
   }
 
   return (
