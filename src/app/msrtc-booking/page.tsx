@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -61,7 +60,7 @@ export default function MsrtcBookingPage() {
   
   const [travelDate, setTravelDate] = useState<Date>();
   const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
+  const [destination, setDestination] = useState('Sangli Samagam');
   const [busType, setBusType] = useState('');
   const [purpose, setPurpose] = useState('');
   
@@ -322,13 +321,13 @@ export default function MsrtcBookingPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="origin">Origin</Label>
+                  <Label htmlFor="origin">Pickup Location (Nearest Depot)</Label>
                   {loadingDepots ? <Skeleton className="h-10 w-full" /> : (
                     <Combobox
                         options={depotOptions}
                         value={origin}
                         onChange={setOrigin}
-                        placeholder="Select origin depot..."
+                        placeholder="Select pickup depot..."
                         searchPlaceholder="Search depot..."
                         notFoundText="No depot found."
                     />
@@ -336,16 +335,7 @@ export default function MsrtcBookingPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destination">Destination</Label>
-                   {loadingDepots ? <Skeleton className="h-10 w-full" /> : (
-                    <Combobox
-                        options={depotOptions}
-                        value={destination}
-                        onChange={setDestination}
-                        placeholder="Select destination depot..."
-                        searchPlaceholder="Search depot..."
-                        notFoundText="No depot found."
-                    />
-                  )}
+                   <Input id="destination" value={destination} disabled />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="numPassengers">Number of Passengers</Label>

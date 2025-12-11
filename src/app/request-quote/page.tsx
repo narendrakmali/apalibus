@@ -27,7 +27,7 @@ interface Location {
 
 export default function RequestQuotePage() {
   const [fromLocation, setFromLocation] = useState<Location>({ address: "" });
-  const [toLocation, setToLocation] = useState<Location>({ address: "Sangli, Maharashtra, India" });
+  const [toLocation, setToLocation] = useState<Location>({ address: "Sangli Samagam" });
   const [journeyDate, setJourneyDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [journeyTime, setJourneyTime] = useState("");
@@ -73,7 +73,7 @@ export default function RequestQuotePage() {
       geocoder.geocode({ address: 'Sangli, Maharashtra' }, (results, status) => {
         if (status === 'OK' && results && results[0]) {
           const { lat, lng } = results[0].geometry.location;
-          setToLocation({ address: 'Sangli, Maharashtra, India', lat: lat(), lng: lng() });
+          setToLocation({ address: 'Sangli Samagam', lat: lat(), lng: lng() });
         }
       });
     }
@@ -193,7 +193,7 @@ export default function RequestQuotePage() {
                             <h2 className="text-lg font-semibold text-slate-700 mb-4">Trip Details</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <Label>From</Label>
+                                    <Label>Pickup Location</Label>
                                     <PlacesAutocomplete 
                                         onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
                                         initialValue={fromLocation.address}
@@ -201,7 +201,7 @@ export default function RequestQuotePage() {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label>To (Destination)</Label>
+                                    <Label>Destination</Label>
                                     <Input value={toLocation.address} disabled />
                                 </div>
                                 <div className="space-y-1">

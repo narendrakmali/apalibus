@@ -29,7 +29,7 @@ interface Location {
 
 export default function SpecialOfferPage() {
   const [fromLocation, setFromLocation] = useState<Location>({ address: "" });
-  const [toLocation, setToLocation] = useState<Location>({ address: "Sangli, Maharashtra, India" });
+  const [toLocation, setToLocation] = useState<Location>({ address: "Sangli Samagam" });
   const [journeyDate, setJourneyDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [journeyTime, setJourneyTime] = useState("");
@@ -75,7 +75,7 @@ export default function SpecialOfferPage() {
       geocoder.geocode({ address: 'Sangli, Maharashtra' }, (results, status) => {
         if (status === 'OK' && results && results[0]) {
           const { lat, lng } = results[0].geometry.location;
-          setToLocation({ address: 'Sangli, Maharashtra, India', lat: lat(), lng: lng() });
+          setToLocation({ address: 'Sangli Samagam', lat: lat(), lng: lng() });
         }
       });
     }
@@ -202,7 +202,7 @@ export default function SpecialOfferPage() {
                     <div className="form-section-title">Trip Details</div>
                     <div className="form-grid">
                         <div className="input-group">
-                            <Label>📍 From</Label>
+                            <Label>📍 Pickup Location</Label>
                             <PlacesAutocomplete 
                                 onLocationSelect={(address, lat, lng) => setFromLocation({ address, lat, lng })}
                                 initialValue={fromLocation.address}
@@ -210,7 +210,7 @@ export default function SpecialOfferPage() {
                             />
                         </div>
                         <div className="input-group">
-                            <Label>📍 To (Destination)</Label>
+                            <Label>📍 Destination</Label>
                             <Input value={toLocation.address} className="input-field" disabled />
                         </div>
                          <div className="input-group">
