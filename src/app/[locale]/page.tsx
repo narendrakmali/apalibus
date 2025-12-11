@@ -1,158 +1,90 @@
-
 'use client';
 
-import React, { useState } from 'react';
-import {
-  Bus, Train, Home, FileText, Upload, Download,
-  Calendar, MapPin, Users, CheckCircle, Menu, X, FilePen, Info
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Link } from '@/navigation';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/navigation'; // Use your custom navigation
+import { Bus, Train, Car, FileText, Activity, ArrowRight } from 'lucide-react';
 
-// --- COMPONENT 1: SIDEBAR NAVIGATION ---
-const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: string, setActiveTab: (tab: string) => void, isOpen: boolean, setIsOpen: (isOpen: boolean) => void}) => {
-  const t = useTranslations('Dashboard');
-  const menuItems = [
-    { id: 'request-quote', label: t('privateBusRequest'), icon: <FilePen size={20} />, href: '/request-quote' },
-    { id: 'msrtc', label: t('msrtcBusRequest'), icon: <Bus size={20} />, href: '/msrtc-booking' },
-    { id: 'inform-transport', label: t('informTransport'), icon: <Info size={20} />, href: '/inform-transport' },
-    { id: 'track-status', label: t('trackStatus'), icon: <MapPin size={20} />, href: '/track-status' },
+export default function Dashboard() {
+  const t = useTranslations('Dashboard'); // Ensure you have this in your en.json
+
+  const cards = [
+    {
+      title: "MSRTC Bus Request",
+      desc: "Book State Transport buses for group travel.",
+      icon: <Bus className="w-8 h-8 text-blue-600" />,
+      href: "/msrtc-booking",
+      color: "bg-blue-50 border-blue-200",
+      btnColor: "text-blue-600"
+    },
+    {
+      title: "Private Vehicle Pass",
+      desc: "Get toll exemption QR codes for private buses.",
+      icon: <Car className="w-8 h-8 text-emerald-600" />,
+      href: "/inform-transport",
+      color: "bg-emerald-50 border-emerald-200",
+      btnColor: "text-emerald-600"
+    },
+    {
+      title: "Private Bus Request",
+      desc: "The easiest way to book a bus. Just tell us your needs and we'll send you a quote.",
+      icon: <FileText className="w-8 h-8 text-orange-600" />,
+      href: "/request-quote",
+      color: "bg-orange-50 border-orange-200",
+      btnColor: "text-orange-600"
+    }
   ];
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-50 w-60 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
-      <div className="flex items-center justify-between p-6 border-b border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center font-bold">SNM</div>
-          <span className="font-bold text-lg">{t('sidebarTitle')}</span>
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
+      
+      {/* 1. Welcome Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Namaskar, Coordinator</h1>
+          <p className="text-slate-500 mt-1">Manage all transport logistics for the 59th Samagam.</p>
         </div>
-        <button onClick={() => setIsOpen(false)} className="md:hidden text-slate-400">
-          <X size={24} />
-        </button>
+        <div className="flex gap-3">
+          <Link href="/track-status" className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 font-medium transition">
+            <Activity className="w-4 h-4" />
+            Track Status
+          </Link>
+        </div>
       </div>
 
-      <nav className="mt-6 px-4 space-y-2">
-        {menuItems.map((item) => (
-          <Link
-            key={item.id}
-            href={item.href}
-            onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-              activeTab === item.id
-                ? 'bg-primary text-white shadow-lg'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            {React.cloneElement(item.icon, { className: `transition-colors ${activeTab === item.id ? 'text-white' : 'text-slate-400'}` })}
-            <span className="font-medium">{item.label}</span>
+      {/* 2. Key Metrics (Quick Stats) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <p className="text-sm font-medium text-slate-500">Total Requests</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">24</p>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <p className="text-sm font-medium text-slate-500">Pending Approval</p>
+          <p className="text-3xl font-bold text-amber-600 mt-2">12</p>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+          <p className="text-sm font-medium text-slate-500">Confirmed Vehicles</p>
+          <p className="text-3xl font-bold text-emerald-600 mt-2">8</p>
+        </div>
+      </div>
+
+      {/* 3. Action Grid (The "Figma" Look) */}
+      <h2 className="text-xl font-semibold text-slate-800 pt-4">Create New Request</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {cards.map((card, idx) => (
+          <Link href={card.href} key={idx} className="group block">
+            <div className={`h-full p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 bg-white hover:border-slate-300`}>
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${card.color}`}>
+                {card.icon}
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{card.title}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-6">{card.desc}</p>
+              <div className={`flex items-center font-semibold text-sm ${card.btnColor}`}>
+                Start Request <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
           </Link>
         ))}
-      </nav>
-
-      <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
-            <span className="font-bold text-sm">BC</span>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-white">{t('coordinator')}</p>
-            <p className="text-xs text-slate-400">{t('sidebarSubtitle')}</p>
-          </div>
-        </div>
       </div>
     </div>
   );
-};
-
-// --- MAIN LAYOUT CONTAINER ---
-const DashboardLayout = () => {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('request-quote');
-  const t = useTranslations('Dashboard');
-
-  const renderContent = () => {
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-semibold">{t('privateBusRequest')}</CardTitle>
-                    <FilePen size={18} className="text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">{t('privateBusDescription')}</p>
-                    <Button asChild>
-                        <Link href="/request-quote">{t('requestQuoteButton')}</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-semibold">{t('msrtcBusRequest')}</CardTitle>
-                    <Bus size={18} className="text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">{t('msrtcDescription')}</p>
-                    <Button asChild>
-                        <Link href="/msrtc-booking">{t('newMsrtcRequestButton')}</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-             <Card className="shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-semibold">{t('informTransport')}</CardTitle>
-                    <Info size={18} className="text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">{t('informTransportDescription')}</p>
-                    <Button asChild>
-                        <Link href="/inform-transport">{t('submitVehicleInfoButton')}</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-            <Card className="shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-semibold">{t('trackStatus')}</CardTitle>
-                    <MapPin size={18} className="text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">{t('trackStatusDescription')}</p>
-                    <Button asChild variant="outline">
-                        <Link href="/track-status">{t('checkStatusButton')}</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-        </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background flex font-sans">
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isOpen={isSidebarOpen}
-        setIsOpen={setSidebarOpen}
-      />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header Toggle */}
-        <header className="md:hidden bg-card border-b p-4 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} className="text-foreground/80">
-            <Menu size={24} />
-          </button>
-          <span className="font-bold text-foreground">Samagam Transport</span>
-        </header>
-
-        {/* Main Content Scroll Area */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-          {renderContent()}
-        </main>
-      </div>
-    </div>
-  );
-};
-
-
-export default DashboardLayout;
+}
