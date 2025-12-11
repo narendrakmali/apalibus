@@ -220,7 +220,7 @@ export default function MsrtcBookingPage() {
     <div className="container mx-auto py-12 px-4 md:px-6 bg-secondary/30">
       <Card className="max-w-4xl mx-auto">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-display text-primary">MSRTC Group Booking Request</CardTitle>
+          <CardTitle className="text-3xl font-display text-primary">MSRTC(ST) Bus Request</CardTitle>
           <CardDescription>Fill out the form below to request a group booking with concessions.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -452,3 +452,5 @@ export default function MsrtcBookingPage() {
     </div>
   );
 }
+
+    

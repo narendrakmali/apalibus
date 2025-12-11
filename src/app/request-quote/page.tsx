@@ -194,7 +194,7 @@ export default function RequestQuotePage() {
         <div className="max-w-3xl mx-auto">
             <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-slate-800">Request a Bus Quote</h1>
+                    <h1 className="text-3xl font-bold text-slate-800">Private Bus Request</h1>
                     <p className="text-slate-500 mt-2">Fill in your travel details, and our team will provide a competitive quote within 24 hours.</p>
                 </div>
                 {isLoaded ? (
@@ -367,3 +367,5 @@ export default function RequestQuotePage() {
     </div>
   );
 }
+
+    
