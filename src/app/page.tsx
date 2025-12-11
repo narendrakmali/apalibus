@@ -259,7 +259,7 @@ const DashboardOverview = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Quote Requests</CardTitle>
+                        <CardTitle className="text-sm font-medium">Private Bus Request</CardTitle>
                         <FilePen size={18} className="text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -271,13 +271,13 @@ const DashboardOverview = () => {
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">MSRTC Bookings</CardTitle>
+                        <CardTitle className="text-sm font-medium">MSRTC(ST) Bus Request</CardTitle>
                         <Bus size={18} className="text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <p className="text-slate-500 text-sm mb-4">Submit a formal request for group booking with MSRTC, including concessions.</p>
                         <Button asChild>
-                           <Link href="/msrtc-booking">New MSRTC Request</Link>
+                           <Link href="/msrtc-booking">New MSRTC(ST) Request</Link>
                         </Button>
                     </CardContent>
                 </Card>
