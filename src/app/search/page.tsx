@@ -4,16 +4,17 @@
 import React, { useState } from 'react';
 import { 
   Bus, Train, Home, FileText, Upload, Download, 
-  Calendar, MapPin, Users, CheckCircle, Menu, X 
+  Calendar, MapPin, Users, CheckCircle, Menu, X, FilePen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
 
 // --- COMPONENT 1: SIDEBAR NAVIGATION ---
 const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }: { activeTab: string, setActiveTab: (tab: string) => void, isOpen: boolean, setIsOpen: (isOpen: boolean) => void}) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard Overview', icon: <Home size={20} />, href: '/search' },
+    { id: 'request-quote', label: 'Request a Quote', icon: <FilePen size={20} />, href: '/request-quote' },
     { id: 'msrtc', label: 'MSRTC Booking', icon: <Bus size={20} />, href: '/msrtc-booking' },
     { id: 'private', label: 'Private Bus (Toll)', icon: <FileText size={20} />, href: '/search' },
     { id: 'train', label: 'Train Arrivals', icon: <Train size={20} />, href: '#' },
@@ -196,7 +197,31 @@ const BookingForm = () => {
 // --- MAIN LAYOUT CONTAINER ---
 const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('private'); // Default to the screen we are fixing
+  const [activeTab, setActiveTab] = useState('dashboard'); // Default to the dashboard overview
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'private':
+        return <BookingForm />;
+      case 'dashboard':
+        return <DashboardOverview />;
+      default:
+        return (
+          <div className="flex items-center justify-center h-full">
+            <Card className="w-full max-w-md text-center">
+              <CardHeader>
+                <CardTitle>Under Construction</CardTitle>
+                <CardDescription>This feature is not yet available.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-500">The page you selected is currently under development. Please check back later or select another option from the sidebar.</p>
+                <Button onClick={() => setActiveTab('dashboard')} className="mt-4">Go to Dashboard</Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex font-sans">
@@ -218,21 +243,7 @@ const DashboardLayout = () => {
 
         {/* Main Content Scroll Area */}
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-          {activeTab === 'private' && <BookingForm />}
-          {activeTab === 'dashboard' && <DashboardOverview />}
-          {activeTab !== 'private' && activeTab !== 'dashboard' && (
-            <div className="flex items-center justify-center h-full">
-              <Card className="w-full max-w-md">
-                <CardHeader>
-                  <CardTitle>Under Construction</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-500">This section is currently under development. Please check back later.</p>
-                  <Button onClick={() => setActiveTab('private')} className="mt-4">Go to Private Bus Request</Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          {renderContent()}
         </main>
       </div>
     </div>
@@ -242,9 +253,47 @@ const DashboardLayout = () => {
 const DashboardOverview = () => {
     return (
         <div>
-            <h1 className="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
-            <p className="text-slate-500">Welcome, Coordinator. Here's a summary of your branch's transport activities.</p>
-            {/* Add dashboard widgets here */}
+            <h1 className="text-2xl font-bold text-slate-800 mb-2">Dashboard Overview</h1>
+            <p className="text-slate-500 mb-8">Welcome, Branch Coordinator. Here is a summary of your transport requests.</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Quote Requests</CardTitle>
+                        <FilePen size={18} className="text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-slate-500 text-sm mb-4">The easiest way to book a bus. Just tell us your needs and we'll send you a quote.</p>
+                        <Button asChild>
+                            <Link href="/request-quote">Request a Quote</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">MSRTC Bookings</CardTitle>
+                        <Bus size={18} className="text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-slate-500 text-sm mb-4">Submit a formal request for group booking with MSRTC, including concessions.</p>
+                        <Button asChild>
+                           <Link href="/msrtc-booking">New MSRTC Request</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Track Requests</CardTitle>
+                        <MapPin size={18} className="text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-slate-500 text-sm mb-4">Check the status of your submitted private and MSRTC booking requests.</p>
+                        <Button asChild variant="outline">
+                            <Link href="/track-status">Check Status</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }
