@@ -1,21 +1,20 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Link, usePathname, useRouter } from '@/navigation';
-import { Button } from "./ui/button";
-import { LogOut, Bus, MapPin, Search, User, Globe, Shield } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { Menu, X, Bus, LogOut, User, Globe, Shield, MapPin, Search } from 'lucide-react';
+import { Button } from './ui/button';
 import { useLocale, useTranslations } from 'next-intl';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
 const LanguageSwitcher = () => {
     const locale = useLocale();
@@ -30,7 +29,7 @@ const LanguageSwitcher = () => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="w-full justify-start">
                     <Globe className="h-4 w-4 mr-2" />
                     <span>{t('language')}</span>
                 </Button>
@@ -44,18 +43,16 @@ const LanguageSwitcher = () => {
     );
 };
 
-
 export default function Header() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
   const auth = useAuth();
   const firestore = useFirestore();
   const [user, authLoading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
-  const pathname = usePathname();
-  const [clientLoaded, setClientLoaded] = useState(false);
   const t = useTranslations('Header');
 
   useEffect(() => {
-    setClientLoaded(true);
     const checkAdminStatus = async () => {
       if (user) {
         try {
@@ -77,40 +74,55 @@ export default function Header() {
     checkAdminStatus();
   }, [user, firestore]);
 
+  const navLinks = [
+    { name: t('dashboard'), href: '/', icon: Search },
+    { name: t('requestQuote'), href: '/request-quote', icon: Bus },
+    { name: t('trackStatus'), href: '/track-status', icon: MapPin },
+  ];
+
+  const isActive = (path: string) => pathname === path;
+
   const handleLogout = async () => {
     await auth.signOut();
+    setIsMobileMenuOpen(false);
   };
 
   return (
-    <header className="bg-card shadow-sm border-b sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-              SNM
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">{t('title')}</h1>
-              <p className="text-xs text-muted-foreground">{t('subtitle')}</p>
-            </div>
-          </Link>
-        </div>
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-20">
+          
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
+                SNM
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-800 hidden sm:block">{t('title')}</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">{t('subtitle')}</p>
+                 <span className="font-bold text-xl text-slate-900 sm:hidden">
+                    {t('title')}
+                 </span>
+              </div>
+            </Link>
+          </div>
 
-        <div className="flex items-center gap-2">
-           <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
-              <Button variant="ghost" asChild>
-                <Link href="/"><Search className="mr-2 h-4 w-4"/>{t('dashboard')}</Link>
+          <div className="hidden md:flex items-center space-x-2">
+            {navLinks.map((link) => (
+              <Button variant="ghost" asChild key={link.href}>
+                <Link
+                  href={link.href}
+                  className={isActive(link.href) ? 'text-primary' : ''}
+                >
+                  <link.icon className="mr-2 h-4 w-4" />
+                  {link.name}
+                </Link>
               </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/request-quote"><Bus className="mr-2 h-4 w-4"/>{t('requestQuote')}</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/track-status"><MapPin className="mr-2 h-4 w-4"/>{t('trackStatus')}</Link>
-              </Button>
-          </nav>
+            ))}
+          </div>
 
-          <div className="flex items-center gap-2">
-            {(authLoading || !clientLoaded) ? null : user ? (
+          <div className="hidden md:flex items-center gap-2">
+             {(authLoading) ? null : user ? (
                 <>
                 {isAdmin && (
                     <Button asChild variant="outline" size="sm">
@@ -126,12 +138,74 @@ export default function Header() {
                   <Link href="/"><User className="mr-2 h-4 w-4"/>{t('login')}</Link>
                 </Button>
             )}
-             <div className="h-6 border-l border-slate-200 mx-2"></div>
+             <div className="h-6 border-l border-slate-200 mx-1"></div>
             <LanguageSwitcher />
-           </div>
+          </div>
 
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-md text-slate-600 hover:bg-slate-100 focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white border-t border-slate-100 shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${
+                  isActive(link.href)
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <link.icon className="mr-3 h-5 w-5" />
+                {link.name}
+              </Link>
+            ))}
+            <div className="border-t border-slate-100 mt-2 pt-2">
+             {(authLoading) ? null : user ? (
+                <>
+                {isAdmin && (
+                  <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center w-full text-left px-3 py-3 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">
+                    <Shield className="mr-3 h-5 w-5" />
+                    {t('admin')}
+                  </Link>
+                )}
+                 <button 
+                    onClick={handleLogout}
+                    className="w-full text-left flex items-center gap-2 px-3 py-3 text-base font-medium text-red-600 hover:bg-red-50 rounded-md"
+                  >
+                    <LogOut className="mr-3 h-5 w-5" />
+                    {t('logout')}
+                  </button>
+                </>
+            ) : (
+                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center w-full text-left px-3 py-3 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">
+                    <User className="mr-3 h-5 w-5" />
+                    {t('login')}
+                  </Link>
+            )}
+             <div className="border-t border-slate-100 mt-2 pt-2">
+                <LanguageSwitcher />
+            </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

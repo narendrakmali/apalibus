@@ -6,6 +6,13 @@ import { FirebaseClientProvider } from '@/firebase';
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { locales } from '@/navigation';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Samagam Transport Seva',
+  description: 'Transport Logistics Management for the 59th Annual Samagam, Sangli.',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+};
 
 export default async function LocaleLayout({
   children,
@@ -27,7 +34,7 @@ export default async function LocaleLayout({
           <FirebaseClientProvider>
             <div className="flex flex-col min-h-screen">
               <Header />
-              <main className="flex-grow bg-background">
+              <main className="flex-grow bg-slate-50">
                 {children}
               </main>
               <Footer />
