@@ -1,3 +1,4 @@
+
 'use client';
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -86,5 +87,3 @@ export default function BookingConfirmation({ bookingId }: { bookingId: string }
         </div>
     );
 }
-
-    

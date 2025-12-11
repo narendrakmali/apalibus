@@ -1,3 +1,4 @@
+
 import createMiddleware from 'next-intl/middleware';
 import {locales, localePrefix} from './navigation';
  
@@ -11,4 +12,3 @@ export const config = {
   // Match only internationalized pathnames
   matcher: ['/', '/(hi|mr|en)/:path*']
 };
-    

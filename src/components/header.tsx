@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Link, usePathname, useRouter } from '@/navigation';
@@ -141,5 +142,3 @@ export default function Header() {
     </header>
   );
 }
-
-    

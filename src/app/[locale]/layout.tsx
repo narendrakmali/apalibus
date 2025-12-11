@@ -1,11 +1,11 @@
+
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { FirebaseClientProvider } from '@/firebase';
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-
-const locales = ['en', 'hi', 'mr'];
+import { locales } from '@/navigation';
 
 export default async function LocaleLayout({
   children,
@@ -14,7 +14,7 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  if (!locales.includes(locale)) {
+  if (!locales.includes(locale as any)) {
     notFound();
   }
 
