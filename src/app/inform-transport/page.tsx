@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Camera, FileUp, Loader2 } from "lucide-react";
+import { Camera, FileUp, Loader2, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
@@ -24,8 +24,8 @@ export default function InformTransportPage() {
   const [passengerCount, setPassengerCount] = useState('');
   const [busRegistration, setBusRegistration] = useState('');
   const [operatorName, setOperatorName] = useState('');
-  const [ticketFile, setTicketFile] = useState<string | null>(null); // Store as data URL
-  const [ticketFileName, setTicketFileName] = useState('');
+  const [ticketFiles, setTicketFiles] = useState<string[]>([]); // Store as data URLs
+  const [ticketFileNames, setTicketFileNames] = useState<string[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +51,10 @@ export default function InformTransportPage() {
   }, [stream]);
 
   const handleCameraOpen = async () => {
+    if (ticketFiles.length >= 10) {
+      setError("You have reached the maximum limit of 10 files.");
+      return;
+    }
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -76,8 +80,9 @@ export default function InformTransportPage() {
       const context = canvas.getContext('2d');
       context?.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
       const dataUrl = canvas.toDataURL('image/jpeg');
-      setTicketFile(dataUrl);
-      setTicketFileName('capture.jpg');
+      
+      setTicketFiles(prev => [...prev, dataUrl]);
+      setTicketFileNames(prev => [...prev, `capture-${Date.now()}.jpg`]);
       handleCameraClose();
     }
   };
@@ -91,25 +96,38 @@ export default function InformTransportPage() {
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setTicketFile(e.target?.result as string);
-        setTicketFileName(file.name);
-      };
-      reader.readAsDataURL(file);
+    const files = event.target.files;
+    if (files) {
+        if (ticketFiles.length + files.length > 10) {
+            setError("You can only upload a maximum of 10 files.");
+            return;
+        }
+        
+        for (const file of Array.from(files)) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setTicketFiles(prev => [...prev, e.target?.result as string]);
+                setTicketFileNames(prev => [...prev, file.name]);
+            };
+            reader.readAsDataURL(file);
+        }
     }
   };
 
-  const uploadTicket = async (userId: string, submissionId: string, dataUrl: string): Promise<string> => {
+  const handleRemoveFile = (index: number) => {
+    setTicketFiles(prev => prev.filter((_, i) => i !== index));
+    setTicketFileNames(prev => prev.filter((_, i) => i !== index));
+  }
+
+  const uploadTickets = async (userId: string, submissionId: string, dataUrls: string[], fileNames: string[]): Promise<string[]> => {
       const storage = getStorage();
-      const filePath = `ticketSubmissions/${userId}/${submissionId}-${ticketFileName}`;
-      const storageRef = ref(storage, filePath);
-      
-      const uploadResult = await uploadString(storageRef, dataUrl, 'data_url');
-      const downloadURL = await getDownloadURL(uploadResult.ref);
-      return downloadURL;
+      const uploadPromises = dataUrls.map((dataUrl, index) => {
+          const fileName = fileNames[index];
+          const filePath = `ticketSubmissions/${userId}/${submissionId}-${fileName}`;
+          const storageRef = ref(storage, filePath);
+          return uploadString(storageRef, dataUrl, 'data_url').then(uploadResult => getDownloadURL(uploadResult.ref));
+      });
+      return Promise.all(uploadPromises);
   }
 
   const generateAlphanumericId = (prefix: string, length: number): string => {
@@ -125,8 +143,8 @@ export default function InformTransportPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!contactName || !contactMobile || !coordinatorName || !journeyDate || !returnDate || !passengerCount || !ticketFile) {
-      setError("Please fill out all required fields and upload a ticket.");
+    if (!contactName || !contactMobile || !coordinatorName || !journeyDate || !returnDate || !passengerCount || ticketFiles.length === 0) {
+      setError("Please fill out all required fields and upload at least one ticket file.");
       return;
     }
 
@@ -143,7 +161,7 @@ export default function InformTransportPage() {
         }
 
         const submissionId = generateAlphanumericId('VS', 8);
-        const ticketImageUrl = await uploadTicket(user.uid, submissionId, ticketFile);
+        const ticketImageUrls = await uploadTickets(user.uid, submissionId, ticketFiles, ticketFileNames);
 
         const docRef = doc(firestore, "vehicleSubmissions", submissionId);
 
@@ -159,7 +177,7 @@ export default function InformTransportPage() {
             journeyDate,
             returnDate,
             passengerCount: parseInt(passengerCount),
-            ticketImageUrl,
+            ticketImageUrls,
             createdAt: serverTimestamp(),
         };
 
@@ -248,26 +266,38 @@ export default function InformTransportPage() {
 
               {/* Ticket Upload */}
               <fieldset className="space-y-4">
-                <legend className="text-lg font-semibold text-slate-700 mb-4">Upload Ticket</legend>
-                <div className="p-4 border-2 border-dashed rounded-lg text-center">
-                    {ticketFile ? (
-                        <div>
-                            <p className="font-medium text-green-600">File Ready: {ticketFileName}</p>
-                            <Button variant="link" onClick={() => { setTicketFile(null); setTicketFileName(''); }}>Remove</Button>
+                <legend className="text-lg font-semibold text-slate-700 mb-4">Upload Ticket(s)</legend>
+                <div className="p-4 border-2 border-dashed rounded-lg">
+                    {ticketFiles.length > 0 && (
+                        <div className="mb-4 space-y-2">
+                             <h4 className="font-medium text-sm">Selected Files ({ticketFiles.length}/10):</h4>
+                             <div className="grid grid-cols-2 gap-2">
+                                {ticketFileNames.map((name, index) => (
+                                    <div key={index} className="flex items-center justify-between text-sm bg-slate-100 p-2 rounded-md">
+                                        <span className="truncate">{name}</span>
+                                        <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveFile(index)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    ) : (
-                        <div className="space-y-4">
-                             <p className="text-sm text-muted-foreground">Upload an image or PDF of your ticket/booking confirmation.</p>
+                    )}
+                    {ticketFiles.length < 10 ? (
+                        <div className="space-y-2 text-center">
+                             <p className="text-xs text-muted-foreground">Upload images or PDFs of your tickets (up to 10 files).</p>
                              <div className="flex justify-center gap-4">
                                 <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                                    <FileUp className="mr-2 h-4 w-4" /> Select File
+                                    <FileUp className="mr-2 h-4 w-4" /> Select Files
                                 </Button>
                                 <Button type="button" onClick={handleCameraOpen}>
                                     <Camera className="mr-2 h-4 w-4" /> Use Camera
                                 </Button>
-                                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" />
+                                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,application/pdf" className="hidden" multiple />
                             </div>
                         </div>
+                    ) : (
+                         <p className="text-center text-sm font-medium text-green-600">You have reached the 10 file limit.</p>
                     )}
                 </div>
               </fieldset>
