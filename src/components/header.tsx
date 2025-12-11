@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from "./ui/button";
-import { Phone, Shield, LogOut, Bus, Calculator, Search, User } from "lucide-react";
+import { Phone, Shield, LogOut, Bus, MapPin, Search, User } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc } from 'firebase/firestore';
