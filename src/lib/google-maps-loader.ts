@@ -1,7 +1,7 @@
 
 import { Loader } from '@googlemaps/js-api-loader';
 
-const libraries: ("places")[] = ["places"];
+const libraries: ("places" | "geometry")[] = ["places", "geometry"];
 
 let loaderInstance: Loader | null = null;
 let promise: Promise<void> | null = null;
@@ -35,5 +35,3 @@ export const loadGoogleMaps = (): Promise<void> => {
 
   return promise;
 };
-
-    
