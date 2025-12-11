@@ -19,15 +19,6 @@ export default function Dashboard() {
       buttonText: t('requestQuoteButton')
     },
     {
-      title: t('msrtcBusRequest'),
-      desc: t('msrtcDescription'),
-      icon: <Bus className="w-8 h-8 text-blue-600" />,
-      href: "/msrtc-booking",
-      color: "bg-blue-50 border-blue-200",
-      btnColor: "text-blue-600",
-      buttonText: t('newMsrtcRequestButton')
-    },
-    {
       title: t('informTransport'),
       desc: t('informTransportDescription'),
       icon: <Car className="w-8 h-8 text-emerald-600" />,
@@ -36,6 +27,15 @@ export default function Dashboard() {
       btnColor: "text-emerald-600",
       buttonText: t('submitVehicleInfoButton')
     },
+    {
+      title: t('trackStatus'),
+      desc: t('trackStatusDescription'),
+      icon: <Activity className="w-8 h-8 text-purple-600" />,
+      href: "/track-status",
+      color: "bg-purple-50 border-purple-200",
+      btnColor: "text-purple-600",
+      buttonText: t('checkStatusButton')
+    }
   ];
 
   return (
@@ -46,30 +46,8 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-slate-900">{t('sidebarTitle')}</h1>
           <p className="text-slate-500 mt-1">{t('coordinator')}: {t('sidebarSubtitle')}</p>
         </div>
-        <div className="flex gap-3">
-          <Link href="/track-status" className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 font-medium transition">
-            <Activity className="w-4 h-4" />
-            {t('trackStatus')}
-          </Link>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <p className="text-sm font-medium text-slate-500">Total Requests</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">24</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <p className="text-sm font-medium text-slate-500">Pending Approval</p>
-          <p className="text-3xl font-bold text-amber-600 mt-2">12</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <p className="text-sm font-medium text-slate-500">Confirmed Vehicles</p>
-          <p className="text-3xl font-bold text-emerald-600 mt-2">8</p>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-semibold text-slate-800 pt-4">Create New Request</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {cards.map((card, idx) => (
           <div key={idx} className={`h-full p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 bg-white hover:border-slate-300 flex flex-col`}>
