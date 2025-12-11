@@ -4,8 +4,6 @@
 import { PT_Sans, Space_Grotesk, Poppins } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from '@/components/error-fallback';
 import { FirebaseClientProvider } from "@/firebase/client-provider";
@@ -27,21 +25,23 @@ const poppins = Poppins({
   variable: '--font-poppins',
 });
 
+// This is the root layout and does not have access to the locale.
+// It's a client component to use Firebase and ErrorBoundary.
+// The actual locale-specific layout is at `/[locale]/layout.tsx`.
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // The `lang` attribute will be set in the locale-specific layout.
+    <html lang="en"> 
       <head>
         <title>Bus Booking</title>
         <meta name="description" content="A comprehensive web-based bus booking platform." />
       </head>
       <body className={cn("min-h-screen flex flex-col font-sans antialiased", ptSans.variable, spaceGrotesk.variable, poppins.variable)}>
           <FirebaseClientProvider>
-            <Header />
-            <main className="flex-grow bg-background">
               <ErrorBoundary
                   FallbackComponent={ErrorFallback}
                   onReset={() => {
@@ -51,8 +51,6 @@ export default function RootLayout({
               >
                 {children}
               </ErrorBoundary>
-            </main>
-            <Footer />
           </FirebaseClientProvider>
       </body>
     </html>

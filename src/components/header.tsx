@@ -1,14 +1,50 @@
 
 'use client';
 
-import Link from 'next/link';
+import Link from 'next-intl/link';
 import { Button } from "./ui/button";
-import { Phone, Shield, LogOut, Bus, MapPin, Search, User } from "lucide-react";
+import { Phone, Shield, LogOut, Bus, MapPin, Search, User, Globe } from "lucide-react";
 import { useAuth, useFirestore } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next-intl/client';
+import { useLocale, useTranslations } from 'next-intl';
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+const LanguageSwitcher = () => {
+    const locale = useLocale();
+    const router = useRouter();
+    const pathname = usePathname();
+    const t = useTranslations('Header');
+
+    const switchLocale = (nextLocale: string) => {
+        router.replace(pathname, { locale: nextLocale });
+    };
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                    <Globe className="h-4 w-4 mr-2" />
+                    {locale.toUpperCase()}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => switchLocale('en')}>English</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchLocale('hi')}>हिंदी (Hindi)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchLocale('mr')}>मराठी (Marathi)</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+};
+
 
 export default function Header() {
   const auth = useAuth();
@@ -17,6 +53,7 @@ export default function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
   const [clientLoaded, setClientLoaded] = useState(false);
+  const t = useTranslations('Header');
 
   useEffect(() => {
     setClientLoaded(true);
@@ -61,8 +98,8 @@ export default function Header() {
               SNM
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Transport Seva</h1>
-              <p className="text-xs text-muted-foreground">59th Annual Samagam, Sangli</p>
+              <h1 className="text-xl font-bold text-foreground">{t('title')}</h1>
+              <p className="text-xs text-muted-foreground">{t('subtitle')}</p>
             </div>
           </Link>
         </div>
@@ -72,31 +109,32 @@ export default function Header() {
 
            <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
               <Button variant="ghost" asChild>
-                <Link href="/"><Search className="mr-2 h-4 w-4"/>Dashboard</Link>
+                <Link href="/"><Search className="mr-2 h-4 w-4"/>{t('dashboard')}</Link>
               </Button>
               <Button variant="ghost" asChild>
-                <Link href="/request-quote"><Bus className="mr-2 h-4 w-4"/>Request Quote</Link>
+                <Link href="/request-quote"><Bus className="mr-2 h-4 w-4"/>{t('requestQuote')}</Link>
               </Button>
               <Button variant="ghost" asChild>
-                <Link href="/track-status"><MapPin className="mr-2 h-4 w-4"/>Track Status</Link>
+                <Link href="/track-status"><MapPin className="mr-2 h-4 w-4"/>{t('trackStatus')}</Link>
               </Button>
           </nav>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             {(authLoading || !clientLoaded) ? null : user ? (
                 <>
                 {isAdmin && (
                     <Button asChild variant="outline" size="sm">
-                        <Link href="/admin"><Shield className="mr-2 h-4 w-4" />Admin</Link>
+                        <Link href="/admin"><Shield className="mr-2 h-4 w-4" />{t('admin')}</Link>
                     </Button>
                 )}
                 <Button onClick={handleLogout} variant="secondary" size="sm">
-                    <LogOut className="mr-2 h-4 w-4" /> Logout
+                    <LogOut className="mr-2 h-4 w-4" /> {t('logout')}
                 </Button>
                 </>
             ) : (
                 <Button asChild size="sm">
-                  <Link href="/"><User className="mr-2 h-4 w-4"/> Branch-Coordinator Login</Link>
+                  <Link href="/"><User className="mr-2 h-4 w-4"/>{t('login')}</Link>
                 </Button>
             )}
            </div>

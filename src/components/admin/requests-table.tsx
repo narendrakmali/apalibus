@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BookingRequest } from '@/hooks/use-admin-data';
 import { ArrowRight, FileText } from "lucide-react";
-import Link from "next/link";
+import Link from "next-intl/link";
 
 
 function formatFirebaseTimestamp(timestamp: any) {

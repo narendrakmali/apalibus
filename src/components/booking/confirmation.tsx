@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Download, Share2 } from "lucide-react";
-import Link from "next/link";
+import Link from "next-intl/link";
 import Image from "next/image";
 import placeholderImages from '@/lib/placeholder-images.json';
 
