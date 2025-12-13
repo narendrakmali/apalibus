@@ -1,10 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbo: {
-    // This tells Next.js that the project root is the current directory,
-    // which resolves the "couldn't find the Next.js package" error.
-    root: __dirname,
-  },
+  // We keep this empty of "experimental" options to avoid crashes
 };
 
-module.exports = nextConfig;
+const withNextIntl = require('next-intl/plugin')();
+
+module.exports = withNextIntl(nextConfig);
