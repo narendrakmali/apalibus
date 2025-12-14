@@ -4,11 +4,20 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/navigation';
 import { Bus, Car, FileText, Activity, ArrowRight } from 'lucide-react';
+import { ComponentProps } from 'react';
 
 export default function Dashboard() {
   const t = useTranslations('Dashboard');
 
-  const cards = [
+  const cards: {
+      title: string;
+      desc: string;
+      icon: JSX.Element;
+      href: ComponentProps<typeof Link>['href'];
+      color: string;
+      btnColor: string;
+      buttonText: string;
+  }[] = [
     {
       title: t('privateBusRequest'),
       desc: t('privateBusDescription'),
