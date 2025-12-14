@@ -2,7 +2,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/navigation';
+import { Link, useRouter } from '@/navigation';
 import { Bus, Car, FileText, Activity, ArrowRight } from 'lucide-react';
 import { ComponentProps } from 'react';
 
@@ -24,7 +24,7 @@ export default function Dashboard() {
       title: t('privateBusRequest'),
       desc: t('privateBusDescription'),
       icon: <FileText className="w-8 h-8 text-orange-600" />,
-      href: "/request-quote",
+      href: "/request-quote" as any,
       color: "bg-orange-50 border-orange-200",
       btnColor: "text-orange-600",
       buttonText: t('requestQuoteButton')
@@ -33,7 +33,7 @@ export default function Dashboard() {
       title: t('msrtcBusRequest'),
       desc: t('msrtcDescription'),
       icon: <Bus className="w-8 h-8 text-blue-600" />,
-      href: "/msrtc-booking",
+      href: "/msrtc-booking" as any,
       color: "bg-blue-50 border-blue-200",
       btnColor: "text-blue-600",
       buttonText: t('newMsrtcRequestButton')
@@ -42,7 +42,7 @@ export default function Dashboard() {
       title: t('informTransport'),
       desc: t('informTransportDescription'),
       icon: <Car className="w-8 h-8 text-emerald-600" />,
-      href: "/inform-transport",
+      href: "/inform-transport" as any,
       color: "bg-emerald-50 border-emerald-200",
       btnColor: "text-emerald-600",
       buttonText: t('submitVehicleInfoButton')
@@ -51,7 +51,7 @@ export default function Dashboard() {
       title: t('trackStatus'),
       desc: t('trackStatusDescription'),
       icon: <Activity className="w-8 h-8 text-purple-600" />,
-      href: "/track-status",
+      href: "/track-status" as any,
       color: "bg-purple-50 border-purple-200",
       btnColor: "text-purple-600",
       buttonText: t('checkStatusButton')
