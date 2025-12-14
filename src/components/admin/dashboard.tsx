@@ -16,7 +16,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/admin/login');
+      router.push('/admin/login' as any);
     }
   }, [user, loading, router]);
 
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     await auth.signOut();
-    router.push('/admin/login');
+    router.push('/admin/login' as any);
   };
   
   return (
