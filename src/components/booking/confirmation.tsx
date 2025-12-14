@@ -71,10 +71,10 @@ export default function BookingConfirmation({ bookingId }: { bookingId: string }
                             Download Ticket
                         </Button>
                         <Button variant="secondary" className="w-full" asChild>
-                            <Link href={`https://wa.me/?text=${whatsappText}`} target="_blank">
+                            <a href={`https://wa.me/?text=${whatsappText}`} target="_blank" rel="noopener noreferrer">
                                 <Share2 className="mr-2 h-4 w-4" />
                                 Share on WhatsApp
-                            </Link>
+                            </a>
                         </Button>
                     </div>
                      <div className="text-center pt-4">
