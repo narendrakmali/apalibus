@@ -60,7 +60,7 @@ export default function AdminDashboard() {
           <CardContent>
              <CardDescription>View and manage all user booking requests.</CardDescription>
              <Button asChild className="mt-4">
-                <Link href="/admin/requests">Manage Requests</Link>
+                <Link href={"/admin/requests" as any}>Manage Requests</Link>
             </Button>
           </CardContent>
         </Card>
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
           <CardContent>
             <CardDescription>Manage bus operators and their fleets.</CardDescription>
              <Button asChild className="mt-4">
-                <Link href="/admin/operators">Manage Operators</Link>
+                <Link href={"/admin/operators" as any}>Manage Operators</Link>
             </Button>
           </CardContent>
         </Card>
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
           <CardContent>
             <CardDescription>View and manage registered users.</CardDescription>
              <Button asChild className="mt-4">
-                <Link href="/admin/users">Manage Users</Link>
+                <Link href={"/admin/users" as any}>Manage Users</Link>
             </Button>
           </CardContent>
         </Card>
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
           <CardContent>
             <CardDescription>Review and confirm MSRTC booking requests.</CardDescription>
              <Button asChild className="mt-4">
-                <Link href="/admin/msrtc-requests">Manage MSRTC Requests</Link>
+                <Link href={"/admin/msrtc-requests" as any}>Manage MSRTC Requests</Link>
             </Button>
           </CardContent>
         </Card>
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
           <CardContent>
             <CardDescription>Consolidate groups and dispatch final tickets for MSRTC bookings.</CardDescription>
              <Button asChild className="mt-4" variant="secondary">
-                <Link href="/admin/ticket-dispatch">Dispatch Tickets</Link>
+                <Link href={"/admin/ticket-dispatch" as any}>Dispatch Tickets</Link>
             </Button>
           </CardContent>
         </Card>
