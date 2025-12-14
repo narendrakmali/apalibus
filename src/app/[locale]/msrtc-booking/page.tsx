@@ -307,7 +307,7 @@ export default function MsrtcBookingPage() {
                 <AlertDialogDescription>{t('successDescription', { mobile: contactNumber })}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                 <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${contactNumber}`)}>
+                 <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${contactNumber}` as any)}>
                     {t('checkStatus')}
                 </AlertDialogAction>
             </AlertDialogFooter>
@@ -316,5 +316,3 @@ export default function MsrtcBookingPage() {
     </>
   );
 }
-
-    

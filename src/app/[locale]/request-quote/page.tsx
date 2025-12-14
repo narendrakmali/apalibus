@@ -352,7 +352,7 @@ export default function RequestQuotePage() {
                     <AlertDialogDescription>{t('successDescription')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}`)}>
+                    <AlertDialogAction onClick={() => router.push(`/track-status?mobile=${mobileNumber}` as any)}>
                         {t('checkStatus')}
                     </AlertDialogAction>
                 </AlertDialogFooter>
