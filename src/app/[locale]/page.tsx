@@ -6,18 +6,20 @@ import { Link } from '@/navigation';
 import { Bus, Car, FileText, Activity, ArrowRight } from 'lucide-react';
 import { ComponentProps } from 'react';
 
+type Card = {
+  title: string;
+  desc: string;
+  icon: JSX.Element;
+  href: ComponentProps<typeof Link>['href'];
+  color: string;
+  btnColor: string;
+  buttonText: string;
+};
+
 export default function Dashboard() {
   const t = useTranslations('Dashboard');
 
-  const cards: {
-      title: string;
-      desc: string;
-      icon: JSX.Element;
-      href: ComponentProps<typeof Link>['href'];
-      color: string;
-      btnColor: string;
-      buttonText: string;
-  }[] = [
+  const cards: Card[] = [
     {
       title: t('privateBusRequest'),
       desc: t('privateBusDescription'),
