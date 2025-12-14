@@ -78,7 +78,7 @@ export function RequestsTable({ requests }: { requests: BookingRequest[] }) {
                         </TableCell>
                         <TableCell className="text-right">
                            <Button asChild size="sm">
-                               <Link href={`/admin/requests/${req.id}`}>
+                               <Link href={`/admin/requests/${req.id}` as any}>
                                    Provide Quote
                                 </Link>
                            </Button>
