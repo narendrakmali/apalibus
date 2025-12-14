@@ -79,7 +79,7 @@ export default function BookingConfirmation({ bookingId }: { bookingId: string }
                     </div>
                      <div className="text-center pt-4">
                          <Button asChild variant="link">
-                            <Link href="/explore-routes">Book Another Ticket</Link>
+                            <Link href="/">Book Another Ticket</Link>
                         </Button>
                     </div>
                 </CardContent>
