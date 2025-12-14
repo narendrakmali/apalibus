@@ -13,7 +13,7 @@ interface PlacesAutocompleteProps {
 const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: PlacesAutocompleteProps) => {
     const [inputValue, setInputValue] = useState(initialValue || '');
     const inputRef = useRef<HTMLInputElement>(null);
-    const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+    const autocompleteRef = useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
 
     useEffect(() => {
       if (initialValue) {
@@ -24,17 +24,21 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: Place
     useEffect(() => {
         if (window.google && window.google.maps && window.google.maps.places && inputRef.current) {
             if (!autocompleteRef.current) {
-                const autocompleteInstance = new window.google.maps.places.Autocomplete(inputRef.current, {
-                    componentRestrictions: { country: 'in' }
+                const autocompleteElement = new window.google.maps.places.PlaceAutocompleteElement({
+                    inputElement: inputRef.current,
+                    config: {
+                        types: ['geocode'],
+                        componentRestrictions: { country: 'in' },
+                    },
                 });
-                autocompleteRef.current = autocompleteInstance;
+                autocompleteRef.current = autocompleteElement;
 
-                autocompleteInstance.addListener('place_changed', () => {
-                    const place = autocompleteInstance.getPlace();
-                    if (place.formatted_address) {
-                        const address = place.formatted_address;
-                        const lat = place.geometry?.location?.lat();
-                        const lng = place.geometry?.location?.lng();
+                autocompleteElement.addEventListener('gmp-placeselect', (ev: any) => {
+                    const place = ev.place;
+                    if (place.formattedAddress) {
+                        const address = place.formattedAddress;
+                        const lat = place.location?.lat;
+                        const lng = place.location?.lng;
                         setInputValue(address);
                         onLocationSelect(address, lat, lng);
                     }
