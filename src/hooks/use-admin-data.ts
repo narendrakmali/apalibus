@@ -13,6 +13,8 @@ export interface BookingRequest {
   toLocation: { address: string; lat?: number; lng?: number };
   journeyDate: string;
   returnDate: string;
+  journeyTime: string;
+  returnTime: string;
   seats: string;
   busType: string;
   seatType: string;
