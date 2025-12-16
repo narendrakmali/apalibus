@@ -31,6 +31,14 @@ export interface BookingRequest {
   };
   status: 'pending' | 'approved' | 'rejected' | 'quote_rejected';
   createdAt: Timestamp;
+  operatorQuote?: {
+    finalCost: number;
+    notes: string;
+    operatorId: string;
+    operatorName: string;
+    timestamp: Timestamp;
+  };
+  notes?: string;
 }
 
 export const useAdminData = (dataVersion = 0) => {
