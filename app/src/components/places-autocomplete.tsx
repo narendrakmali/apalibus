@@ -1,29 +1,20 @@
 
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { Input } from '@/components/ui/input';
+import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface PlacesAutocompleteProps {
     onLocationSelect: (address: string, lat?: number, lng?: number) => void;
-    initialValue?: string;
+    initialValue?: string; // This will now be used to pre-fill, but the component is uncontrolled
     className?: string;
 }
 
 const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: PlacesAutocompleteProps) => {
-    const [inputValue, setInputValue] = useState(initialValue || '');
-    const inputRef = useRef<HTMLInputElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const autocompleteRef = useRef<any | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null); // Ref for the container
 
     useEffect(() => {
-      if (initialValue) {
-          setInputValue(initialValue);
-      }
-    }, [initialValue]);
-
-    useEffect(() => {
-        if (window.google && window.google.maps && window.google.maps.places && inputRef.current && containerRef.current) {
+        if (window.google && window.google.maps && window.google.maps.places && containerRef.current) {
             if (!autocompleteRef.current) {
                 // 1. Create the Autocomplete Element
                 const autocompleteElement = new window.google.maps.places.PlaceAutocompleteElement({
@@ -31,52 +22,48 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: Place
                     componentRestrictions: { country: 'in' },
                 });
 
-                // 2. Hide the element itself, as we're using our own Input component
-                autocompleteElement.style.display = 'none';
+                // Style the underlying input
+                const input = autocompleteElement.querySelector('input');
+                if(input) {
+                    input.className = cn(
+                        "flex h-11 w-full rounded-xl border border-input bg-transparent px-4 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                        className
+                    );
+                    input.placeholder = "Enter a location";
+                    if(initialValue) {
+                       input.value = initialValue;
+                    }
+                }
                 
-                // 3. Append it to a container in the DOM
+                // 2. Append it to the container
+                containerRef.current.innerHTML = ''; // Clear previous instances
                 containerRef.current.appendChild(autocompleteElement);
 
-                // 4. Associate it with our visible input
-                autocompleteElement.inputElement = inputRef.current;
-                
                 autocompleteRef.current = autocompleteElement;
-
+                
+                // 3. Add listener
                 autocompleteElement.addEventListener('gmp-placeselect', (ev: any) => {
                     const place = ev.place;
                     if (place.formattedAddress) {
                         const address = place.formattedAddress;
                         const lat = place.location?.lat;
                         const lng = place.location?.lng;
-                        setInputValue(address);
                         onLocationSelect(address, lat, lng);
+
+                        // Also update the input visually if the parent component doesn't re-render
+                         const currentInput = autocompleteRef.current?.querySelector('input');
+                         if(currentInput) {
+                            currentInput.value = address;
+                         }
                     }
                 });
             }
         }
-    }, []);
+    }, [initialValue, className, onLocationSelect]);
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(event.target.value);
-        if (!event.target.value) {
-            onLocationSelect('');
-        }
-    };
 
-    return (
-        <div>
-            <Input
-                ref={inputRef}
-                type="text"
-                placeholder="Enter a location"
-                className={cn("w-full", className)}
-                onChange={handleInputChange}
-                value={inputValue}
-            />
-            {/* Hidden container for the Google Maps element */}
-            <div ref={containerRef} style={{ display: 'none' }}></div>
-        </div>
-    );
+    // We only render the container for the Google Maps element
+    return <div ref={containerRef} className="w-full" />;
 };
 
 export default PlacesAutocomplete;
