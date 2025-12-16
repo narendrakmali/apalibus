@@ -78,7 +78,7 @@ export default function Header() {
             {navLinks.map((link) => (
               <Button variant="ghost" asChild key={link.href}>
                 <Link
-                  href={link.href}
+                  href={link.href as any}
                   className={isActive(link.href) ? 'text-primary font-semibold' : 'text-slate-600'}
                 >
                   <link.icon className="mr-2 h-4 w-4" />
@@ -93,7 +93,7 @@ export default function Header() {
                 <>
                 {isAdmin && (
                     <Button asChild variant="outline" size="sm">
-                        <Link href="/admin"><Shield className="mr-2 h-4 w-4" />{t('admin')}</Link>
+                        <Link href={"/admin" as any}><Shield className="mr-2 h-4 w-4" />{t('admin')}</Link>
                     </Button>
                 )}
                 <Button onClick={handleLogout} variant="secondary" size="sm">
