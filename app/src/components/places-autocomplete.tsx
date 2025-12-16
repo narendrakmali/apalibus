@@ -25,12 +25,10 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: Place
     useEffect(() => {
         if (window.google && window.google.maps && window.google.maps.places && inputRef.current && containerRef.current) {
             if (!autocompleteRef.current) {
-                // 1. Create the Autocomplete Element with config
+                // 1. Create the Autocomplete Element with flattened config
                 const autocompleteElement = new window.google.maps.places.PlaceAutocompleteElement({
-                    config: {
-                        types: ['geocode'],
-                        componentRestrictions: { country: 'in' },
-                    },
+                    types: ['geocode'],
+                    componentRestrictions: { country: 'in' },
                 });
 
                 // 2. Hide the element itself, as we're using our own Input component
