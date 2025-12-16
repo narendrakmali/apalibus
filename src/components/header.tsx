@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -102,7 +103,7 @@ export default function Header() {
                 </>
             ) : (
                 <Button asChild size="sm">
-                  <Link href="/"><User className="mr-2 h-4 w-4"/>{t('login')}</Link>
+                  <Link href={"/admin/login" as any}><User className="mr-2 h-4 w-4"/>{t('login')}</Link>
                 </Button>
             )}
              <div className="border-l border-slate-200 h-6"></div>
@@ -131,7 +132,7 @@ export default function Header() {
             {navLinks.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={link.href as any}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center px-3 py-3 rounded-md text-base font-medium ${
                   isActive(link.href)
@@ -147,7 +148,7 @@ export default function Header() {
              {(authLoading) ? null : user ? (
                 <>
                 {isAdmin && (
-                  <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center w-full text-left px-3 py-3 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">
+                  <Link href={"/admin" as any} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center w-full text-left px-3 py-3 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">
                     <Shield className="mr-3 h-5 w-5" />
                     {t('admin')}
                   </Link>
@@ -161,7 +162,7 @@ export default function Header() {
                   </button>
                 </>
             ) : (
-                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center w-full text-left px-3 py-3 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">
+                 <Link href={"/admin/login" as any} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center w-full text-left px-3 py-3 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">
                     <User className="mr-3 h-5 w-5" />
                     {t('login')}
                   </Link>
