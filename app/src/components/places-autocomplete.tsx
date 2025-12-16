@@ -13,7 +13,7 @@ interface PlacesAutocompleteProps {
 const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: PlacesAutocompleteProps) => {
     const [inputValue, setInputValue] = useState(initialValue || '');
     const inputRef = useRef<HTMLInputElement>(null);
-    const autocompleteRef = useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
+    const autocompleteRef = useRef<any | null>(null);
     const containerRef = useRef<HTMLDivElement>(null); // Ref for the container
 
     useEffect(() => {
@@ -25,7 +25,7 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: Place
     useEffect(() => {
         if (window.google && window.google.maps && window.google.maps.places && inputRef.current && containerRef.current) {
             if (!autocompleteRef.current) {
-                // 1. Create the Autocomplete Element with flattened config
+                // 1. Create the Autocomplete Element
                 const autocompleteElement = new window.google.maps.places.PlaceAutocompleteElement({
                     types: ['geocode'],
                     componentRestrictions: { country: 'in' },
@@ -74,7 +74,7 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: Place
                 value={inputValue}
             />
             {/* Hidden container for the Google Maps element */}
-            <div ref={containerRef}></div>
+            <div ref={containerRef} style={{ display: 'none' }}></div>
         </div>
     );
 };
