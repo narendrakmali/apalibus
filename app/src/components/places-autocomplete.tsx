@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 interface PlacesAutocompleteProps {
     onLocationSelect: (address: string, lat?: number, lng?: number) => void;
-    initialValue?: string; // This will now be used to pre-fill, but the component is uncontrolled
+    initialValue?: string;
     className?: string;
 }
 
@@ -16,13 +16,13 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: Place
     useEffect(() => {
         if (window.google && window.google.maps && window.google.maps.places && containerRef.current) {
             if (!autocompleteRef.current) {
-                // 1. Create the Autocomplete Element
+                // 1. Create the Autocomplete Element with its configuration
                 const autocompleteElement = new window.google.maps.places.PlaceAutocompleteElement({
                     types: ['geocode'],
                     componentRestrictions: { country: 'in' },
                 });
 
-                // Style the underlying input
+                // 2. Style the underlying input field within the web component
                 const input = autocompleteElement.querySelector('input');
                 if(input) {
                     input.className = cn(
@@ -35,24 +35,26 @@ const PlacesAutocomplete = ({ onLocationSelect, initialValue, className }: Place
                     }
                 }
                 
-                // 2. Append it to the container
+                // 3. Append the web component to our container div
                 containerRef.current.innerHTML = ''; // Clear previous instances
                 containerRef.current.appendChild(autocompleteElement);
 
                 autocompleteRef.current = autocompleteElement;
                 
-                // 3. Add listener
+                // 4. Add the event listener for place selections
                 autocompleteElement.addEventListener('gmp-placeselect', (ev: any) => {
                     const place = ev.place;
-                    if (place.formattedAddress) {
-                        const address = place.formattedAddress;
+                    if (place) {
+                        const address = place.formattedAddress || place.displayName;
                         const lat = place.location?.lat;
                         const lng = place.location?.lng;
-                        onLocationSelect(address, lat, lng);
+                        if (address) {
+                            onLocationSelect(address, lat, lng);
+                        }
 
                         // Also update the input visually if the parent component doesn't re-render
                          const currentInput = autocompleteRef.current?.querySelector('input');
-                         if(currentInput) {
+                         if(currentInput && address) {
                             currentInput.value = address;
                          }
                     }
