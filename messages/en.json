@@ -30,7 +30,10 @@
         "requestQuoteButton": "Request a Quote",
         "newMsrtcRequestButton": "New MSRTC Request",
         "submitVehicleInfoButton": "Submit Vehicle Info",
-        "checkStatusButton": "Check Status"
+        "checkStatusButton": "Check Status",
+        "sewaVolunteerTitle": "Sewa Volunteer Arrival",
+        "sewaVolunteerDescription": "For Sewadal members to submit their arrival and departure details in advance.",
+        "sewaVolunteerButton": "Submit Arrival Info"
     },
     "RequestQuote": {
         "title": "Private Bus Request",
@@ -159,6 +162,37 @@
         "successTitle": "MSRTC Request Submitted!",
         "successDescription": "Your group booking request has been received. Our team will verify the details with MSRTC and contact you on {mobile} with the final confirmation and payment details.",
         "checkStatus": "Check Status"
+    },
+    "SewaVolunteer": {
+        "title": "Sewa Volunteer Arrival Information",
+        "subtitle": "Form for Sewadal members to submit their arrival details for Samagam coordination.",
+        "volunteerInfo": "Volunteer Information",
+        "volunteerName": "Full Name",
+        "mobileNumber": "Mobile Number",
+        "branch": "Branch / Zone",
+        "branchPlaceholder": "e.g., Chembur",
+        "arrivalDeparture": "Arrival & Departure Details",
+        "dutyPeriod": "Select Your Duty Period",
+        "selectDutyPeriod": "Select from the official duty calendar",
+        "transportMode": "Mode of Transport",
+        "selectTransportMode": "Select how you will be arriving",
+        "train": "Train",
+        "bus": "Bus",
+        "car": "Car",
+        "other": "Other",
+        "arrivalDate": "Arrival Date",
+        "arrivalTime": "Arrival Time",
+        "departureDate": "Departure Date",
+        "departureTime": "Departure Time",
+        "notes": "Notes (Optional)",
+        "notesPlaceholder": "e.g., Arriving with family, specific transport details...",
+        "submitDetails": "Submit Details",
+        "submitting": "Submitting...",
+        "errorFillAllFields": "Please fill in all required fields to submit your details.",
+        "errorAuth": "Could not authenticate your session. Please try again.",
+        "successTitle": "Details Submitted Successfully!",
+        "successDescription": "Thank you for providing your arrival information. This will help us greatly in coordinating the transport and accommodation.",
+        "backToDashboard": "Back to Dashboard"
     }
 }
 

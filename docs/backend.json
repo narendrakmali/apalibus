@@ -364,6 +364,30 @@
       "required": [
         "id", "userId", "contactName", "contactMobile", "coordinatorName", "bookingType", "journeyDate", "returnDate", "passengerCount", "createdAt"
       ]
+    },
+    "SewaVolunteer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sewa Volunteer Arrival",
+      "type": "object",
+      "description": "Details of an arriving Sewa volunteer for Samagam coordination.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "volunteerName": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "branch": { "type": "string" },
+        "dutyPeriod": { "type": "string" },
+        "transportMode": { "type": "string", "enum": ["Train", "Bus", "Car", "Other"] },
+        "arrivalDate": { "type": "string", "format": "date" },
+        "arrivalTime": { "type": "string", "format": "time" },
+        "departureDate": { "type": "string", "format": "date" },
+        "departureTime": { "type": "string", "format": "time" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id", "userId", "volunteerName", "mobileNumber", "branch", "dutyPeriod", "transportMode", "arrivalDate", "arrivalTime", "departureDate", "departureTime", "createdAt"
+      ]
     }
   },
   "auth": {
@@ -488,6 +512,15 @@
             "schema": { "$ref": "#/backend/entities/VehicleSubmission" },
             "description": "Stores information about pre-booked vehicles submitted by attendees.",
             "params": [{ "name": "submissionId", "description": "The unique identifier for the vehicle submission." }]
+        }
+      },
+      {
+        "path": "/sewaVolunteers/{volunteerId}",
+        "definition": {
+            "entityName": "SewaVolunteer",
+            "schema": { "$ref": "#/backend/entities/SewaVolunteer" },
+            "description": "Stores arrival and departure information for Sewa volunteers.",
+            "params": [{ "name": "volunteerId", "description": "The unique identifier for the volunteer submission." }]
         }
       }
     ],

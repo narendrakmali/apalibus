@@ -16,6 +16,7 @@
  * - /bookingRequests/{requestId}: Open write for all, managed by operators/admins.
  * - /msrtcBookings/{bookingId}: Open write for all, managed by admins.
  * - /vehicleSubmissions/{submissionId}: Open write for all, managed by admins.
+ * - /sewaVolunteers/{volunteerId}: Open write for all, managed by admins.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -125,6 +126,14 @@ service cloud.firestore {
     match /vehicleSubmissions/{submissionId} {
        allow create: if true; // Anyone can submit their vehicle info.
        allow get, list, update, delete: if isAdmin(); // Only admins can manage submissions.
+    }
+
+    /**
+     * @description Rules for Sewa Volunteer arrival submissions.
+     */
+    match /sewaVolunteers/{volunteerId} {
+      allow create: if true; // Anyone can submit their arrival info.
+      allow get, list, update, delete: if isAdmin(); // Only admins can manage submissions.
     }
   }
 }

@@ -30,7 +30,10 @@
         "requestQuoteButton": "कोटेशन का अनुरोध करें",
         "newMsrtcRequestButton": "नया MSRTC-बस-अनुरोध",
         "submitVehicleInfoButton": "वाहन की जानकारी जमा करें",
-        "checkStatusButton": "स्थिति जांचें"
+        "checkStatusButton": "स्थिति जांचें",
+        "sewaVolunteerTitle": "सेवा स्वयंसेवक आगमन",
+        "sewaVolunteerDescription": "सेवा दल के सदस्यों के लिए अग्रिम में अपने आगमन और प्रस्थान का विवरण जमा करने के लिए।",
+        "sewaVolunteerButton": "आगमन जानकारी जमा करें"
     },
     "RequestQuote": {
         "title": "निजी बस अनुरोध",
@@ -159,6 +162,37 @@
         "successTitle": "MSRTC अनुरोध सफलतापूर्वक जमा किया गया!",
         "successDescription": "आपकी समूह बुकिंग का अनुरोध प्राप्त हो गया है। हमारी टीम MSRTC के साथ विवरणों का सत्यापन करेगी और अंतिम पुष्टि और भुगतान विवरण के साथ {mobile} पर आपसे संपर्क करेगी।",
         "checkStatus": "स्थिति जांचें"
+    },
+    "SewaVolunteer": {
+        "title": "सेवा स्वयंसेवक आगमन सूचना",
+        "subtitle": "सेवा दल के सदस्यों के लिए समागम समन्वय हेतु अपने आगमन का विवरण जमा करने का फॉर्म।",
+        "volunteerInfo": "स्वयंसेवक की जानकारी",
+        "volunteerName": "पूरा नाम",
+        "mobileNumber": "मोबाइल नंबर",
+        "branch": "ब्रांच / जोन",
+        "branchPlaceholder": "उदा., चेंबूर",
+        "arrivalDeparture": "आगमन और प्रस्थान विवरण",
+        "dutyPeriod": "अपनी ड्यूटी अवधि चुनें",
+        "selectDutyPeriod": "आधिकारिक ड्यूटी कैलेंडर से चुनें",
+        "transportMode": "परिवहन का माध्यम",
+        "selectTransportMode": "चुनें कि आप कैसे पहुंचेंगे",
+        "train": "ट्रेन",
+        "bus": "बस",
+        "car": "कार",
+        "other": "अन्य",
+        "arrivalDate": "आगमन की तारीख",
+        "arrivalTime": "आगमन का समय",
+        "departureDate": "प्रस्थान की तारीख",
+        "departureTime": "प्रस्थान का समय",
+        "notes": "नोट्स (वैकल्पिक)",
+        "notesPlaceholder": "उदा., परिवार के साथ आगमन, विशिष्ट परिवहन विवरण...",
+        "submitDetails": "विवरण जमा करें",
+        "submitting": "जमा हो रहा है...",
+        "errorFillAllFields": "कृपया अपना विवरण जमा करने के लिए सभी आवश्यक फ़ील्ड भरें।",
+        "errorAuth": "आपका सत्र प्रमाणित नहीं किया जा सका। कृपया पुनः प्रयास करें।",
+        "successTitle": "विवरण सफलतापूर्वक जमा किया गया!",
+        "successDescription": "आपकी आगमन जानकारी प्रदान करने के लिए धन्यवाद। यह हमें परिवहन और आवास के समन्वय में बहुत मदद करेगा।",
+        "backToDashboard": "डैशबोर्ड पर वापस जाएं"
     }
 }
 

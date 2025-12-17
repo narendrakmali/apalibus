@@ -30,7 +30,10 @@
         "requestQuoteButton": "कोटेशनची विनंती करा",
         "newMsrtcRequestButton": "नवीन MSRTC-बस-विनंती",
         "submitVehicleInfoButton": "वाहनाची माहिती सबमिट करा",
-        "checkStatusButton": "स्थिती तपासा"
+        "checkStatusButton": "स्थिती तपासा",
+        "sewaVolunteerTitle": "सेवा स्वयंसेवक आगमन",
+        "sewaVolunteerDescription": "सेवा दल सदस्यांना त्यांचे आगमन आणि प्रस्थान तपशील आगाऊ सादर करण्यासाठी.",
+        "sewaVolunteerButton": "आगमन माहिती सबमिट करा"
     },
     "RequestQuote": {
         "title": "खाजगी बस विनंती",
@@ -159,6 +162,37 @@
         "successTitle": "MSRTC विनंती यशस्वीरित्या सबमिट झाली!",
         "successDescription": "तुमची गट बुकिंग विनंती प्राप्त झाली आहे. आमची टीम MSRTC सोबत तपशीलांची पडताळणी करेल आणि अंतिम पुष्टीकरण आणि पेमेंट तपशीलांसह {mobile} वर तुमच्याशी संपर्क साधेल.",
         "checkStatus": "स्थिती तपासा"
+    },
+    "SewaVolunteer": {
+        "title": "सेवा स्वयंसेवक आगमन माहिती",
+        "subtitle": "सेवा दल सदस्यांना समागम समन्वयासाठी त्यांचे आगमन तपशील सबमिट करण्यासाठी फॉर्म.",
+        "volunteerInfo": "स्वयंसेवक माहिती",
+        "volunteerName": "पूर्ण नाव",
+        "mobileNumber": "मोबाईल नंबर",
+        "branch": "शाखा / झोन",
+        "branchPlaceholder": "उदा., चेंबूर",
+        "arrivalDeparture": "आगमन आणि प्रस्थान तपशील",
+        "dutyPeriod": "तुमची ड्युटी कालावधी निवडा",
+        "selectDutyPeriod": "अधिकृत ड्युटी कॅलेंडरमधून निवडा",
+        "transportMode": "परिवहनाचे माध्यम",
+        "selectTransportMode": "तुम्ही कसे येणार आहात ते निवडा",
+        "train": "ट्रेन",
+        "bus": "बस",
+        "car": "कार",
+        "other": "इतर",
+        "arrivalDate": "आगमनाची तारीख",
+        "arrivalTime": "आगमनाची वेळ",
+        "departureDate": "प्रस्थानाची तारीख",
+        "departureTime": "प्रस्थानाची वेळ",
+        "notes": "टीप (ऐच्छिक)",
+        "notesPlaceholder": "उदा., कुटुंबासह आगमन, विशिष्ट परिवहन तपशील...",
+        "submitDetails": "तपशील सबमिट करा",
+        "submitting": "सबमिट करत आहे...",
+        "errorFillAllFields": "कृपया तुमचे तपशील सबमिट करण्यासाठी सर्व आवश्यक फील्ड भरा.",
+        "errorAuth": "तुमचे सत्र प्रमाणित होऊ शकले नाही. कृपया पुन्हा प्रयत्न करा.",
+        "successTitle": "तपशील यशस्वीरित्या सबमिट झाला!",
+        "successDescription": "तुमची आगमन माहिती दिल्याबद्दल धन्यवाद. यामुळे आम्हाला परिवहन आणि निवासाचे समन्वय साधण्यात मोठी मदत होईल.",
+        "backToDashboard": "डॅशबोर्डवर परत जा"
     }
 }
 

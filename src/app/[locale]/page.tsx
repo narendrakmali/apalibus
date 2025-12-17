@@ -3,7 +3,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/navigation';
-import { Bus, Car, FileText, Activity, ArrowRight } from 'lucide-react';
+import { Bus, Car, FileText, Activity, ArrowRight, UserCheck } from 'lucide-react';
 import { ComponentProps } from 'react';
 
 type Card = {
@@ -47,6 +47,15 @@ export default function Dashboard() {
       btnColor: "text-emerald-600",
       buttonText: t('submitVehicleInfoButton')
     },
+     {
+      title: t('sewaVolunteerTitle'),
+      desc: t('sewaVolunteerDescription'),
+      icon: <UserCheck className="w-8 h-8 text-indigo-600" />,
+      href: "/sewa-volunteer" as any,
+      color: "bg-indigo-50 border-indigo-200",
+      btnColor: "text-indigo-600",
+      buttonText: t('sewaVolunteerButton')
+    },
     {
       title: t('trackStatus'),
       desc: t('trackStatusDescription'),
@@ -68,7 +77,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card, idx) => (
           <div key={idx} className={`h-full p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 bg-white hover:border-slate-300 flex flex-col`}>
               <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${card.color}`}>
@@ -87,3 +96,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+    
