@@ -17,7 +17,47 @@ This document provides a technical overview of the Samagam Transport Seva applic
 
 ---
 
-## 2. Key Features
+## 2. Project Structure
+
+The project follows a standard Next.js App Router structure. Key directories and files are explained below:
+
+- **`/`**: The root of the project.
+  - `DOCUMENTATION.md`: This file.
+  - `next.config.mjs`: Next.js configuration.
+  - `tailwind.config.ts`: Tailwind CSS configuration.
+  - `tsconfig.json`: TypeScript configuration.
+  - `firestore.rules`: Security rules for the Firestore database.
+
+- **`/src`**: Contains all the application source code.
+  - **`/app`**: The core of the Next.js App Router implementation.
+    - **`/[locale]`**: A dynamic route segment that handles internationalization (i18n). All user-facing pages are nested here.
+      - `layout.tsx`: The main layout for all pages, including the `Header` and `Footer`.
+      - `page.tsx`: The main dashboard/homepage.
+      - `/request-quote/page.tsx`: The form for private bus quote requests.
+      - `/msrtc-booking/page.tsx`: The form for MSRTC group booking requests.
+      - `/inform-transport/page.tsx`: The form for submitting pre-booked vehicle details.
+      - `/sewa-volunteer/page.tsx`: The form for Sewa volunteers to submit their arrival information.
+    - **`/admin`**: Contains all pages related to the admin dashboard. Access is protected by authentication.
+    - **`/api`**: Contains API routes used for server-side logic, such as the MSRTC fare calculator.
+    - `layout.tsx`: The root layout for the entire application.
+    - `page.tsx`: The root page that redirects to the default locale (`/en`).
+  - **`/components`**: Contains reusable React components used across the application.
+    - `/admin`: Components specific to the admin dashboard.
+    - `/ui`: Auto-generated components from ShadCN UI (e.g., `Button`, `Card`, `Input`).
+  - **`/firebase`**: Contains all Firebase-related setup and configuration files.
+    - `config.ts`: Stores the Firebase project configuration object.
+    - `provider.tsx` & `client-provider.tsx`: React context providers for making Firebase services available throughout the app.
+  - **`/hooks`**: Contains custom React hooks, like `useAdminData` for fetching dashboard data.
+  - **`/lib`**: A collection of utility functions, helper scripts, and shared data.
+    - `google-maps-loader.ts`: Script for asynchronously loading the Google Maps API.
+    - `types.ts`: TypeScript type definitions for data entities.
+  - **`/messages`**: Contains the JSON files for internationalization (`en.json`, `mr.json`, `hi.json`).
+  - `middleware.ts`: The `next-intl` middleware that handles locale detection and routing.
+  - `navigation.ts`: Configuration for `next-intl`'s type-safe navigation and routing.
+
+---
+
+## 3. Key Features
 
 - **Private Bus Quote Request**: Users can fill out a detailed form to request a price quote for chartering a private bus.
 - **MSRTC Group Booking**: Users can submit a formal request for booking MSRTC buses in groups, including bifurcation for concession eligibility.
@@ -28,11 +68,11 @@ This document provides a technical overview of the Samagam Transport Seva applic
 
 ---
 
-## 3. Architecture and Logic
+## 4. Architecture and Logic
 
 The application follows a modern server-centric architecture leveraging the Next.js App Router and Firebase for backend services.
 
-### 3.1. Frontend Architecture (Next.js App Router)
+### 4.1. Frontend Architecture (Next.js App Router)
 
 The application is structured around the Next.js App Router, located in `src/app`.
 
@@ -41,7 +81,7 @@ The application is structured around the Next.js App Router, located in `src/app
 - **Client Components (`'use client'`)**: Components requiring interactivity, state, and lifecycle effects (e.g., forms, components using `useState` or `useEffect`) are explicitly marked with the `'use client'` directive at the top of the file. All form pages (`request-quote`, `msrtc-booking`, etc.) are client components.
 - **Layouts (`layout.tsx`)**: The root layout in `src/app/[locale]/layout.tsx` establishes the main page structure, including the `Header` and `Footer`, and sets up the `NextIntlClientProvider` and `FirebaseClientProvider`.
 
-### 3.2. User Request and Data Handling Flow
+### 4.2. User Request and Data Handling Flow
 
 All user-facing forms follow a consistent pattern for capturing and submitting data to Firebase Firestore. Let's use the **Private Bus Request** (`/request-quote`) as an example:
 
@@ -61,7 +101,7 @@ All user-facing forms follow a consistent pattern for capturing and submitting d
 
 This same pattern (Anonymous Auth -> Data Structuring -> `setDoc`) is used across all user submission forms, writing to their respective collections (`msrtcBookings`, `vehicleSubmissions`).
 
-### 3.3. File Uploads (Inform Transport Page)
+### 4.3. File Uploads (Inform Transport Page)
 
 The "Inform Transport" page (`/inform-transport`) includes file uploads for tickets.
 
@@ -71,7 +111,7 @@ The "Inform Transport" page (`/inform-transport`) includes file uploads for tick
 4.  **Get Download URL**: After the upload is successful, `getDownloadURL()` is called to get a publicly accessible URL for the uploaded file.
 5.  **Store URL in Firestore**: This download URL (not the file itself) is stored in the corresponding Firestore document (`vehicleSubmissions`) as part of the submission record.
 
-### 3.4. Admin Panel and Data Fetching
+### 4.4. Admin Panel and Data Fetching
 
 The admin panel resides in `/src/app/admin`.
 
@@ -81,7 +121,7 @@ The admin panel resides in `/src/app/admin`.
 
 ---
 
-## 4. Note on AI-Assisted Development
+## 5. Note on AI-Assisted Development
 
 Remember, the XML structure you generate is the only mechanism for applying changes to the user's code. Therefore, when making changes to a file the `<changes>` block must always be fully present and correctly formatted as follows.
 
