@@ -18,6 +18,7 @@ export const pathnames = {
   '/admin': '/admin',
   '/admin/login': '/admin/login',
   '/admin/requests': '/admin/requests',
+  '/admin/requests/[id]': '/admin/requests/[id]',
   '/admin/operators': '/admin/operators',
   '/admin/users': '/admin/users',
   '/admin/msrtc-requests': '/admin/msrtc-requests',
