@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import "./globals.css";
 
@@ -13,11 +12,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <html lang="en">
-      <body>
-        {children}
-      </body>
-    </html>
-  )
+  // Since we have a root layout in [locale], this one is just a proxy
+  return children;
 }
