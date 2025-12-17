@@ -1,4 +1,3 @@
-
 # Web Developer Documentation: Samagam Transport Seva
 
 ## 1. Project Overview
