@@ -10,6 +10,18 @@ export const pathnames = {
   // If all locales use the same pathnames, a single
   // external path can be used for all locales.
   '/': '/',
+  '/request-quote': '/request-quote',
+  '/msrtc-booking': '/msrtc-booking',
+  '/inform-transport': '/inform-transport',
+  '/sewa-volunteer': '/sewa-volunteer',
+  '/track-status': '/track-status',
+  '/admin': '/admin',
+  '/admin/login': '/admin/login',
+  '/admin/requests': '/admin/requests',
+  '/admin/operators': '/admin/operators',
+  '/admin/users': '/admin/users',
+  '/admin/msrtc-requests': '/admin/msrtc-requests',
+  '/admin/ticket-dispatch': '/admin/ticket-dispatch',
 };
  
 export const {Link, redirect, usePathname, useRouter} =
