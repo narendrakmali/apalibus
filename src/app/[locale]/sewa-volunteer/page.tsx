@@ -23,7 +23,7 @@ const sewaCalendar = [
     { value: "2025-12-14_2025-12-18_Kolhapur/Gadchiroli/Ratnagiri", label: "14 Dec - 18 Dec | Kolhapur/Gadchiroli/Ratnagiri Duty" },
     { value: "2025-12-18_2025-12-22_Ahmednagar/Nagpur/Jalgaon/Raigad", label: "18 Dec - 22 Dec | Ahmednagar/Nagpur/Jalgaon/Raigad Duty" },
     { value: "2025-12-21_2025-12-25_Pune/Pimpri/Solapur/Akola", label: "21 Dec - 25 Dec | Pune/Pimpri/Solapur/Akola Duty" },
-    { value: "2025-12-25_2025-12-29_Nashik/CSN/Goa/Solapur", label: "25 Dec - 29 Dec | Nashik/CSN/Goa Duty" },
+    { value: "2025-12-25_2025-12-29_Nashik/CSN/Goa", label: "25 Dec - 29 Dec | Nashik/CSN/Goa Duty" },
     { value: "2025-12-28_2026-01-01_Mumbai/Vasai/Ratnagiri", label: "28 Dec - 01 Jan | Mumbai/Vasai/Ratnagiri Duty" },
     { value: "2026-01-01_2026-01-05_Mumbai/Local", label: "01 Jan - 05 Jan | Mumbai & Local Duty" },
     { value: "2026-01-04_2026-01-08_Mumbai/Local", label: "04 Jan - 08 Jan | Mumbai & Local Duty" },
