@@ -1,3 +1,4 @@
+
 // src/app/[locale]/not-found.tsx
 'use client';
 
